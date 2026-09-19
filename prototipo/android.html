@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VíaSegura — App Android</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/prototipo.css">
+<style>
+  .screen-nav { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 40px; }
+  .screen-nav a { color: #ccc; text-decoration: none; font-size: 12px; background: rgba(255,255,255,.06); padding: 6px 12px; border-radius: 99px; border: 1px solid rgba(255,255,255,.1); }
+  .screen-nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="screen-group">
+  <h2>📱 VíaSegura — Aplicación Android</h2>
+  <p>Flujo Estudiante y Apoderado · Frames 360×800</p>
+  <div class="screen-nav">
+    <a href="#splash">Splash</a>
+    <a href="#rol">Rol</a>
+    <a href="#login">Login</a>
+    <a href="#reg1">Reg Paso 1</a>
+    <a href="#reg2">Reg Paso 2 QR</a>
+    <a href="#reg3">Reg Paso 3</a>
+    <a href="#reg4">Reg Paso 4</a>
+    <a href="#home">Home Estudiante</a>
+    <a href="#recorrido">Recorrido Activo</a>
+    <a href="#anomalia">Recorrido Inusual</a>
+    <a href="#emergencia">Emergencia</a>
+    <a href="#enviada">Alerta Enviada</a>
+    <a href="#puntos">Puntos Seguros</a>
+    <a href="#incidencia">Reportar</a>
+    <a href="#padre">Home Apoderado</a>
+    <a href="#padre-alerta">Alerta Apoderado</a>
+  </div>
+
+  <div class="screens">
+
+    <!-- SPLASH -->
+    <div id="splash" class="phone" style="background: linear-gradient(160deg,#0F2A4A,#1B4E9B);">
+      <div class="phone-label">1 · Splash</div>
+      <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:740px;">
+        <div style="font-size:56px; margin-bottom:16px;">🛡️</div>
+        <h1 style="color:#fff; font-size:30px; font-weight:700; letter-spacing:1px;">VíaSegura</h1>
+        <p style="color:rgba(255,255,255,.7); font-size:14px; margin-top:8px;">Acompañando cada paso</p>
+        <div style="margin-top:120px; width:80%; height:4px; background:rgba(255,255,255,.15); border-radius:2px; overflow:hidden;">
+          <div style="width:60%; height:100%; background:#fff; border-radius:2px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SELECCIÓN DE ROL -->
+    <div id="rol" class="phone">
+      <div class="phone-label">2 · Selección de rol</div>
+      <div class="status-bar light"><span>4:20 PM</span><span>📶 🔋</span></div>
+      <div style="text-align:center; padding:48px 24px 24px;">
+        <div style="font-size:44px;">🛡️</div>
+        <h1 style="font-size:24px; font-weight:700; margin-top:8px;">VíaSegura</h1>
+        <p class="body-sm" style="margin-top:4px;">¿Cómo quieres ingresar?</p>
+      </div>
+      <div class="content" style="text-align:center;">
+        <div class="card" style="padding:24px; cursor:pointer; border:2px solid var(--primary);">
+          <div style="font-size:36px;">🎒</div>
+          <h3 style="margin-top:8px; font-size:16px; font-weight:700;">Soy Estudiante</h3>
+          <p class="body-sm">Realizo mi recorrido y necesito acompañamiento</p>
+        </div>
+        <div class="card" style="padding:24px; cursor:pointer; margin-top:12px;">
+          <div style="font-size:36px;">👨‍👩‍👧</div>
+          <h3 style="margin-top:8px; font-size:16px; font-weight:700;">Soy Apoderado</h3>
+          <p class="body-sm">Sigo el recorrido de mi hijo/hija</p>
+        </div>
+        <p class="body-sm" style="margin-top:20px;">🏫 ¿Eres una institución? <span style="color:var(--primary-soft); font-weight:600;">Ingresa al Panel Web</span></p>
+      </div>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="login" class="phone">
+      <div class="phone-label">3 · Login</div>
+      <div class="status-bar"><span>4:20 PM</span><span>📶 🔋</span></div>
+      <div class="topbar"><span class="topbar-title">VíaSegura</span></div>
+      <div class="content" style="padding-top:32px;">
+        <h2 class="greeting">Bienvenido de vuelta</h2>
+        <p class="subtitle" style="margin-bottom:28px;">Ingresa tus credenciales</p>
+        <div class="input-group">
+          <label class="input-label">Correo electrónico</label>
+          <input class="input" type="email" placeholder="juan.perez@gmail.com">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Contraseña</label>
+          <input class="input" type="password" placeholder="••••••••">
+        </div>
+        <p class="body-sm" style="text-align:right; margin-bottom:20px; color:var(--primary-soft); font-weight:600;">¿Olvidaste tu contraseña?</p>
+        <button class="btn btn-primary">INGRESAR</button>
+        <p class="body-sm" style="text-align:center; margin-top:20px;">¿No tienes cuenta? <span style="color:var(--primary-soft); font-weight:600;">Regístrate</span></p>
+      </div>
+    </div>
+
+    <!-- REGISTRO PASO 1 -->
+    <div id="reg1" class="phone">
+      <div class="phone-label">4 · Registro Paso 1 — Institución</div>
+      <div class="status-bar"><span>4:20 PM</span><span>📶 🔋</span></div>
+      <div class="topbar">
+        <span style="font-size:22px; cursor:pointer;">←</span>
+        <span class="topbar-title">Registro</span>
+        <span class="topbar-icon">🎒</span>
+      </div>
+      <div class="content" style="padding-top:20px;">
+        <div class="stepper">
+          <div class="step active"></div><div class="step"></div><div class="step"></div><div class="step"></div>
+        </div>
+        <h2 class="greeting" style="font-size:22px;">Selecciona tu institución</h2>
+        <p class="subtitle" style="margin-bottom:20px;">Paso 1 de 4 · Busca tu colegio</p>
+        <div class="input-group">
+          <input class="input" placeholder="🔍 Buscar tu institución...">
+        </div>
+        <div class="institution-item" style="border-color:var(--primary-soft);">
+          <div class="inst-icon">🏫</div>
+          <div style="flex:1;">
+            <div style="font-size:14px; font-weight:600;">Colegio ABC</div>
+            <div class="body-sm">San Isidro, Lima</div>
+          </div>
+          <div style="width:20px; height:20px; border-radius:50%; border:2px solid var(--primary-soft); display:flex; align-items:center; justify-content:center;"><div style="width:10px; height:10px; border-radius:50%; background:var(--primary-soft);"></div></div>
+        </div>
+        <div class="institution-item">
+          <div class="inst-icon">🏫</div>
+          <div style="flex:1;">
+            <div style="font-size:14px; font-weight:600;">I.E. Santa Úrsula</div>
+            <div class="body-sm">San Isidro, Lima</div>
+          </div>
+        </div>
+        <div class="institution-item">
+          <div class="inst-icon">🏫</div>
+          <div style="flex:1;">
+            <div style="font-size:14px; font-weight:600;">Colegio Nacional A. Merino</div>
+            <div class="body-sm">Miraflores, Lima</div>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="margin-top:16px;">CONTINUAR</button>
+        <p class="body-sm" style="text-align:center; margin-top:12px;">¿No encuentras tu colegio? <span style="color:var(--primary-soft); font-weight:600;">Solicitar registro</span></p>
+      </div>
+    </div>
+
+    <!-- REGISTRO PASO 2 QR -->
+    <div id="reg2" class="phone">
+      <div class="phone-label">5 · Registro Paso 2 — Escanear QR</div>
+      <div class="status-bar"><span>4:20 PM</span><span>📶 🔋</span></div>
+      <div class="topbar">
+        <span style="font-size:22px; cursor:pointer;">←</span>
+        <span class="topbar-title">Escanea tu institución</span>
+        <span class="topbar-icon" style="opacity:0;">.</span>
+      </div>
+      <div class="content" style="padding-top:20px;">
+        <div class="stepper">
+          <div class="step done"></div><div class="step active"></div><div class="step"></div><div class="step"></div>
+        </div>
+        <div style="background:var(--primary); border-radius:16px; padding:32px 16px; margin-bottom:16px; position:relative; overflow:hidden;">
+          <p style="color:#fff; text-align:center; font-size:14px; margin-bottom:20px;">Apunta el código QR de tu institución</p>
+          <div class="qr-viewfinder"></div>
+          <div style="background:#0b1d33; color:#fff; border-radius:12px; padding:10px; margin:20px auto 0; font-size:12px; text-align:center;">🎥 Escaneando... apunta al QR</div>
+        </div>
+        <button class="btn btn-outline btn-sm" style="width:100%; margin-bottom:12px;">🖼️ Usar foto de la galería</button>
+        <div style="background:var(--warning-bg); border-radius:8px; padding:10px 12px; font-size:12px; color:#E65100; line-height:1.4;">
+          ℹ️ El código QR <b>identifica la institución</b>, no valida tu identidad personal.
+        </div>
+      </div>
+    </div>
+
+    <!-- REGISTRO PASO 3 -->
+    <div id="reg3" class="phone">
+      <div class="phone-label">6 · Registro Paso 3 — Datos</div>
+      <div class="status-bar"><span>4:20 PM</span><span>📶 🔋</span></div>
+      <div class="topbar">
+        <span style="font-size:22px; cursor:pointer;">←</span>
+        <span class="topbar-title">Tus datos</span>
+        <span class="topbar-icon" style="opacity:0;">.</span>
+      </div>
+      <div class="content" style="padding-top:20px;">
+        <div class="stepper">
+          <div class="step done"></div><div class="step done"></div><div class="step active"></div><div class="step"></div>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:center; margin-bottom:20px;">
+          <div style="width:80px; height:80px; border-radius:50%; background:var(--border); display:flex; align-items:center; justify-content:center; font-size:32px; color:var(--text-muted); border:2px dashed var(--text-muted);">📷</div>
+          <p class="body-sm" style="margin-top:8px;">Agregar foto (opcional)</p>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Nombres</label>
+          <input class="input" placeholder="Juan Alberto">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Apellidos</label>
+          <input class="input" placeholder="Pérez Gómez">
+        </div>
+        <div style="display:flex; gap:10px;">
+          <div class="input-group" style="flex:1;">
+            <label class="input-label">Grado</label>
+            <select class="input select"><option>3° de Secundaria</option></select>
+          </div>
+          <div class="input-group" style="flex:1;">
+            <label class="input-label">Nacimiento</label>
+            <input class="input" placeholder="12/03/2010">
+          </div>
+        </div>
+        <div style="border:1px solid var(--border); border-radius:var(--radius-card); padding:14px; margin-bottom:16px; background:var(--surface);">
+          <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
+            <span class="body" style="font-weight:600;">🎒 Verificar uniforme <span class="chip chip-neutral" style="margin-left:6px;">Opcional</span></span>
+            <span style="color:var(--text-muted);">⌄</span>
+          </div>
+          <p class="body-sm" style="margin-top:8px;">Verificación asistida por <b>visión artificial</b>. No garantiza al 100% la identidad. El registro es válido sin esta opción.</p>
+          <button class="btn btn-outline btn-sm" style="margin-top:10px;">📷 TOMAR FOTO</button>
+        </div>
+        <button class="btn btn-primary">CONTINUAR</button>
+      </div>
+    </div>
+
+    <!-- REGISTRO PASO 4 -->
+    <div id="reg4" class="phone">
+      <div class="phone-label">7 · Registro Paso 4 — Apoderado</div>
+      <div class="status-bar"><span>4:20 PM</span><span>📶 🔋</span></div>
+      <div class="topbar">
+        <span style="font-size:22px; cursor:pointer;">←</span>
+        <span class="topbar-title">Apoderado</span>
+        <span class="topbar-icon" style="opacity:0;">.</span>
+      </div>
+      <div class="content" style="padding-top:20px;">
+        <div class="stepper">
+          <div class="step done"></div><div class="step done"></div><div class="step done"></div><div class="step active"></div>
+        </div>
+        <h2 class="greeting" style="font-size:22px;">Registra al apoderado</h2>
+        <p class="subtitle" style="margin-bottom:20px;">Paso 4 de 4 · Recibirá las alertas</p>
+        <div class="input-group">
+          <label class="input-label">Nombre completo</label>
+          <input class="input" placeholder="María Gómez">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Relación</label>
+          <select class="input select"><option>Madre</option><option>Padre</option><option>Tutor / Tutora</option></select>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Teléfono celular</label>
+          <input class="input" placeholder="+51 987 654 321">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Email</label>
+          <input class="input" placeholder="maria.gomez@gmail.com">
+        </div>
+        <div class="checkbox-group">
+          <div class="checkbox-box" style="background:var(--primary); border-color:var(--primary); display:flex; align-items:center; justify-content:center; color:#fff; font-size:12px;">✓</div>
+          <div class="checkbox-text">Autorizo el seguimiento de ubicación durante los recorridos de mi hijo/hija.</div>
+        </div>
+        <button class="btn btn-primary">CREAR CUENTA</button>
+      </div>
+    </div>
+
+    <!-- HOME ESTUDIANTE -->
+    <div id="home" class="phone">
+      <div class="phone-label">8 · Home Estudiante</div>
+      <div class="status-bar"><span>4:20 PM</span><span>📶 🔋</span></div>
+      <div class="topbar">
+        <span class="topbar-title">🛡️ VíaSegura</span>
+        <span class="topbar-icon" style="background:var(--primary-light);">👤</span>
+      </div>
+      <div class="content">
+        <h2 class="greeting">Hola, Juan</h2>
+        <p class="subtitle" style="margin-bottom:16px;">Colegio ABC · San Isidro</p>
+        <div class="card card-row" style="margin-bottom:16px;">
+          <div class="card-icon blue">🏫</div>
+          <div style="flex:1;">
+            <div class="body" style="font-weight:600;">Colegio ABC</div>
+            <div class="body-sm">Institución verificada ✓</div>
+          </div>
+          <span class="chip chip-green">Activa</span>
+        </div>
+        <div class="status-card">
+          <div class="status-circle green">✓</div>
+          <div class="status-text green">No estás en recorrido</div>
+          <p class="body-sm" style="margin-top:6px;">Estás a salvo en casa. Cuando salgas, activa tu recorrido.</p>
+        </div>
+        <button class="btn btn-success" style="margin-bottom:16px;">▶ INICIAR RECORRIDO</button>
+        <div class="quick-grid">
+          <a class="quick-item"><div style="font-size:22px;">🗺️</div><span>Mi ruta</span></a>
+          <a class="quick-item"><div style="font-size:22px;">🛡️</div><span>Puntos seguros</span></a>
+          <a class="quick-item"><div style="font-size:22px;">📢</div><span>Reportar incidente</span></a>
+        </div>
+        <button class="emergency-btn">🚨<br>EMERGENCIA</button>
+      </div>
+      <div class="bottom-nav">
+        <a class="nav-item active"><span class="nav-icon">🏠</span>Inicio</a>
+        <a class="nav-item"><span class="nav-icon">🗺️</span>Ruta</a>
+        <a class="nav-item"><span class="nav-icon">🛡️</span>Seguros</a>
+        <a class="nav-item"><span class="nav-icon">👤</span>Perfil</a>
+      </div>
+    </div>
+
+    <!-- RECORRIDO ACTIVO -->
+    <div id="recorrido" class="phone">
+      <div class="phone-label">9 · Recorrido Activo</div>
+      <div class="status-bar"><span>4:20 PM</span><span>📶 🔋</span></div>
+      <div style="background:var(--success); color:#fff; text-align:center; padding:12px; font-weight:700; font-size:14px; letter-spacing:1px;">● RECORRIDO ACTIVO</div>
+      <div class="content">
+        <div class="map-placeholder" style="height:170px;">
+          <div class="map-route"></div>
+          <span class="map-pin" style="position:absolute; top:20%; left:15%;">🏫</span>
+          <span class="map-pin" style="position:absolute; top:45%; left:55%;">📍</span>
+          <span class="map-pin" style="position:absolute; bottom:15%; right:15%;">🏠</span>
+        </div>
+        <div class="route-info">
+          <div class="route-info-item"><div class="route-info-value">18 min</div><div class="route-info-label">Transcurrido</div></div>
+          <div class="route-info-item"><div class="route-info-value" style="color:var(--success);">Normal</div><div class="route-info-label">Estado</div></div>
+        </div>
+        <div class="card" style="margin-bottom:16px;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+            <span class="body-sm">Colegio → Casa</span>
+            <span class="body-sm">Ruta habitual</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill green" style="width:60%;"></div></div>
+          <div style="display:flex; justify-content:space-between; margin-top:6px;">
+            <span class="body-sm">Origen</span>
+            <span class="body-sm">Destino</span>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="margin-bottom:16px;">■ FINALIZAR RECORRIDO</button>
+        <button class="emergency-btn">🚨<br>EMERGENCIA</button>
+      </div>
+      <div class="bottom-nav">
+        <a class="nav-item active"><span class="nav-icon">🏠</span>Inicio</a>
+        <a class="nav-item"><span class="nav-icon">🗺️</span>Ruta</a>
+        <a class="nav-item"><span class="nav-icon">🛡️</span>Seguros</a>
+        <a class="nav-item"><span class="nav-icon">👤</span>Perfil</a>
+      </div>
+    </div>
+
+    <!-- RECORRIDO INUSUAL -->
+    <div id="anomalia" class="phone" style="position:relative;">
+      <div class="phone-label">10 · Modal Recorrido Inusual</div>
+      <div class="status-bar"><span>4:35 PM</span><span>📶 🔋</span></div>
+      <div style="background:var(--warning); color:#fff; text-align:center; padding:12px; font-weight:700; font-size:14px; letter-spacing:1px;">● RECORRIDO ACTIVO</div>
+      <div class="content" style="opacity:.4;">
+        <div class="map-placeholder" style="height:150px;"></div>
+        <div class="route-info">
+          <div class="route-info-item"><div class="route-info-value" style="color:var(--warning);">45 min</div><div class="route-info-label">Transcurrido</div></div>
+          <div class="route-info-item"><div class="route-info-value" style="color:var(--warning);">Anómalo</div><div class="route-info-label">Estado</div></div>
+        </div>
+      </div>
+      <div class="modal-overlay">
+        <div class="modal-box">
+          <div class="status-circle amber" style="margin:0 auto 12px;">⚠️</div>
+          <h3 style="font-size:18px; font-weight:700; margin-bottom:8px;">Recorrido inusual</h3>
+          <p class="body-sm" style="margin-bottom:20px;">Tu recorrido está tomando más tiempo de lo habitual. ¿Todo está bien?</p>
+          <button class="btn btn-outline" style="margin-bottom:10px;">🟢 Sí, estoy bien</button>
+          <button class="btn btn-danger">🔴 Necesito ayuda</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- EMERGENCIA -->
+    <div id="emergencia" class="phone" style="position:relative;">
+      <div class="phone-label">11 · Emergencia — Confirmación</div>
+      <div class="status-bar"><span>4:35 PM</span><span>📶 🔋</span></div>
+      <div class="topbar">
+        <span class="topbar-title">🛡️ VíaSegura</span>
+        <span class="topbar-icon" style="background:var(--primary-light);">👤</span>
+      </div>
+      <div class="content" style="opacity:.4;">
+        <h2 class="greeting">Hola, Juan</h2>
+        <p class="subtitle" style="margin-bottom:16px;">Colegio ABC</p>
+        <div class="status-card"><div class="status-circle green">✓</div><div class="status-text green">No estás en recorrido</div></div>
+      </div>
+      <div class="modal-overlay">
+        <div class="modal-box">
+          <div class="status-circle red" style="margin:0 auto 12px;">🚨</div>
+          <h3 style="font-size:18px; font-weight:700; margin-bottom:8px;">¿Deseas enviar una alerta?</h3>
+          <p class="body-sm" style="margin-bottom:20px;">Se compartirá tu ubicación, hora e institución con tus contactos autorizados.</p>
+          <div style="display:flex; gap:10px;">
+            <button class="btn btn-outline" style="flex:1; background:transparent; border:2px solid var(--border); color:var(--text);">CANCELAR</button>
+            <button class="btn btn-danger" style="flex:1;">CONFIRMAR</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALERTA ENVIADA -->
+    <div id="enviada" class="phone">
+      <div class="phone-label">12 · Alerta Enviada</div>
+      <div class="status-bar"><span>4:35 PM</span><span>📶 🔋</span></div>
+      <div class="alert-success">
+        <div style="background:var(--primary); width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:30px; margin-bottom:16px;">🛡️</div>
+        <div class="check-circle">✓</div>
+        <h2 style="font-size:20px; font-weight:700; color:var(--success); margin-bottom:8px;">ALERTA ENVIADA</h2>
+        <p class="body-sm" style="margin-bottom:20px;">Tus contactos autorizados han sido notificados.</p>
+      </div>
+      <div class="content">
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-row" style="margin-bottom:12px;">
+            <div class="card-icon red">🚨</div>
+            <div>
+              <div class="body" style="font-weight:600;">Juan Pérez</div>
+              <div class="body-sm">Colegio ABC · 4:35 PM</div>
+            </div>
+          </div>
+          <div style="background:var(--danger-bg); border-radius:8px; padding:10px; font-size:12px; color:var(--danger); margin-bottom:12px;">📍 Última ubicación: Av. Aviación 2100, San Borja</div>
+          <div style="display:flex; gap:10px;">
+            <button class="btn btn-primary btn-sm" style="flex:1;">📞 LLAMAR</button>
+            <button class="btn btn-outline btn-sm" style="flex:1; background:transparent; border:2px solid var(--border); color:var(--text);">💬 MENSAJE</button>
+          </div>
+        </div>
+        <p class="body-sm" style="text-align:center;">El botón de emergencia se desactiva automáticamente al llegar a un lugar seguro confirmado.</p>
+      </div>
+    </div>
+
+    <!-- PUNTOS SEGUROS -->
+    <div id="puntos" class="phone">
+      <div class="phone-label">13 · Puntos Seguros</div>
+      <div class="status-bar"><span>4:20 PM</span><span>📶 🔋</span></div>
+      <div class="topbar">
+        <span style="font-size:22px; cursor:pointer;">←</span>
+        <span class="topbar-title">Puntos seguros</span>
+        <span class="topbar-icon" style="opacity:0;">.</span>
+      </div>
+      <div class="content" style="padding-top:16px;">
+        <div class="filter-chips">
+          <span class="chip chip-neutral" style="background:var(--primary); color:#fff;">Todos</span>
+          <span class="chip chip-neutral">Colegio</span>
+          <span class="chip chip-neutral">Comisaría</span>
+          <span class="chip chip-neutral">Centro médico</span>
+          <span class="chip chip-neutral">Tienda</span>
+        </div>
+        <div class="card" style="border:2px solid var(--success);">
+          <div class="card-row">
+            <div class="card-icon green">🏛️</div>
+            <div class="safe-point-info">
+              <div class="safe-point-name">Comisaría La Victoria</div>
+              <div class="safe-point-dist">📍 350 m · 5 min a pie</div>
+            </div>
+            <span class="chip chip-green">Más cercano</span>
+          </div>
+          <button class="btn btn-success btn-sm" style="margin-top:12px;">IR AL PUNTO SEGURO</button>
+        </div>
+        <div class="safe-point">
+          <div class="card-icon" style="background:var(--success-bg);">🩺</div>
+          <div class="safe-point-info"><div class="safe-point-name">Centro Médico San Juan</div><div class="safe-point-dist">📍 620 m · 8 min a pie</div></div>
+          <span class="chip chip-green">Abierto</span>
+        </div>
+        <div class="safe-point">
+          <div class="card-icon" style="background:#E3F2FD;">🏠</div>
+          <div class="safe-point-info"><div class="safe-point-name">Casa de la tía Rosa</div><div class="safe-point-dist">📍 800 m · 10 min a pie</div></div>
+        </div>
+        <div class="safe-point">
+          <div class="card-icon" style="background:#F3E5F5;">🏪</div>
+          <div class="safe-point-info"><div class="safe-point-name">Tienda autorizada "El Cóndor"</div><div class="safe-point-dist">📍 1.1 km · 14 min a pie</div></div>
+        </div>
+        <div class="safe-point">
+          <div class="card-icon" style="background:var(--warning-bg);">📌</div>
+          <div class="safe-point-info"><div class="safe-point-name">Punto de encuentro Plaza</div><div class="safe-point-dist">📍 1.4 km · 18 min a pie</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPORTAR INCIDENCIA -->
+    <div id="incidencia" class="phone">
+      <div class="phone-label">14 · Reportar Incidencia</div>
+      <div class="status-bar"><span>4:20 PM</span><span>📶 🔋</span></div>
+      <div class="topbar">
+        <span style="font-size:22px; cursor:pointer;">←</span>
+        <span class="topbar-title">Reportar incidencia</span>
+        <span class="topbar-icon" style="opacity:0;">.</span>
+      </div>
+      <div class="content" style="padding-top:16px;">
+        <div class="input-group">
+          <label class="input-label">Tipo de incidencia</label>
+          <select class="input select">
+            <option>Cruce peligroso</option>
+            <option>Vehículo a alta velocidad</option>
+            <option>Mala iluminación</option>
+            <option>Personas sospechosas</option>
+            <option>Otro</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Descripción (opcional)</label>
+          <textarea class="input" rows="3" style="resize:none;" placeholder="Describe brevemente lo ocurrido..."></textarea>
+        </div>
+        <div class="card" style="background:var(--success-bg); border:1px solid var(--success);">
+          <div class="card-row">
+            <div class="card-icon green">📍</div>
+            <div>
+              <div class="body" style="font-weight:600;">Ubicación detectada</div>
+              <div class="body-sm">Av. Aviación 2100, San Borja</div>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-outline btn-sm" style="width:100%; margin-bottom:16px;">📷 Agregar foto</button>
+        <button class="btn btn-primary">ENVIAR REPORTE</button>
+      </div>
+    </div>
+
+    <!-- HOME APODERADO -->
+    <div id="padre" class="phone">
+      <div class="phone-label">15 · Home Apoderado</div>
+      <div class="status-bar"><span>4:35 PM</span><span>📶 🔋</span></div>
+      <div class="topbar">
+        <span class="topbar-title">🛡️ VíaSegura</span>
+        <span class="topbar-icon" style="background:var(--primary-light);">👩</span>
+      </div>
+      <div class="content">
+        <h2 class="greeting" style="font-size:22px;">Hola, María</h2>
+        <p class="subtitle" style="margin-bottom:16px;">Acompañando a Juan</p>
+        <div class="card card-row" style="border-left:4px solid var(--success);">
+          <div style="width:44px; height:44px; border-radius:50%; background:var(--primary-light); color:#fff; display:flex; align-items:center; justify-content:center; font-size:18px;">👦</div>
+          <div style="flex:1;">
+            <div class="body" style="font-weight:600;">Juan</div>
+            <div class="body-sm">Colegio ABC → Casa</div>
+          </div>
+          <span class="chip chip-green">🟢 En recorrido</span>
+        </div>
+        <div class="map-placeholder" style="height:170px; margin-top:16px;">
+          <div class="map-route"></div>
+          <span class="map-pin" style="position:absolute; top:20%; left:15%;">🏫</span>
+          <span class="map-pin" style="position:absolute; top:45%; left:55%;">📍</span>
+          <span class="map-pin" style="position:absolute; bottom:15%; right:15%;">🏠</span>
+        </div>
+        <div class="route-info">
+          <div class="route-info-item"><div class="route-info-value">18 min</div><div class="route-info-label">Transcurrido</div></div>
+          <div class="route-info-item"><div class="route-info-value" style="color:var(--success);">Normal</div><div class="route-info-label">Estado</div></div>
+        </div>
+        <p class="body-sm" style="margin-bottom:12px; text-align:center;">Última actualización hace 10 segundos</p>
+        <div style="display:flex; gap:10px; margin-bottom:24px;">
+          <button class="btn btn-primary" style="flex:1;">VER UBICACIÓN</button>
+          <button class="btn btn-outline" style="flex:1; background:transparent; border:2px solid var(--border); color:var(--text);">📞 CONTACTAR</button>
+        </div>
+        <div class="section-title">Notificaciones recientes</div>
+        <div class="notif-card">
+          <div class="notif-dot" style="background:var(--success);"></div>
+          <div><div class="body" style="font-size:13px; font-weight:600;">Recorrido iniciado</div><div class="body-sm">hace 18 min · Sale del colegio</div></div>
+        </div>
+        <div class="notif-card">
+          <div class="notif-dot" style="background:var(--primary-light);"></div>
+          <div><div class="body" style="font-size:13px; font-weight:600;">Llegada al colegio</div><div class="body-sm">hace 7 h · 8:15 AM</div></div>
+        </div>
+      </div>
+      <div class="bottom-nav">
+        <a class="nav-item active"><span class="nav-icon">🏠</span>Inicio</a>
+        <a class="nav-item"><span class="nav-icon">🗓️</span>Historial</a>
+        <a class="nav-item"><span class="nav-icon">👤</span>Perfil</a>
+      </div>
+    </div>
+
+    <!-- ALERTA APODERADO -->
+    <div id="padre-alerta" class="phone">
+      <div class="phone-label">16 · Alerta de Emergencia (Apoderado)</div>
+      <div class="status-bar"><span>4:36 PM</span><span>📶 🔋</span></div>
+      <div style="background:var(--danger); color:#fff; padding:12px; font-size:13px; font-weight:700; text-align:center;">🚨 ALERTA DE SEGURIDAD</div>
+      <div class="content" style="padding-top:16px;">
+        <div class="card" style="border:2px solid var(--danger); margin-bottom:16px;">
+          <div class="card-row">
+            <div class="card-icon red">🚨</div>
+            <div>
+              <div class="body" style="font-weight:700;">Juan ha enviado una alerta</div>
+              <div class="body-sm">Colegio ABC · 4:36 PM</div>
+            </div>
+          </div>
+        </div>
+        <div class="map-placeholder" style="height:140px;">
+          <span class="map-pin" style="position:absolute; top:45%; left:55%;">📍</span>
+        </div>
+        <p class="body-sm" style="text-align:center; margin:8px 0 16px; color:var(--danger); font-weight:600;">Última ubicación: Av. Aviación 2100, San Borja</p>
+        <div style="display:flex; gap:10px; margin-bottom:20px;">
+          <button class="btn btn-primary" style="flex:1;">📞 LLAMAR A JUAN</button>
+          <button class="btn btn-outline" style="flex:1; background:transparent; border:2px solid var(--border); color:var(--text);">LLAMAR AL COLEGIO</button>
+        </div>
+        <div class="section-title">Timeline del evento</div>
+        <div style="border-left:2px solid var(--border); padding-left:16px; margin-left:6px;">
+          <p class="body-sm" style="margin-bottom:12px;"><b style="color:var(--danger);">4:36 PM</b> · 🚨 Emergencia enviada</p>
+          <p class="body-sm" style="margin-bottom:12px;"><b>4:35 PM</b> · ⚠️ Recorrido anómalo (45 min)</p>
+          <p class="body-sm" style="margin-bottom:12px;"><b>4:18 PM</b> · 🟢 Recorrido iniciado</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

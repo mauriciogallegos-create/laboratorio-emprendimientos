@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VíaSegura — Panel Web</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/prototipo.css">
+<style>
+  .screen-nav { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 40px; }
+  .screen-nav a { color: #ccc; text-decoration: none; font-size: 12px; background: rgba(255,255,255,.06); padding: 6px 12px; border-radius: 99px; border: 1px solid rgba(255,255,255,.1); }
+  .screen-nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="screen-group">
+  <h2>🏫 VíaSegura — Panel Web Institucional</h2>
+  <p>Dashboard, Estudiantes e Incidencias · Frame 1440×900</p>
+  <div class="screen-nav">
+    <a href="#dashboard">Dashboard</a>
+    <a href="#estudiantes">Estudiantes</a>
+    <a href="#incidencias">Incidencias / Zonas de riesgo</a>
+    <a href="#detalle">Detalle incidencia</a>
+  </div>
+
+  <div class="screens" style="max-width:1440px; margin:0 auto;">
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="web-frame">
+      <aside class="web-sidebar">
+        <div class="web-sidebar-logo">
+          <h2>🛡️ VíaSegura</h2>
+          <small>Panel Institucional</small>
+        </div>
+        <div class="web-nav-item active">📊 Dashboard</div>
+        <div class="web-nav-item">👥 Estudiantes</div>
+        <div class="web-nav-item">⚠️ Incidencias</div>
+        <div class="web-nav-item">📍 Zonas de riesgo</div>
+        <div class="web-nav-item">📌 Puntos seguros</div>
+        <div class="web-nav-item">⚙️ Configuración</div>
+        <div style="flex:1;"></div>
+        <div class="web-nav-item" style="border-top:1px solid rgba(255,255,255,.1); margin-top:16px;">🚪 Cerrar sesión</div>
+      </aside>
+      <main class="web-main">
+        <div class="web-topbar">
+          <div><h2 style="font-size:22px; font-weight:700;">Dashboard</h2><p class="body-sm">Colegio ABC · Resumen del día</p></div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="background:var(--bg); border-radius:8px; padding:8px 14px; font-size:13px; color:var(--text-muted);">🔍 Buscar...</div>
+            <div style="width:38px; height:38px; border-radius:50%; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center;">🏫</div>
+          </div>
+        </div>
+        <div class="web-content">
+          <div class="kpi-grid">
+            <div class="kpi-card"><div class="kpi-number">350</div><div class="kpi-label">👥 Estudiantes registrados</div></div>
+            <div class="kpi-card green"><div class="kpi-number">287</div><div class="kpi-label">🟢 Recorridos normales</div></div>
+            <div class="kpi-card amber"><div class="kpi-number">12</div><div class="kpi-label">🟡 Recorridos con anomalías</div></div>
+            <div class="kpi-card red"><div class="kpi-number">2</div><div class="kpi-label">🔴 Emergencias</div></div>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 2fr 1fr; gap:20px;">
+            <div>
+              <h3 style="font-size:16px; font-weight:700; margin-bottom:12px;">📍 Mapa de incidencias</h3>
+              <div class="web-map">
+                <span class="map-pin" style="position:absolute; top:30%; left:35%;">🔴</span>
+                <span class="map-pin" style="position:absolute; top:55%; left:60%;">🟡</span>
+                <span class="map-pin" style="position:absolute; top:40%; left:75%;">🟡</span>
+                <span class="map-pin" style="position:absolute; top:65%; left:25%;">🟡</span>
+                <span class="map-pin" style="position:absolute; top:25%; left:55%;">🟢</span>
+              </div>
+            </div>
+            <div>
+              <h3 style="font-size:16px; font-weight:700; margin-bottom:12px;">🌡️ Zonas de riesgo</h3>
+              <div style="background:var(--surface); border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow);">
+                <div class="risk-row">
+                  <div class="risk-label">Zona A</div>
+                  <div class="risk-bar"><div class="risk-fill" style="width:100%; background:var(--danger);"></div></div>
+                  <div class="risk-count">12 reportes</div>
+                </div>
+                <div class="risk-row">
+                  <div class="risk-label">Zona B</div>
+                  <div class="risk-bar"><div class="risk-fill" style="width:60%;"></div></div>
+                  <div class="risk-count">7 reportes</div>
+                </div>
+                <div class="risk-row">
+                  <div class="risk-label">Zona C</div>
+                  <div class="risk-bar"><div class="risk-fill" style="width:35%;"></div></div>
+                  <div class="risk-count">4 reportes</div>
+                </div>
+                <div class="risk-row">
+                  <div class="risk-label">Zona D</div>
+                  <div class="risk-bar"><div class="risk-fill" style="width:15%; background:var(--success);"></div></div>
+                  <div class="risk-count">2 reportes</div>
+                </div>
+              </div>
+              <div style="margin-top:12px; background:var(--surface); border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow);">
+                <div style="font-size:13px; font-weight:600; margin-bottom:8px;">⏰ Zona horaria</div>
+                <div style="font-size:13px; color:var(--text-muted);">Todos los timestamps se muestran en hora de Perú <b style="color:var(--text);">(GMT-5)</b>.</div>
+              </div>
+            </div>
+          </div>
+
+          <h3 style="font-size:16px; font-weight:700; margin:24px 0 12px;">⚠️ Incidencias recientes</h3>
+          <div style="background:var(--surface); border-radius:var(--radius-card); box-shadow:var(--shadow); overflow:hidden;">
+            <table class="web-table">
+              <tr><th>Tipo</th><th>Zona</th><th>Reportado por</th><th>Hora</th><th>Estado</th></tr>
+              <tr><td><span class="chip chip-amber">⚠️ Cruce peligroso</span></td><td>Zona A</td><td>Estudiante</td><td>15:20</td><td><span class="chip chip-amber">En revisión</span></td></tr>
+              <tr><td><span class="chip chip-amber">⚠️ Vehículo a alta velocidad</span></td><td>Zona B</td><td>Apoderado</td><td>15:35</td><td><span class="chip chip-amber">En revisión</span></td></tr>
+              <tr><td><span class="chip chip-red">🚨 Emergencia</span></td><td>Zona A</td><td>Estudiante</td><td>15:42</td><td><span class="chip chip-red">Atendida</span></td></tr>
+              <tr><td><span class="chip chip-neutral">💡 Mala iluminación</span></td><td>Zona C</td><td>Estudiante</td><td>14:10</td><td><span class="chip chip-neutral">Programada</span></td></tr>
+            </table>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- ESTUDIANTES -->
+    <div id="estudiantes" class="web-frame">
+      <aside class="web-sidebar">
+        <div class="web-sidebar-logo">
+          <h2>🛡️ VíaSegura</h2>
+          <small>Panel Institucional</small>
+        </div>
+        <div class="web-nav-item">📊 Dashboard</div>
+        <div class="web-nav-item active">👥 Estudiantes</div>
+        <div class="web-nav-item">⚠️ Incidencias</div>
+        <div class="web-nav-item">📍 Zonas de riesgo</div>
+        <div class="web-nav-item">📌 Puntos seguros</div>
+        <div class="web-nav-item">⚙️ Configuración</div>
+        <div style="flex:1;"></div>
+        <div class="web-nav-item" style="border-top:1px solid rgba(255,255,255,.1); margin-top:16px;">🚪 Cerrar sesión</div>
+      </aside>
+      <main class="web-main">
+        <div class="web-topbar">
+          <div><h2 style="font-size:22px; font-weight:700;">Estudiantes</h2><p class="body-sm">Colegio ABC · 350 registrados</p></div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="background:var(--bg); border-radius:8px; padding:8px 14px; font-size:13px; color:var(--text-muted);">🔍 Buscar estudiante...</div>
+            <button class="btn btn-primary btn-sm" style="width:auto; background:var(--success);">+ NUEVO ESTUDIANTE</button>
+          </div>
+        </div>
+        <div class="web-content">
+          <div style="display:flex; gap:8px; margin-bottom:16px;">
+            <span class="chip chip-neutral" style="background:var(--primary); color:#fff;">Todos (350)</span>
+            <span class="chip chip-neutral">1° (58)</span>
+            <span class="chip chip-neutral">2° (61)</span>
+            <span class="chip chip-neutral">3° (54)</span>
+            <span class="chip chip-neutral">4° (87)</span>
+            <span class="chip chip-neutral">5° (90)</span>
+          </div>
+          <table class="web-table" style="width:100%;">
+            <tr><th>Matrícula</th><th>Estudiante</th><th>Grado</th><th>Estado</th><th>Apoderado</th><th>Acciones</th></tr>
+            <tr>
+              <td class="body-sm">2026-001</td>
+              <td><div style="display:flex; align-items:center; gap:10px;"><div style="width:30px; height:30px; border-radius:50%; background:var(--primary-light); color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px;">JP</div><b>Juan Pérez</b></div></td>
+              <td>3° Sec</td>
+              <td><span class="chip chip-green">Activa</span></td>
+              <td>María Gómez</td>
+              <td><span style="color:var(--primary-soft); font-weight:600; cursor:pointer; font-size:13px;">Ver · Desactivar</span></td>
+            </tr>
+            <tr>
+              <td class="body-sm">2026-002</td>
+              <td><div style="display:flex; align-items:center; gap:10px;"><div style="width:30px; height:30px; border-radius:50%; background:#A1887F; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px;">LC</div><b>Lucía Cáceres</b></div></td>
+              <td>5° Sec</td>
+              <td><span class="chip chip-green">Activa</span></td>
+              <td>Carlos Cáceres</td>
+              <td><span style="color:var(--primary-soft); font-weight:600; cursor:pointer; font-size:13px;">Ver · Desactivar</span></td>
+            </tr>
+            <tr>
+              <td class="body-sm">2026-003</td>
+              <td><div style="display:flex; align-items:center; gap:10px;"><div style="width:30px; height:30px; border-radius:50%; background:#81C784; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px;">DR</div><b>Diego Rojas</b></div></td>
+              <td>2° Sec</td>
+              <td><span class="chip chip-neutral">Pendiente</span></td>
+              <td>—</td>
+              <td><span style="color:var(--primary-soft); font-weight:600; cursor:pointer; font-size:13px;">Asociar apoderado</span></td>
+            </tr>
+            <tr>
+              <td class="body-sm">2026-004</td>
+              <td><div style="display:flex; align-items:center; gap:10px;"><div style="width:30px; height:30px; border-radius:50%; background:#E57373; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px;">AM</div><b>Ana Mendoza</b></div></td>
+              <td>4° Sec</td>
+              <td><span class="chip chip-red">Desactivada</span></td>
+              <td>Rosa Mendoza</td>
+              <td><span style="color:var(--primary-soft); font-weight:600; cursor:pointer; font-size:13px;">Reactivar</span></td>
+            </tr>
+            <tr>
+              <td class="body-sm">2026-005</td>
+              <td><div style="display:flex; align-items:center; gap:10px;"><div style="width:30px; height:30px; border-radius:50%; background:#4FC3F7; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px;">PS</div><b>Pedro Sánchez</b></div></td>
+              <td>1° Sec</td>
+              <td><span class="chip chip-green">Activa</span></td>
+              <td>Lucía Sánchez</td>
+              <td><span style="color:var(--primary-soft); font-weight:600; cursor:pointer; font-size:13px;">Ver · Desactivar</span></td>
+            </tr>
+          </table>
+        </div>
+      </main>
+    </div>
+
+    <!-- INCIDENCIAS / ZONAS -->
+    <div id="incidencias" class="web-frame">
+      <aside class="web-sidebar">
+        <div class="web-sidebar-logo">
+          <h2>🛡️ VíaSegura</h2>
+          <small>Panel Institucional</small>
+        </div>
+        <div class="web-nav-item">📊 Dashboard</div>
+        <div class="web-nav-item">👥 Estudiantes</div>
+        <div class="web-nav-item active">⚠️ Incidencias</div>
+        <div class="web-nav-item">📍 Zonas de riesgo</div>
+        <div class="web-nav-item">📌 Puntos seguros</div>
+        <div class="web-nav-item">⚙️ Configuración</div>
+        <div style="flex:1;"></div>
+        <div class="web-nav-item" style="border-top:1px solid rgba(255,255,255,.1); margin-top:16px;">🚪 Cerrar sesión</div>
+      </aside>
+      <main class="web-main">
+        <div class="web-topbar">
+          <div><h2 style="font-size:22px; font-weight:700;">Incidencias</h2><p class="body-sm">Mapa de calor y lista de reportes</p></div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="background:var(--bg); border-radius:8px; padding:8px 14px; font-size:13px; color:var(--text-muted);">📅 Últimos 7 días</div>
+            <select class="input select" style="width:auto; padding:8px;"><option>Gravedad: Todas</option></select>
+          </div>
+        </div>
+        <div class="web-content">
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+            <div class="web-map" style="height:220px;">
+              <span class="map-pin" style="position:absolute; top:30%; left:35%;">🔴</span>
+              <span class="map-pin" style="position:absolute; top:55%; left:60%;">🟡</span>
+              <span class="map-pin" style="position:absolute; top:40%; left:75%;">🟡</span>
+              <span class="map-pin" style="position:absolute; top:65%; left:25%;">🟡</span>
+            </div>
+            <div>
+              <h3 style="font-size:15px; font-weight:700; margin-bottom:12px;">🌡️ Zonas de riesgo</h3>
+              <div style="background:var(--surface); border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow);">
+                <div class="risk-row"><div class="risk-label">Zona A</div><div class="risk-bar"><div class="risk-fill" style="width:100%; background:var(--danger);"></div></div><div class="risk-count">12 reportes</div></div>
+                <div class="risk-row"><div class="risk-label">Zona B</div><div class="risk-bar"><div class="risk-fill" style="width:60%;"></div></div><div class="risk-count">7 reportes</div></div>
+                <div class="risk-row"><div class="risk-label">Zona C</div><div class="risk-bar"><div class="risk-fill" style="width:35%;"></div></div><div class="risk-count">4 reportes</div></div>
+              </div>
+            </div>
+          </div>
+
+          <h3 style="font-size:16px; font-weight:700; margin:24px 0 12px;">⚠️ Lista de reportes</h3>
+          <div style="background:var(--surface); border-radius:var(--radius-card); box-shadow:var(--shadow); overflow:hidden;">
+            <table class="web-table" style="width:100%;">
+              <tr><th>Severidad</th><th>Tipo</th><th>Ubicación</th><th>Reportado por</th><th>Fecha · Hora (Lima)</th><th>Estado</th></tr>
+              <tr><td><span class="chip chip-red">Crítica</span></td><td>Vehículo a alta velocidad</td><td>Av. Aviación cdra. 21</td><td>Ana Mendoza</td><td>12 sep · 15:42</td><td><span class="chip chip-red">Atendida</span></td></tr>
+              <tr><td><span class="chip chip-amber">Media</span></td><td>Cruce peligroso</td><td>Cruce Jr. Talara / Av. México</td><td>Juan Pérez</td><td>12 sep · 15:20</td><td><span class="chip chip-amber">En revisión</span></td></tr>
+              <tr><td><span class="chip chip-amber">Media</span></td><td>Vehículo a alta velocidad</td><td>Av. Canadá cdra. 18</td><td>Lucía Cáceres</td><td>12 sep · 15:35</td><td><span class="chip chip-amber">En revisión</span></td></tr>
+              <tr><td><span class="chip chip-neutral">Baja</span></td><td>Mala iluminación</td><td>Parque Grau, Zona C</td><td>Anónimo</td><td>12 sep · 14:10</td><td><span class="chip chip-neutral">Programada</span></td></tr>
+              <tr><td><span class="chip chip-neutral">Baja</span></td><td>Personas sospechosas</td><td>Óvalo Higuereta</td><td>Apoderado</td><td>12 sep · 13:25</td><td><span class="chip chip-neutral">Descartada</span></td></tr>
+            </table>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- DETALLE INCIDENCIA -->
+    <div id="detalle" class="web-frame" style="max-width:900px; margin:0 auto;">
+      <aside class="web-sidebar" style="width:0; display:none;"></aside>
+      <main class="web-main">
+        <div class="web-topbar">
+          <div><h2 style="font-size:20px; font-weight:700;">← Detalle de incidencia</h2><p class="body-sm">Reporte #INC-2026-0142</p></div>
+          <div style="display:flex; gap:10px;">
+            <button class="btn btn-primary btn-sm" style="width:auto;">✅ Marcar atendida</button>
+            <button class="btn btn-outline btn-sm" style="width:auto; background:transparent; border:2px solid var(--border); color:var(--text);">▦ Exportar</button>
+          </div>
+        </div>
+        <div class="web-content" style="max-width:760px; margin:0 auto;">
+          <div class="kpi-grid" style="grid-template-columns: repeat(2,1fr);">
+            <div class="kpi-card" style="text-align:left;"><div class="body-sm">Reportado por</div><div style="font-weight:600; margin-top:4px;">Juan Pérez</div><div class="body-sm">3° Sec · Estudiante</div></div>
+            <div class="kpi-card" style="text-align:left;"><div class="body-sm">Fecha y hora</div><div style="font-weight:600; margin-top:4px;">12 sep · 3:20 PM</div><div class="body-sm">GMT-5 · Lima, Perú</div></div>
+          </div>
+          <div style="background:var(--surface); border-radius:var(--radius-card); padding:20px; box-shadow:var(--shadow); margin-bottom:20px;">
+            <div class="body" style="font-weight:600; margin-bottom:6px;">⚠️ Cruce peligroso — Zona A</div>
+            <p class="body-sm" style="line-height:1.6;">Semáforo fuera de servicio en la intersección. Vehículos no respetan la zona de cruce peatonal. Varios estudiantes reportaron la misma situación esta semana.</p>
+          </div>
+          <div class="web-map" style="height:220px;">
+            <span class="map-pin" style="position:absolute; top:45%; left:55%;">🔴</span>
+          </div>
+          <p class="body-sm" style="margin:10px 0 0; text-align:center;">📍 Av. Aviación con Jr. Talara, San Borja</p>
+        </div>
+      </main>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
