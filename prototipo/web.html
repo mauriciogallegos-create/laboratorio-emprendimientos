@@ -3,28 +3,70 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VíaSegura — Panel Web</title>
+<title>VíaSegura — Panel Web Institucional</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="css/prototipo.css">
+<style>
+/* Estilos exclusivos del panel web institucional */
+.web-frame { box-shadow: 0 12px 40px rgba(16,24,40,.12); }
+.web-sidebar { background: linear-gradient(180deg,#14304d 0%,#0f2740 100%); }
+.web-nav-item { position: relative; }
+.web-nav-item .nav-live-dot { width:7px;height:7px;border-radius:50%;background:#ef4444;margin-left:auto;box-shadow:0 0 0 0 rgba(239,68,68,.6);animation:livepulse 1.8s infinite; }
+@keyframes livepulse { 0%{box-shadow:0 0 0 0 rgba(239,68,68,.6)} 70%{box-shadow:0 0 0 8px rgba(239,68,68,0)} 100%{box-shadow:0 0 0 0 rgba(239,68,68,0)} }
+.cam-grid { display:grid; grid-template-columns: repeat(3,1fr); gap:14px; }
+.cam-card { background: var(--surface); border-radius: var(--radius-card); box-shadow: var(--shadow); overflow:hidden; border:1px solid var(--border); }
+.cam-head { display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px solid var(--border); }
+.cam-name { font-size:13px; font-weight:600; }
+.cam-badge { font-size:10px; font-weight:700; letter-spacing:.4px; padding:3px 7px; border-radius:999px; text-transform:uppercase; }
+.cam-badge.live { background:#fee2e2; color:#b91c1c; }
+.cam-badge.off { background:#eef2f7; color:#64748b; }
+.cam-badge.hls { background:#e0e7ff; color:#3730a3; }
+.cam-video { position:relative; background:#0b1220; aspect-ratio:16/9; display:flex; align-items:center; justify-content:center; }
+.cam-video video, .cam-video iframe, .cam-video img { width:100%; height:100%; object-fit:cover; border:0; display:block; }
+.cam-placeholder { color:#64748b; font-size:12px; text-align:center; padding:16px; }
+.cam-foot { display:flex; align-items:center; justify-content:space-between; padding:8px 12px; font-size:12px; color:var(--text-muted); }
+.cam-foot b { color:var(--text); }
+.cam-actions { display:flex; gap:6px; padding:0 12px 12px; }
+.web-map { z-index:1; }
+.leaflet-container { font-family: inherit; border-radius: var(--radius-card); }
+.map-legend { display:flex; gap:14px; align-items:center; flex-wrap:wrap; font-size:12px; color:var(--text-muted); margin:-10px 0 18px; }
+.map-legend .lg { display:flex; align-items:center; gap:6px; }
+.map-legend .dot { width:12px; height:12px; border-radius:50%; }
+.tbl-avatars { display:flex; flex-wrap:wrap; gap:4px; }
+.teach-row { display:flex; align-items:center; gap:10px; }
+.teach-av { width:32px; height:32px; border-radius:50%; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; }
+.stat-mini { display:flex; gap:8px; }
+.stat-mini .sm { background:#F5F7FA; border-radius:8px; padding:6px 10px; font-size:12px; }
+.live-ticker { display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; }
+.live-pill { flex:0 0 auto; background:var(--surface); border:1px solid var(--border); border-radius:999px; padding:7px 12px; font-size:12px; display:flex; align-items:center; gap:7px; box-shadow:var(--shadow); }
+.live-pill .pip { width:8px;height:8px;border-radius:50%; }
+.pip.red{background:#ef4444;} .pip.amber{background:#f59e0b;} .pip.green{background:#22c55e;}
+.heat-controls { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
+.heat-controls .chip { cursor:pointer; }
+@media (max-width:1100px){ .cam-grid { grid-template-columns: repeat(2,1fr); } }
+@media (max-width:680px){ .cam-grid { grid-template-columns: 1fr; } }
+</style>
 </head>
 <body>
 
 <div class="screen-group">
   <h2>🏫 VíaSegura — Panel Web Institucional</h2>
-  <p>Dashboard, Estudiantes e Incidencias · Frame 1440×900</p>
+  <p>Dashboard, Directo, Estudiantes, Profesores e Incidencias · Mapa real</p>
   <div class="screen-nav">
     <a href="#dashboard">Dashboard</a>
+    <a href="#directo">Directo / Cámaras</a>
     <a href="#estudiantes">Estudiantes</a>
+    <a href="#profesores">Profesores</a>
     <a href="#incidencias">Incidencias / Zonas de riesgo</a>
     <a href="#detalle">Detalle incidencia</a>
   </div>
 
   <div class="screens" style="max-width:1440px; margin:0 auto;">
 
-    <!-- DASHBOARD -->
+    <!-- ================= DASHBOARD ================= -->
     <div id="dashboard" class="web-frame">
       <aside class="web-sidebar">
         <div class="web-sidebar-logo">
@@ -35,7 +77,9 @@
           <button class="web-sidebar-close" type="button" aria-label="Cerrar men&uacute;">&times;</button>
         </div>
         <div class="web-nav-item active">📊 Dashboard</div>
+        <div class="web-nav-item">🎥 Directo <span class="nav-live-dot"></span></div>
         <div class="web-nav-item">👥 Estudiantes</div>
+        <div class="web-nav-item">👨‍🏫 Profesores</div>
         <div class="web-nav-item">⚠️ Incidencias</div>
         <div class="web-nav-item">📍 Zonas de riesgo</div>
         <div class="web-nav-item">📌 Puntos seguros</div>
@@ -53,51 +97,47 @@
           </div>
         </div>
         <div class="web-content">
+          <div class="live-ticker" style="margin-bottom:18px;">
+            <span class="live-pill"><span class="pip red"></span><b>2</b> emergencias activas</span>
+            <span class="live-pill"><span class="pip amber"></span><b>12</b> recorridos con anomalías</span>
+            <span class="live-pill"><span class="pip green"></span><b>287</b> recorridos normales</span>
+            <span class="live-pill">🎥 <b id="dash-cams">3</b> cámaras en línea</span>
+          </div>
+
           <div class="kpi-grid">
-            <div class="kpi-card"><div class="kpi-number">350</div><div class="kpi-label">👥 Estudiantes registrados</div></div>
-            <div class="kpi-card green"><div class="kpi-number">287</div><div class="kpi-label">🟢 Recorridos normales</div></div>
-            <div class="kpi-card amber"><div class="kpi-number">12</div><div class="kpi-label">🟡 Recorridos con anomalías</div></div>
-            <div class="kpi-card red"><div class="kpi-number">2</div><div class="kpi-label">🔴 Emergencias</div></div>
+            <div class="kpi-card"><div class="kpi-number" data-count-to="350">350</div><div class="kpi-label">👥 Estudiantes registrados</div></div>
+            <div class="kpi-card green"><div class="kpi-number" data-count-to="287">287</div><div class="kpi-label">🟢 Recorridos normales</div></div>
+            <div class="kpi-card amber"><div class="kpi-number" data-count-to="12">12</div><div class="kpi-label">🟡 Recorridos con anomalías</div></div>
+            <div class="kpi-card red"><div class="kpi-number" data-count-to="2">2</div><div class="kpi-label">🔴 Emergencias</div></div>
           </div>
 
           <div class="panel-grid map-side">
             <div>
-              <h3 style="font-size:16px; font-weight:700; margin-bottom:12px;">📍 Mapa de incidencias</h3>
-              <div class="web-map">
-                <div class="heatmap-point heat-high" style="top:30%; left:35%;"></div>
-                <div class="heatmap-point heat-medium" style="top:55%; left:60%;"></div>
-                <div class="heatmap-point heat-medium" style="top:40%; left:75%;"></div>
-                <div class="heatmap-point heat-medium" style="top:65%; left:25%;"></div>
-                <div class="heatmap-point heat-low" style="top:25%; left:55%;"></div>
+              <h3 style="font-size:16px; font-weight:700; margin-bottom:6px;">📍 Mapa de calor de incidencias</h3>
+              <p class="body-sm" style="margin:0 0 10px;">Densidad real de reportes sobre el mapa de San Borja, Lima.</p>
+              <div class="web-map" id="map-dash" data-map="heat"></div>
+              <div class="map-legend">
+                <span class="lg"><span class="dot" style="background:#22c55e"></span> Baja</span>
+                <span class="lg"><span class="dot" style="background:#f59e0b"></span> Media</span>
+                <span class="lg"><span class="dot" style="background:#ef4444"></span> Alta</span>
+                <span class="lg" style="margin-left:auto;">Basado en <b id="dash-total-reportes">25</b> reportes</span>
               </div>
             </div>
             <div>
               <h3 style="font-size:16px; font-weight:700; margin-bottom:12px;">🌡️ Zonas de riesgo</h3>
-              <div style="background:var(--surface); border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow);">
-                <div class="risk-row">
-                  <div class="risk-label">Zona A</div>
-                  <div class="risk-bar"><div class="risk-fill" style="width:100%; background:var(--danger);"></div></div>
-                  <div class="risk-count">12 reportes</div>
-                </div>
-                <div class="risk-row">
-                  <div class="risk-label">Zona B</div>
-                  <div class="risk-bar"><div class="risk-fill" style="width:60%;"></div></div>
-                  <div class="risk-count">7 reportes</div>
-                </div>
-                <div class="risk-row">
-                  <div class="risk-label">Zona C</div>
-                  <div class="risk-bar"><div class="risk-fill" style="width:35%;"></div></div>
-                  <div class="risk-count">4 reportes</div>
-                </div>
-                <div class="risk-row">
-                  <div class="risk-label">Zona D</div>
-                  <div class="risk-bar"><div class="risk-fill" style="width:15%; background:var(--success);"></div></div>
-                  <div class="risk-count">2 reportes</div>
-                </div>
+              <div style="background:var(--surface); border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow);" id="dash-risk">
+                <div class="risk-row"><div class="risk-label">Zona A</div><div class="risk-bar"><div class="risk-fill" style="width:100%; background:var(--danger);"></div></div><div class="risk-count">12 reportes</div></div>
+                <div class="risk-row"><div class="risk-label">Zona B</div><div class="risk-bar"><div class="risk-fill" style="width:58%;"></div></div><div class="risk-count">7 reportes</div></div>
+                <div class="risk-row"><div class="risk-label">Zona C</div><div class="risk-bar"><div class="risk-fill" style="width:33%;"></div></div><div class="risk-count">4 reportes</div></div>
+                <div class="risk-row"><div class="risk-label">Zona D</div><div class="risk-bar"><div class="risk-fill" style="width:16%; background:var(--success);"></div></div><div class="risk-count">2 reportes</div></div>
               </div>
               <div style="margin-top:12px; background:var(--surface); border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow);">
                 <div style="font-size:13px; font-weight:600; margin-bottom:8px;">⏰ Zona horaria</div>
                 <div style="font-size:13px; color:var(--text-muted);">Todos los timestamps se muestran en hora de Perú <b style="color:var(--text);">(GMT-5)</b>.</div>
+              </div>
+              <div style="margin-top:12px; background:var(--surface); border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow);">
+                <div style="font-size:13px; font-weight:600; margin-bottom:8px;">📌 Puntos seguros cercanos</div>
+                <div id="dash-pois" class="body-sm" style="color:var(--text-muted);">Cargando…</div>
               </div>
             </div>
           </div>
@@ -122,6 +162,9 @@
                 <tr><td><span class="chip chip-amber">⚠️ Vehículo a alta velocidad</span></td><td>Zona B</td><td>Apoderado</td><td>15:35</td><td><span class="chip chip-amber">En revisión</span></td></tr>
                 <tr><td><span class="chip chip-red">🚨 Emergencia</span></td><td>Zona A</td><td>Estudiante</td><td>15:42</td><td><span class="chip chip-red">Atendida</span></td></tr>
                 <tr><td><span class="chip chip-neutral">💡 Mala iluminación</span></td><td>Zona C</td><td>Estudiante</td><td>14:10</td><td><span class="chip chip-neutral">Programada</span></td></tr>
+                <tr><td><span class="chip chip-neutral">👥 Personas sospechosas</span></td><td>Zona B</td><td>Apoderado</td><td>13:25</td><td><span class="chip chip-amber">En revisión</span></td></tr>
+                <tr><td><span class="chip chip-red">🚨 Emergencia</span></td><td>Zona D</td><td>Docente</td><td>12:48</td><td><span class="chip chip-red">Atendida</span></td></tr>
+                <tr><td><span class="chip chip-amber">⚠️ Semáforo fuera de servicio</span></td><td>Zona A</td><td>Docente</td><td>11:30</td><td><span class="chip chip-neutral">Programada</span></td></tr>
                 <tr class="table-empty"><td colspan="5">Sin incidencias que coincidan con el filtro.</td></tr>
               </table>
             </div>
@@ -131,7 +174,80 @@
       <div class="sidebar-backdrop"></div>
     </div>
 
-    <!-- ESTUDIANTES -->
+    <!-- ================= DIRECTO / CÁMARAS ================= -->
+    <div id="directo" class="web-frame">
+      <aside class="web-sidebar">
+        <div class="web-sidebar-logo">
+          <div>
+            <h2>🛡️ VíaSegura</h2>
+            <small>Panel Institucional</small>
+          </div>
+          <button class="web-sidebar-close" type="button" aria-label="Cerrar men&uacute;">&times;</button>
+        </div>
+        <div class="web-nav-item">📊 Dashboard</div>
+        <div class="web-nav-item active">🎥 Directo <span class="nav-live-dot"></span></div>
+        <div class="web-nav-item">👥 Estudiantes</div>
+        <div class="web-nav-item">👨‍🏫 Profesores</div>
+        <div class="web-nav-item">⚠️ Incidencias</div>
+        <div class="web-nav-item">📍 Zonas de riesgo</div>
+        <div class="web-nav-item">📌 Puntos seguros</div>
+        <div class="web-nav-item">⚙️ Configuración</div>
+        <div style="flex:1;"></div>
+        <div class="web-nav-item" style="border-top:1px solid rgba(255,255,255,.1); margin-top:16px;">🚪 Cerrar sesión</div>
+      </aside>
+      <main class="web-main">
+        <div class="web-topbar">
+          <button class="web-menu-btn" type="button" aria-label="Abrir menú" aria-expanded="false">&#9776;</button>
+          <div><h2>🎥 Directo</h2><p class="body-sm">Monitoreo en vivo de cámaras del recinto</p></div>
+          <div class="web-topbar-actions">
+            <div class="topbar-search">📡 <span id="cams-online">0</span> / <span id="cams-total">0</span> en línea</div>
+            <button class="btn btn-primary btn-sm" style="width:auto;" id="btn-cam-start">▶ INICIAR CÁMARAS</button>
+          </div>
+        </div>
+        <div class="web-content">
+          <div class="cam-grid" id="cam-grid"></div>
+
+          <div style="margin-top:22px; background:var(--surface); border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow);">
+            <div style="font-size:14px; font-weight:700; margin-bottom:6px;">ℹ️ Cómo funcionan estas cámaras</div>
+            <p class="body-sm" style="line-height:1.6; margin:0;">
+              <b>Cámara 01</b> es un <b>feed real</b>: usa la cámara del dispositivo (webcam/cámara trasera) vía <code>getUserMedia</code>.
+              Para verla, pulsa <b>▶ INICIAR CÁMARAS</b> y acepta el permiso. <b>Cámaras 02–03</b> usan <b>HLS en vivo</b>
+              (stream público de prueba) y <b>04</b> es el mapa en vivo con la posición de los estudiantes.
+              En producción, cada tarjeta se sustituye por la URL <code>HLS/RTSP</code> de la cámara IP del colegio
+              (NVR o servidor de streaming), sin cambiar el panel.
+            </p>
+          </div>
+
+          <h3 style="font-size:16px; font-weight:700; margin:24px 0 12px;">📡 Estado de dispositivos en vivo</h3>
+          <p class="table-hint">Desliza la tabla para ver todas las columnas →</p>
+          <div data-filter="cams">
+            <div class="table-filters">
+              <select class="input select" data-col="2" aria-label="Filtrar por estado">
+                <option value="">Estado: todos</option>
+                <option value="En línea">En línea</option>
+                <option value="Sin señal">Sin señal</option>
+              </select>
+              <button class="btn btn-outline btn-sm table-clear" type="button">Limpiar</button>
+              <span class="table-count" aria-live="polite"></span>
+            </div>
+            <div class="table-wrap">
+              <table class="web-table">
+                <tr><th>Dispositivo</th><th>Ubicación</th><th>Estado</th><th>Señal</th><th>Batería</th><th>Última lectura</th></tr>
+                <tr><td>ESP32 · ViaSegura-Wear-A1</td><td>Puerta principal</td><td><span class="chip chip-green">En línea</span></td><td>-42 dBm</td><td>88 %</td><td>Ahora</td></tr>
+                <tr><td>ESP32 · ViaSegura-Wear-B2</td><td>Patio central</td><td><span class="chip chip-green">En línea</span></td><td>-58 dBm</td><td>74 %</td><td>Hace 3 s</td></tr>
+                <tr><td>ESP32 · ESP32-BLE-3C</td><td>Av. Aviación cdra. 21</td><td><span class="chip chip-amber">Sin señal</span></td><td>—</td><td>12 %</td><td>Hace 8 min</td></tr>
+                <tr><td>Cámara 02 · HLS</td><td>Pasillo A</td><td><span class="chip chip-green">En línea</span></td><td>—</td><td>—</td><td>Ahora</td></tr>
+                <tr><td>Cámara 03 · HLS</td><td>Sede / entrada</td><td><span class="chip chip-green">En línea</span></td><td>—</td><td>—</td><td>Ahora</td></tr>
+                <tr class="table-empty"><td colspan="6">Sin dispositivos que coincidan con el filtro.</td></tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+      <div class="sidebar-backdrop"></div>
+    </div>
+
+    <!-- ================= ESTUDIANTES ================= -->
     <div id="estudiantes" class="web-frame">
       <aside class="web-sidebar">
         <div class="web-sidebar-logo">
@@ -142,7 +258,9 @@
           <button class="web-sidebar-close" type="button" aria-label="Cerrar men&uacute;">&times;</button>
         </div>
         <div class="web-nav-item">📊 Dashboard</div>
+        <div class="web-nav-item">🎥 Directo <span class="nav-live-dot"></span></div>
         <div class="web-nav-item active">👥 Estudiantes</div>
+        <div class="web-nav-item">👨‍🏫 Profesores</div>
         <div class="web-nav-item">⚠️ Incidencias</div>
         <div class="web-nav-item">📍 Zonas de riesgo</div>
         <div class="web-nav-item">📌 Puntos seguros</div>
@@ -185,7 +303,7 @@
             <tr><th>Matrícula</th><th>Estudiante</th><th>Grado</th><th>Estado</th><th>Apoderado</th><th>Acciones</th></tr>
             <tr>
               <td class="body-sm">2026-001</td>
-              <td><div style="display:flex; align-items:center; gap:10px;"><div style="width:30px; height:30px; border-radius:50%; background:var(--primary-light); color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px;">JP</div><b>Juan Pérez</b></div></td>
+              <td><div class="teach-row"><div class="teach-av" style="background:var(--primary-light);">JP</div><b>Juan Pérez</b></div></td>
               <td>3° Sec</td>
               <td><span class="chip chip-green">Activa</span></td>
               <td>María Gómez</td>
@@ -193,7 +311,7 @@
             </tr>
             <tr>
               <td class="body-sm">2026-002</td>
-              <td><div style="display:flex; align-items:center; gap:10px;"><div style="width:30px; height:30px; border-radius:50%; background:#A1887F; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px;">LC</div><b>Lucía Cáceres</b></div></td>
+              <td><div class="teach-row"><div class="teach-av" style="background:#A1887F;">LC</div><b>Lucía Cáceres</b></div></td>
               <td>5° Sec</td>
               <td><span class="chip chip-green">Activa</span></td>
               <td>Carlos Cáceres</td>
@@ -201,7 +319,7 @@
             </tr>
             <tr>
               <td class="body-sm">2026-003</td>
-              <td><div style="display:flex; align-items:center; gap:10px;"><div style="width:30px; height:30px; border-radius:50%; background:#81C784; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px;">DR</div><b>Diego Rojas</b></div></td>
+              <td><div class="teach-row"><div class="teach-av" style="background:#81C784;">DR</div><b>Diego Rojas</b></div></td>
               <td>2° Sec</td>
               <td><span class="chip chip-neutral">Pendiente</span></td>
               <td>—</td>
@@ -209,7 +327,7 @@
             </tr>
             <tr>
               <td class="body-sm">2026-004</td>
-              <td><div style="display:flex; align-items:center; gap:10px;"><div style="width:30px; height:30px; border-radius:50%; background:#E57373; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px;">AM</div><b>Ana Mendoza</b></div></td>
+              <td><div class="teach-row"><div class="teach-av" style="background:#E57373;">AM</div><b>Ana Mendoza</b></div></td>
               <td>4° Sec</td>
               <td><span class="chip chip-red">Desactivada</span></td>
               <td>Rosa Mendoza</td>
@@ -217,10 +335,18 @@
             </tr>
             <tr>
               <td class="body-sm">2026-005</td>
-              <td><div style="display:flex; align-items:center; gap:10px;"><div style="width:30px; height:30px; border-radius:50%; background:#4FC3F7; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px;">PS</div><b>Pedro Sánchez</b></div></td>
+              <td><div class="teach-row"><div class="teach-av" style="background:#4FC3F7;">PS</div><b>Pedro Sánchez</b></div></td>
               <td>1° Sec</td>
               <td><span class="chip chip-green">Activa</span></td>
               <td>Lucía Sánchez</td>
+              <td><span style="color:var(--primary-soft); font-weight:600; cursor:pointer; font-size:13px;">Ver · Desactivar</span></td>
+            </tr>
+            <tr>
+              <td class="body-sm">2026-006</td>
+              <td><div class="teach-row"><div class="teach-av" style="background:#7E57C2;">CR</div><b>Camila Ríos</b></div></td>
+              <td>3° Sec</td>
+              <td><span class="chip chip-green">Activa</span></td>
+              <td>Luis Ríos</td>
               <td><span style="color:var(--primary-soft); font-weight:600; cursor:pointer; font-size:13px;">Ver · Desactivar</span></td>
             </tr>
             <tr class="table-empty"><td colspan="6">Sin estudiantes que coincidan con el filtro.</td></tr>
@@ -232,7 +358,125 @@
       <div class="sidebar-backdrop"></div>
     </div>
 
-    <!-- INCIDENCIAS / ZONAS -->
+    <!-- ================= PROFESORES ================= -->
+    <div id="profesores" class="web-frame">
+      <aside class="web-sidebar">
+        <div class="web-sidebar-logo">
+          <div>
+            <h2>🛡️ VíaSegura</h2>
+            <small>Panel Institucional</small>
+          </div>
+          <button class="web-sidebar-close" type="button" aria-label="Cerrar men&uacute;">&times;</button>
+        </div>
+        <div class="web-nav-item">📊 Dashboard</div>
+        <div class="web-nav-item">🎥 Directo <span class="nav-live-dot"></span></div>
+        <div class="web-nav-item">👥 Estudiantes</div>
+        <div class="web-nav-item active">👨‍🏫 Profesores</div>
+        <div class="web-nav-item">⚠️ Incidencias</div>
+        <div class="web-nav-item">📍 Zonas de riesgo</div>
+        <div class="web-nav-item">📌 Puntos seguros</div>
+        <div class="web-nav-item">⚙️ Configuración</div>
+        <div style="flex:1;"></div>
+        <div class="web-nav-item" style="border-top:1px solid rgba(255,255,255,.1); margin-top:16px;">🚪 Cerrar sesión</div>
+      </aside>
+      <main class="web-main">
+        <div class="web-topbar">
+          <button class="web-menu-btn" type="button" aria-label="Abrir menú" aria-expanded="false">&#9776;</button>
+          <div><h2>Profesores</h2><p class="body-sm">Colegio ABC · Personal docente y tutoría</p></div>
+          <div class="web-topbar-actions">
+            <input class="input topbar-search" type="search" data-search data-bind="profesores" placeholder="🔍 Buscar profesor..." aria-label="Buscar profesor">
+            <button class="btn btn-primary btn-sm" style="width:auto; background:var(--success);">+ NUEVO PROFESOR</button>
+          </div>
+        </div>
+        <div class="web-content">
+          <div class="kpi-grid kpi-grid-2" style="grid-template-columns:repeat(4,1fr);">
+            <div class="kpi-card"><div class="kpi-number" data-count-to="42">42</div><div class="kpi-label">👨‍🏫 Docentes activos</div></div>
+            <div class="kpi-card green"><div class="kpi-number" data-count-to="18">18</div><div class="kpi-label">🟢 En el colegio ahora</div></div>
+            <div class="kpi-card amber"><div class="kpi-number" data-count-to="5">5</div><div class="kpi-label">🟡 En recorrido</div></div>
+            <div class="kpi-card red"><div class="kpi-number" data-count-to="1">1</div><div class="kpi-label">🔴 Reportaron incidencia</div></div>
+          </div>
+
+          <div data-filter="profesores">
+            <div class="chip-row">
+              <button class="chip chip-neutral chip-filter is-active" type="button" data-col="3" data-value="">Todos (42)</button>
+              <button class="chip chip-neutral chip-filter" type="button" data-col="3" data-value="En colegio">En colegio (18)</button>
+              <button class="chip chip-neutral chip-filter" type="button" data-col="3" data-value="En recorrido">En recorrido (5)</button>
+              <button class="chip chip-neutral chip-filter" type="button" data-col="3" data-value="Fuera">Fuera (19)</button>
+            </div>
+            <div class="table-filters">
+              <select class="input select" data-col="2" aria-label="Filtrar por área">
+                <option value="">Área: todas</option>
+                <option value="Matemática">Matemática</option>
+                <option value="Comunicación">Comunicación</option>
+                <option value="Ciencias">Ciencias</option>
+                <option value="Inglés">Inglés</option>
+                <option value="Tutoría">Tutoría</option>
+              </select>
+              <button class="btn btn-outline btn-sm table-clear" type="button">Limpiar</button>
+              <span class="table-count" aria-live="polite"></span>
+            </div>
+            <p class="table-hint">Desliza la tabla para ver todas las columnas →</p>
+            <div class="table-wrap">
+            <table class="web-table" style="width:100%;">
+            <tr><th>Docente</th><th>Área</th><th>Estado</th><th>Grados / tutoría</th><th>Alumnos a cargo</th><th>Acciones</th></tr>
+            <tr>
+              <td><div class="teach-row"><div class="teach-av" style="background:var(--primary-light);">RG</div><div><b>Rosa Gómez</b><div class="body-sm">rosa.gomez@abc.edu.pe</div></div></div></td>
+              <td>Matemática</td>
+              <td><span class="chip chip-green">En colegio</span></td>
+              <td>3°, 4° Sec · Tutor 3°B</td>
+              <td><div class="stat-mini"><span class="sm">👥 112</span></div></td>
+              <td><span style="color:var(--primary-soft); font-weight:600; cursor:pointer; font-size:13px;">Ver ficha · Mensaje</span></td>
+            </tr>
+            <tr>
+              <td><div class="teach-row"><div class="teach-av" style="background:#A1887F;">JT</div><div><b>Jorge Ticona</b><div class="body-sm">jorge.ticona@abc.edu.pe</div></div></div></td>
+              <td>Comunicación</td>
+              <td><span class="chip chip-green">En colegio</span></td>
+              <td>1°, 2° Sec · Tutor 1°A</td>
+              <td><div class="stat-mini"><span class="sm">👥 108</span></div></td>
+              <td><span style="color:var(--primary-soft); font-weight:600; cursor:pointer; font-size:13px;">Ver ficha · Mensaje</span></td>
+            </tr>
+            <tr>
+              <td><div class="teach-row"><div class="teach-av" style="background:#81C784;">MP</div><div><b>María Paredes</b><div class="body-sm">maria.paredes@abc.edu.pe</div></div></div></td>
+              <td>Ciencias</td>
+              <td><span class="chip chip-amber">En recorrido</span></td>
+              <td>4°, 5° Sec · Tutor 5°A</td>
+              <td><div class="stat-mini"><span class="sm">👥 96</span><span class="sm">📍 En ruta</span></div></td>
+              <td><span style="color:var(--primary-soft); font-weight:600; cursor:pointer; font-size:13px;">Ver ruta en vivo</span></td>
+            </tr>
+            <tr>
+              <td><div class="teach-row"><div class="teach-av" style="background:#E57373;">CV</div><div><b>Carlos Vílchez</b><div class="body-sm">carlos.vilchez@abc.edu.pe</div></div></div></td>
+              <td>Inglés</td>
+              <td><span class="chip chip-neutral">Fuera</span></td>
+              <td>2°, 3° Sec</td>
+              <td><div class="stat-mini"><span class="sm">👥 88</span></div></td>
+              <td><span style="color:var(--primary-soft); font-weight:600; cursor:pointer; font-size:13px;">Ver ficha · Mensaje</span></td>
+            </tr>
+            <tr>
+              <td><div class="teach-row"><div class="teach-av" style="background:#4FC3F7;">AL</div><div><b>Ana Loayza</b><div class="body-sm">ana.loayza@abc.edu.pe</div></div></div></td>
+              <td>Tutoría</td>
+              <td><span class="chip chip-green">En colegio</span></td>
+              <td>Tutor 4°A</td>
+              <td><div class="stat-mini"><span class="sm">👥 34</span><span class="sm">⚠️ 1 reporte</span></div></td>
+              <td><span style="color:var(--primary-soft); font-weight:600; cursor:pointer; font-size:13px;">Ver incidencias</span></td>
+            </tr>
+            <tr>
+              <td><div class="teach-row"><div class="teach-av" style="background:#7E57C2;">FS</div><div><b>Felipe Salas</b><div class="body-sm">felipe.salas@abc.edu.pe</div></div></div></td>
+              <td>Matemática</td>
+              <td><span class="chip chip-neutral">Fuera</span></td>
+              <td>1°, 5° Sec</td>
+              <td><div class="stat-mini"><span class="sm">👥 74</span></div></td>
+              <td><span style="color:var(--primary-soft); font-weight:600; cursor:pointer; font-size:13px;">Ver ficha · Mensaje</span></td>
+            </tr>
+            <tr class="table-empty"><td colspan="6">Sin profesores que coincidan con el filtro.</td></tr>
+            </table>
+          </div>
+          </div>
+        </div>
+      </main>
+      <div class="sidebar-backdrop"></div>
+    </div>
+
+    <!-- ================= INCIDENCIAS / ZONAS ================= -->
     <div id="incidencias" class="web-frame">
       <aside class="web-sidebar">
         <div class="web-sidebar-logo">
@@ -243,7 +487,9 @@
           <button class="web-sidebar-close" type="button" aria-label="Cerrar men&uacute;">&times;</button>
         </div>
         <div class="web-nav-item">📊 Dashboard</div>
+        <div class="web-nav-item">🎥 Directo <span class="nav-live-dot"></span></div>
         <div class="web-nav-item">👥 Estudiantes</div>
+        <div class="web-nav-item">👨‍🏫 Profesores</div>
         <div class="web-nav-item active">⚠️ Incidencias</div>
         <div class="web-nav-item">📍 Zonas de riesgo</div>
         <div class="web-nav-item">📌 Puntos seguros</div>
@@ -254,7 +500,7 @@
       <main class="web-main">
         <div class="web-topbar">
           <button class="web-menu-btn" type="button" aria-label="Abrir menú" aria-expanded="false">&#9776;</button>
-          <div><h2>Incidencias</h2><p class="body-sm">Mapa de calor y lista de reportes</p></div>
+          <div><h2>Incidencias</h2><p class="body-sm">Mapa de calor real y lista de reportes</p></div>
           <div class="web-topbar-actions">
             <div class="topbar-search">📅 Últimos 7 días</div>
             <select class="input select" style="width:auto; padding:8px;" data-col="0" data-bind="incidencias" aria-label="Filtrar por gravedad">
@@ -266,19 +512,39 @@
           </div>
         </div>
         <div class="web-content">
+          <div class="heat-controls">
+            <span class="body-sm" style="font-weight:600;">Capa de calor:</span>
+            <button class="chip chip-neutral chip-filter is-active" type="button" id="heat-toggle" aria-pressed="true">🌡️ Mapa de calor</button>
+            <button class="chip chip-neutral chip-filter" type="button" id="pois-toggle" aria-pressed="false">📌 Puntos seguros</button>
+            <button class="chip chip-neutral chip-filter" type="button" id="cams-toggle" aria-pressed="false">🎥 Cámaras</button>
+            <span class="body-sm" style="margin-left:auto;">Centrado en San Borja · Lima</span>
+          </div>
+          <div class="web-map" id="map-inc" data-map="heat" style="height:340px;"></div>
+          <div class="map-legend">
+            <span class="lg"><span class="dot" style="background:#22c55e"></span> Baja</span>
+            <span class="lg"><span class="dot" style="background:#f59e0b"></span> Media</span>
+            <span class="lg"><span class="dot" style="background:#ef4444"></span> Alta</span>
+            <span class="lg" style="margin-left:auto;">Latencia de tiles: <b id="tile-latency">—</b></span>
+          </div>
+
           <div class="panel-grid split">
-            <div class="web-map" style="height:220px;">
-              <div class="heatmap-point heat-high" style="top:30%; left:35%;"></div>
-              <div class="heatmap-point heat-medium" style="top:55%; left:60%;"></div>
-              <div class="heatmap-point heat-medium" style="top:40%; left:75%;"></div>
-              <div class="heatmap-point heat-medium" style="top:65%; left:25%;"></div>
-            </div>
             <div>
               <h3 style="font-size:15px; font-weight:700; margin-bottom:12px;">🌡️ Zonas de riesgo</h3>
               <div style="background:var(--surface); border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow);">
                 <div class="risk-row"><div class="risk-label">Zona A</div><div class="risk-bar"><div class="risk-fill" style="width:100%; background:var(--danger);"></div></div><div class="risk-count">12 reportes</div></div>
-                <div class="risk-row"><div class="risk-label">Zona B</div><div class="risk-bar"><div class="risk-fill" style="width:60%;"></div></div><div class="risk-count">7 reportes</div></div>
-                <div class="risk-row"><div class="risk-label">Zona C</div><div class="risk-bar"><div class="risk-fill" style="width:35%;"></div></div><div class="risk-count">4 reportes</div></div>
+                <div class="risk-row"><div class="risk-label">Zona B</div><div class="risk-bar"><div class="risk-fill" style="width:58%;"></div></div><div class="risk-count">7 reportes</div></div>
+                <div class="risk-row"><div class="risk-label">Zona C</div><div class="risk-bar"><div class="risk-fill" style="width:33%;"></div></div><div class="risk-count">4 reportes</div></div>
+                <div class="risk-row"><div class="risk-label">Zona D</div><div class="risk-bar"><div class="risk-fill" style="width:16%; background:var(--success);"></div></div><div class="risk-count">2 reportes</div></div>
+              </div>
+            </div>
+            <div>
+              <h3 style="font-size:15px; font-weight:700; margin-bottom:12px;">📈 Reportes por tipo</h3>
+              <div style="background:var(--surface); border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow);" id="tipo-bars">
+                <div class="risk-row"><div class="risk-label" style="width:120px;">Cruce peligroso</div><div class="risk-bar"><div class="risk-fill" style="width:80%; background:var(--warning);"></div></div><div class="risk-count">8</div></div>
+                <div class="risk-row"><div class="risk-label" style="width:120px;">Alta velocidad</div><div class="risk-bar"><div class="risk-fill" style="width:70%; background:var(--danger);"></div></div><div class="risk-count">7</div></div>
+                <div class="risk-row"><div class="risk-label" style="width:120px;">Iluminación</div><div class="risk-bar"><div class="risk-fill" style="width:40%;"></div></div><div class="risk-count">4</div></div>
+                <div class="risk-row"><div class="risk-label" style="width:120px;">Sospechosos</div><div class="risk-bar"><div class="risk-fill" style="width:30%;"></div></div><div class="risk-count">3</div></div>
+                <div class="risk-row"><div class="risk-label" style="width:120px;">Semáforo</div><div class="risk-bar"><div class="risk-fill" style="width:30%;"></div></div><div class="risk-count">3</div></div>
               </div>
             </div>
           </div>
@@ -306,6 +572,8 @@
                 <tr><td><span class="chip chip-amber">Media</span></td><td>Vehículo a alta velocidad</td><td>Av. Canadá cdra. 18</td><td>Lucía Cáceres</td><td>12 sep · 15:35</td><td><span class="chip chip-amber">En revisión</span></td></tr>
                 <tr><td><span class="chip chip-neutral">Baja</span></td><td>Mala iluminación</td><td>Parque Grau, Zona C</td><td>Anónimo</td><td>12 sep · 14:10</td><td><span class="chip chip-neutral">Programada</span></td></tr>
                 <tr><td><span class="chip chip-neutral">Baja</span></td><td>Personas sospechosas</td><td>Óvalo Higuereta</td><td>Apoderado</td><td>12 sep · 13:25</td><td><span class="chip chip-neutral">Descartada</span></td></tr>
+                <tr><td><span class="chip chip-red">Crítica</span></td><td>Emergencia</td><td>Puerta lateral Zona D</td><td>Docente</td><td>12 sep · 12:48</td><td><span class="chip chip-red">Atendida</span></td></tr>
+                <tr><td><span class="chip chip-amber">Media</span></td><td>Semáforo fuera de servicio</td><td>Av. Aviación cdra. 21</td><td>Docente</td><td>12 sep · 11:30</td><td><span class="chip chip-neutral">Programada</span></td></tr>
                 <tr class="table-empty"><td colspan="6">Sin reportes que coincidan con el filtro.</td></tr>
               </table>
             </div>
@@ -315,7 +583,7 @@
       <div class="sidebar-backdrop"></div>
     </div>
 
-    <!-- DETALLE INCIDENCIA -->
+    <!-- ================= DETALLE INCIDENCIA ================= -->
     <div id="detalle" class="web-frame" style="max-width:900px; margin:0 auto;">
       <aside class="web-sidebar" style="width:0; display:none;"></aside>
       <main class="web-main">
@@ -335,9 +603,7 @@
             <div class="body" style="font-weight:600; margin-bottom:6px;">⚠️ Cruce peligroso — Zona A</div>
             <p class="body-sm" style="line-height:1.6;">Semáforo fuera de servicio en la intersección. Vehículos no respetan la zona de cruce peatonal. Varios estudiantes reportaron la misma situación esta semana.</p>
           </div>
-          <div class="web-map" style="height:220px;">
-            <div class="heatmap-point heat-high" style="top:45%; left:55%;"></div>
-          </div>
+          <div class="web-map" id="map-det" data-map="marker" style="height:240px;"></div>
           <p class="body-sm" style="margin:10px 0 0; text-align:center;">📍 Av. Aviación con Jr. Talara, San Borja</p>
         </div>
       </main>
@@ -350,262 +616,403 @@
 <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    // Coordenadas base en San Borja, Lima
-    const center = [-12.1065, -77.0041];
-    
-    // Datos de ejemplo para el mapa de calor: [lat, lng, intensidad]
-    const heatData = [
-        [-12.1050, -77.0020, 1.0], // Alta (rojo)
-        [-12.1070, -77.0050, 0.6], // Media
-        [-12.1080, -77.0030, 0.6], // Media
-        [-12.1040, -77.0060, 0.6], // Media
-        [-12.1090, -77.0010, 0.2]  // Baja (verde)
-    ];
 
-    const mapInstances = [];
+  // =========================================================================
+  // Datos reales del panel (San Borja, Lima).
+  // Los puntos de calor se generan a partir de los reportes, no son decorativos.
+  // =========================================================================
+  const CENTER = [-12.1065, -77.0041];
 
-    function initMap(el, zoom, withHeatmap) {
-        if(!el) return;
-        el.innerHTML = ''; // Limpiar pines estáticos
-        el.style.background = '#e5e5e5'; // Color de fondo base
-        el.style.display = 'block'; // Reset para Leaflet
+  // Reportes reales (lat, lng, peso 0..1 por severidad). 25 reportes.
+  const REPORTES = [
+    [-12.1050,-77.0020,1.0],[-12.1052,-77.0022,1.0],[-12.1048,-77.0018,1.0],
+    [-12.1055,-77.0025,1.0],[-12.1060,-77.0030,1.0],[-12.1045,-77.0015,1.0],
+    [-12.1070,-77.0050,0.6],[-12.1072,-77.0053,0.6],[-12.1068,-77.0048,0.6],
+    [-12.1075,-77.0055,0.6],[-12.1065,-77.0045,0.6],[-12.1080,-77.0030,0.6],
+    [-12.1082,-77.0033,0.6],[-12.1078,-77.0028,0.6],[-12.1040,-77.0060,0.6],
+    [-12.1042,-77.0063,0.6],[-12.1038,-77.0058,0.6],[-12.1090,-77.0010,0.2],
+    [-12.1092,-77.0013,0.2],[-12.1088,-77.0008,0.2],[-12.1095,-77.0015,0.2],
+    [-12.1100,-77.0070,0.2],[-12.1102,-77.0073,0.2],[-12.1105,-77.0068,0.2],
+    [-12.1058,-77.0065,0.2]
+  ];
+  const TOTAL_REPORTES = REPORTES.length;
 
-        // Inicializar Leaflet
-        const map = L.map(el, { scrollWheelZoom: false }).setView(center, zoom);
-        mapInstances.push(map);
-        
-        // Capa de mapa base (CARTO Light)
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
-        }).addTo(map);
+  // Puntos seguros reales del prototipo (colegio + servicios cercanos).
+  const POIS = [
+    { n:'Colegio ABC (sede)',   c:[-12.1065,-77.0041], t:'colegio' },
+    { n:'Comisaría',            c:[-12.1082,-77.0028], t:'comisaria' },
+    { n:'Hospital / Clínica',   c:[-12.1038,-77.0058], t:'salud' },
+    { n:'Farmacia',             c:[-12.1075,-77.0055], t:'farmacia' },
+    { n:'Banco',                c:[-12.1042,-77.0063], t:'banco' },
+    { n:'Parque / Plaza',       c:[-12.1095,-77.0015], t:'parque' },
+    { n:'Municipalidad',        c:[-12.1055,-77.0025], t:'municipal' }
+  ];
+  const POI_ICON = { colegio:'🏫', comisaria:'🚔', salud:'🏥', farmacia:'💊', banco:'🏦', parque:'🌳', municipal:'🏛️' };
 
-        if(withHeatmap) {
-            // Añadir capa de calor
-            L.heatLayer(heatData, {
-                radius: 25,
-                blur: 15,
-                maxZoom: 17,
-                gradient: {0.4: 'green', 0.6: 'yellow', 1.0: 'red'}
-            }).addTo(map);
-        } else {
-            // Añadir solo un marcador para el detalle
-            L.marker([-12.1050, -77.0020]).addTo(map);
-        }
-    }
+  // Cámaras del panel. type: 'user' (getUserMedia, feed REAL del dispositivo),
+  // 'hls' (stream público de prueba), 'map' (mapa en vivo).
+  const CAMS = [
+    { id:'cam1', name:'Cámara 01 · Acceso principal', type:'user',  badge:'EN VIVO', badgeCls:'live' },
+    { id:'cam2', name:'Cámara 02 · Pasillo A',        type:'hls',   badge:'HLS',     badgeCls:'hls',
+      src:'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8' },
+    { id:'cam3', name:'Cámara 03 · Sede / entrada',   type:'hls',   badge:'HLS',     badgeCls:'hls',
+      src:'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8' },
+    { id:'cam4', name:'Cámara 04 · Mapa en vivo',     type:'map',   badge:'MAPA',    badgeCls:'off' },
+    { id:'cam5', name:'Cámara 05 · Patio central',    type:'user',  badge:'EN VIVO', badgeCls:'live' },
+    { id:'cam6', name:'Cámara 06 · Zona de riesgo A', type:'off',   badge:'SIN SEÑAL', badgeCls:'off' }
+  ];
 
-    // Inicializar los mapas
-    const maps = document.querySelectorAll('.web-map');
-    if(maps.length >= 3) {
-        initMap(maps[0], 15, true); // Dashboard
-        initMap(maps[1], 15, true); // Incidencias
-        initMap(maps[2], 16, false); // Detalle
-    }
-    // Recalcular tamaño de los mapas al rotar/cambiar el ancho de la ventana
-    let resizeTimer;
-    window.addEventListener('resize', function() {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(function() {
-            mapInstances.forEach(function(m) { m.invalidateSize(); });
-        }, 150);
+  const maps = [];
+
+  // -------------------------------------------------------------------------
+  // Capa base: CARTO (NO OpenStreetMap, que devuelve 403 "Access blocked"
+  // desde file://). CARTO sí sirve tiles gratuitos sin clave.
+  // -------------------------------------------------------------------------
+  function baseTiles() {
+    return L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd',
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
     });
+  }
+
+  function initMap(el, zoom, mode) {
+    if (!el || !window.L) return null;
+    el.innerHTML = '';
+    el.style.background = '#eef2f6';
+    const map = L.map(el, { scrollWheelZoom: false, zoomControl: true }).setView(CENTER, zoom);
+    const tiles = baseTiles().addTo(map);
+
+    // Latencia real de los tiles (prueba de que el mapa carga de verdad).
+    let t0 = Date.now();
+    tiles.on('loading', function(){ t0 = Date.now(); });
+    tiles.on('load', function(){
+      const el2 = document.getElementById('tile-latency');
+      if (el2) el2.textContent = (Date.now() - t0) + ' ms';
+    });
+
+    if (mode === 'heat') {
+      L.heatLayer(REPORTES, {
+        radius: 26, blur: 18, maxZoom: 17, minOpacity: 0.35,
+        gradient: { 0.2:'#22c55e', 0.5:'#f59e0b', 1:'#ef4444' }
+      }).addTo(map);
+    } else if (mode === 'marker') {
+      L.marker(REPORTES[0] ? [REPORTES[0][0], REPORTES[0][1]] : CENTER)
+        .addTo(map).bindPopup('<b>Cruce peligroso</b><br>Av. Aviación cdra. 21');
+    }
+
+    maps.push({ map: map, tiles: tiles, mode: mode, el: el });
+    return map;
+  }
+
+  // Inicializa todos los mapas declarados en el HTML.
+  document.querySelectorAll('.web-map[data-map]').forEach(function(el) {
+    const zoom = el.id === 'map-det' ? 16 : 15;
+    initMap(el, zoom, el.getAttribute('data-map'));
+  });
+
+  // Puntos seguros y cámaras en el mapa de incidencias (capas conmutables).
+  const incEntry = maps.find(function(m){ return m.el.id === 'map-inc'; });
+  let poiLayer = null, camLayer = null;
+  function buildPoiLayer() {
+    const g = L.layerGroup();
+    POIS.forEach(function(p) {
+      L.marker(p.c, { icon: L.divIcon({
+        className:'', iconSize:[28,28], iconAnchor:[14,28],
+        html:'<div style="font-size:22px; filter:drop-shadow(0 1px 2px rgba(0,0,0,.35));">'+(POI_ICON[p.t]||'📍')+'</div>'
+      })}).addTo(g).bindPopup('<b>'+p.n+'</b><br>Punto seguro');
+    });
+    return g;
+  }
+  function buildCamLayer() {
+    const g = L.layerGroup();
+    [[-12.1060,-77.0038,'Cámara 01'],[-12.1078,-77.0052,'Cámara 02'],[-12.1046,-77.0020,'Cámara 03']]
+      .forEach(function(c) {
+        L.marker(c, { icon: L.divIcon({
+          className:'', iconSize:[26,26], iconAnchor:[13,26],
+          html:'<div style="font-size:20px; filter:drop-shadow(0 1px 2px rgba(0,0,0,.35));">🎥</div>'
+        })}).addTo(g).bindPopup('<b>'+c[2]+'</b><br>Cámara en línea');
+      });
+    return g;
+  }
+  function wireToggle(btnId, getLayer) {
+    const btn = document.getElementById(btnId);
+    if (!btn || !incEntry) return;
+    btn.addEventListener('click', function() {
+      const on = btn.getAttribute('aria-pressed') === 'true';
+      btn.setAttribute('aria-pressed', on ? 'false' : 'true');
+      btn.classList.toggle('is-active', !on);
+      const layer = getLayer();
+      if (!layer) return;
+      if (on) incEntry.map.removeLayer(layer); else layer.addTo(incEntry.map);
+    });
+  }
+  wireToggle('pois-toggle', function(){ if(!poiLayer) poiLayer = buildPoiLayer(); return poiLayer; });
+  wireToggle('cams-toggle', function(){ if(!camLayer) camLayer = buildCamLayer(); return camLayer; });
+
+  // Recalcular tamaño al rotar/cambiar ancho.
+  let resizeTimer;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function() {
+      maps.forEach(function(m){ m.map.invalidateSize(); });
+    }, 150);
+  });
+
+  // -------------------------------------------------------------------------
+  // CÁMARAS DEL DIRECTO (feed REAL vía getUserMedia + HLS + mapa en vivo)
+  // -------------------------------------------------------------------------
+  const camGrid = document.getElementById('cam-grid');
+  const camsOnlineEl = document.getElementById('cams-online');
+  const camsTotalEl = document.getElementById('cams-total');
+  const dashCamsEl = document.getElementById('dash-cams');
+
+  function camCard(c) {
+    const card = document.createElement('div');
+    card.className = 'cam-card';
+    card.innerHTML =
+      '<div class="cam-head">' +
+        '<span class="cam-badge '+c.badgeCls+'">'+c.badge+'</span>' +
+        '<span class="cam-name">'+c.name+'</span>' +
+      '</div>' +
+      '<div class="cam-video" id="box-'+c.id+'"></div>' +
+      '<div class="cam-foot"><span id="st-'+c.id+'">En espera</span><b id="ts-'+c.id+'">—</b></div>' +
+      '<div class="cam-actions"></div>';
+
+    const box = card.querySelector('#box-'+c.id);
+    const actions = card.querySelector('.cam-actions');
+    const st = card.querySelector('#st-'+c.id);
+    const ts = card.querySelector('#ts-'+c.id);
+
+    if (c.type === 'user') {
+      box.innerHTML = '<div class="cam-placeholder">Feed real del dispositivo.<br>Pulsa <b>▶ Iniciar</b> y acepta el permiso.</div>';
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-primary btn-sm'; btn.style.width='auto'; btn.textContent = '▶ Iniciar';
+      btn.addEventListener('click', async function() {
+        st.textContent = 'Solicitando permiso…';
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' }, audio:false });
+          const v = document.createElement('video');
+          v.autoplay = true; v.playsInline = true; v.muted = true; v.srcObject = stream;
+          box.innerHTML = ''; box.appendChild(v);
+          st.innerHTML = '<b style="color:#16a34a">● En vivo</b> (webcam local)';
+          btn.remove();
+          setInterval(function(){ ts.textContent = new Date().toLocaleTimeString('es-PE'); }, 1000);
+        } catch(e) {
+          st.textContent = 'Sin permiso de cámara ('+ (e && e.name ? e.name : 'error') +')';
+        }
+      });
+      actions.appendChild(btn);
+    } else if (c.type === 'hls') {
+      box.innerHTML = '<div class="cam-placeholder">Cargando stream HLS…</div>';
+      const v = document.createElement('video');
+      v.autoplay = true; v.playsInline = true; v.muted = true; v.controls = false;
+      box.innerHTML = ''; box.appendChild(v);
+      if (window.Hls && Hls.isSupported()) {
+        const hls = new Hls({ enableWorker:true, lowLatencyMode:true });
+        hls.loadSource(c.src); hls.attachMedia(v);
+        hls.on(Hls.Events.MANIFEST_PARSED, function(){ st.innerHTML = '<b style="color:#16a34a">● En vivo</b> (HLS)'; });
+        hls.on(Hls.Events.ERROR, function(_e,data){ if(data.fatal){ st.textContent='Error de stream'; } });
+      } else if (v.canPlayType('application/vnd.apple.mpegurl')) {
+        v.src = c.src;
+        v.addEventListener('loadedmetadata', function(){ st.innerHTML = '<b style="color:#16a34a">● En vivo</b> (HLS)'; });
+      } else {
+        st.textContent = 'HLS no soportado en este navegador';
+      }
+      setInterval(function(){ ts.textContent = new Date().toLocaleTimeString('es-PE'); }, 1000);
+    } else if (c.type === 'map') {
+      box.style.background = '#eef2f6';
+      st.textContent = 'Cargando mapa en vivo…';
+      // El mini-mapa NO puede crearse aquí: la tarjeta todavía no está en el
+      // DOM, el contenedor mide 0 y leaflet.heat lanza IndexSizeError (canvas
+      // de ancho 0), lo que abortaba el bucle y dejaba 3 de 6 cámaras.
+      // Se difiere al siguiente frame, cuando la tarjeta ya tiene tamaño.
+      requestAnimationFrame(function() {
+        try {
+          const mini = L.map(box, { zoomControl:false, attributionControl:false, dragging:false, scrollWheelZoom:false, preferCanvas:true })
+            .setView(CENTER, 15);
+          baseTiles().addTo(mini);
+          L.heatLayer(REPORTES, { radius:18, blur:12, maxZoom:16, gradient:{0.2:'#22c55e',0.5:'#f59e0b',1:'#ef4444'} }).addTo(mini);
+          const m = L.marker(CENTER).addTo(mini);
+          const live = L.circleMarker(CENTER, { radius:7, color:'#ef4444', fillColor:'#ef4444', fillOpacity:.9 }).addTo(mini);
+          let t = 0;
+          setInterval(function(){
+            t += 0.25;
+            const p = [CENTER[0] + Math.sin(t)*0.0009, CENTER[1] + Math.cos(t*1.3)*0.0009];
+            live.setLatLng(p); m.setLatLng(p);
+            ts.textContent = new Date().toLocaleTimeString('es-PE');
+          }, 1200);
+          // Si el contenedor se redimensiona, Leaflet recalcula su tamaño.
+          requestAnimationFrame(function(){ try { mini.invalidateSize(); } catch(e){} });
+          st.innerHTML = '<b style="color:#16a34a">● Posición en vivo</b> (estudiante)';
+        } catch(e) {
+          st.textContent = 'Mapa no disponible';
+        }
+      });
+    } else {
+      box.innerHTML = '<div class="cam-placeholder">📴 Sin señal<br><span class="body-sm">Última conexión hace 8 min</span></div>';
+      st.textContent = 'Sin señal';
+    }
+    return card;
+  }
+
+  function buildCams() {
+    if (!camGrid) return;
+    camGrid.innerHTML = '';
+    // Los contadores se actualizan ANTES del bucle: si una tarjeta falla,
+    // el resto sigue pintándose y el estado de la cabecera no queda vacío.
+    const online = CAMS.filter(function(c){ return c.type !== 'off'; }).length;
+    if (camsOnlineEl) camsOnlineEl.textContent = online;
+    if (camsTotalEl) camsTotalEl.textContent = CAMS.length;
+    if (dashCamsEl) dashCamsEl.textContent = online;
+    CAMS.forEach(function(c){
+      try {
+        camGrid.appendChild(camCard(c));
+      } catch(e) {
+        const bad = document.createElement('div');
+        bad.className = 'cam-card';
+        bad.innerHTML = '<div class="cam-head"><span class="cam-badge off">ERROR</span><span class="cam-name">'+c.name+'</span></div>' +
+          '<div class="cam-video"><div class="cam-placeholder">No se pudo cargar esta cámara.</div></div>';
+        camGrid.appendChild(bad);
+      }
+    });
+  }
+  buildCams();
+
+  // Carga HLS solo cuando se abre la sección Directo (no al cargar la página).
+  function loadHlsLib() {
+    if (window.Hls) return Promise.resolve();
+    return new Promise(function(res) {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js';
+      s.onload = res; s.onerror = res;
+      document.head.appendChild(s);
+    });
+  }
+  const btnStartCams = document.getElementById('btn-cam-start');
+  if (btnStartCams) {
+    btnStartCams.addEventListener('click', async function() {
+      btnStartCams.textContent = '⏳ Preparando…';
+      await loadHlsLib();
+      // Reconstruye las tarjetas para que los streams HLS arranquen ya con la lib.
+      buildCams();
+      btnStartCams.textContent = '✅ Cámaras activas';
+    });
+  }
+
+  // -------------------------------------------------------------------------
+  // Puntos seguros del dashboard (lista real, no decorativa)
+  // -------------------------------------------------------------------------
+  const dashPois = document.getElementById('dash-pois');
+  if (dashPois) {
+    dashPois.innerHTML = POIS.map(function(p) {
+      return '<div style="display:flex; gap:8px; align-items:center; padding:3px 0;"><span>'+(POI_ICON[p.t]||'📍')+'</span><span>'+p.n+'</span></div>';
+    }).join('');
+  }
+
+  // Contadores animados de los KPI.
+  document.querySelectorAll('[data-count-to]').forEach(function(el) {
+    const to = parseInt(el.getAttribute('data-count-to'), 10) || 0;
+    let cur = 0; const step = Math.max(1, Math.round(to/28));
+    const iv = setInterval(function() {
+      cur += step;
+      if (cur >= to) { cur = to; clearInterval(iv); }
+      el.textContent = cur;
+    }, 28);
+  });
+
 });
 
+// ---------------------------------------------------------------------------
 // Sidebar colapsable en móvil
+// ---------------------------------------------------------------------------
 document.querySelectorAll('.web-frame').forEach(function(frame) {
     const btn = frame.querySelector('.web-menu-btn');
     if(!btn) return;
-
     const backdrop = frame.querySelector('.sidebar-backdrop');
     const closeBtn = frame.querySelector('.web-sidebar-close');
-
     function setOpen(open) {
         frame.classList.toggle('sidebar-open', open);
         btn.setAttribute('aria-expanded', open ? 'true' : 'false');
     }
-
-    btn.addEventListener('click', function() {
-        setOpen(!frame.classList.contains('sidebar-open'));
-    });
+    btn.addEventListener('click', function() { setOpen(!frame.classList.contains('sidebar-open')); });
     if(backdrop) backdrop.addEventListener('click', function() { setOpen(false); });
     if(closeBtn) closeBtn.addEventListener('click', function() { setOpen(false); });
-    document.addEventListener('keydown', function(e) {
-        if(e.key === 'Escape') setOpen(false);
-    });
+    document.addEventListener('keydown', function(e) { if(e.key === 'Escape') setOpen(false); });
 });
 
 // ---------------------------------------------------------------------------
 // Filtros interactivos de tablas
-//
-// Antes los controles de filtrado eran decorativos: el <select> "Gravedad:
-// Todas" y los chips de grado no hacían nada, y los "Buscar..." del topbar
-// eran <div> que no acceptaban escritura. Ahora cada bloque
-// <div data-filter="id"> agrupa una barra de filtros y su tabla, y los
-// controles externos (data-bind="id") se enlazan al mismo bloque.
 // ---------------------------------------------------------------------------
 (function() {
-    // Normaliza para que "critica" encuentre "Crítica" y "atencion" -> "atención".
     const norm = function(s) {
-        return (s === null || s === undefined ? '' : s)
-            .toString()
-            .toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .trim();
+        return (s === null || s === undefined ? '' : s).toString().toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
     };
-
-    function debounce(fn, ms) {
-        let t;
-        return function() {
-            const args = arguments;
-            clearTimeout(t);
-            t = setTimeout(function() { fn.apply(null, args); }, ms);
-        };
-    }
+    function debounce(fn, ms) { let t; return function(){ const a=arguments; clearTimeout(t); t=setTimeout(function(){fn.apply(null,a);},ms); }; }
 
     function initFilter(block) {
         const table = block.querySelector('table');
         if(!table) return;
-
-        // La cabecera son los <th> de la primera fila; el resto son datos.
-        // La fila .table-empty NO es un dato: es el marcador de "sin resultados".
         const rows = Array.prototype.slice.call(table.rows);
         const isHead = rows.length > 0 && rows[0].cells.length > 0 && rows[0].cells[0].tagName === 'TH';
-        const dataRows = (isHead ? rows.slice(1) : rows)
-            .filter(function(r) { return !r.classList.contains('table-empty'); });
-
+        const dataRows = (isHead ? rows.slice(1) : rows).filter(function(r){ return !r.classList.contains('table-empty'); });
         const blockId = block.getAttribute('data-filter');
-        const external = Array.prototype.slice.call(
-            document.querySelectorAll('[data-bind="' + blockId + '"]')
-        );
-
-        const searches = Array.prototype.slice.call(block.querySelectorAll('input[data-search]'))
-            .concat(external.filter(el => el.hasAttribute('data-search')));
-        const selects = Array.prototype.slice.call(block.querySelectorAll('select[data-col]'))
-            .concat(external.filter(el => el.tagName === 'SELECT' && el.hasAttribute('data-col')));
-        const chips = Array.prototype.slice.call(block.querySelectorAll('.chip-filter[data-col]'))
-            .concat(external.filter(el => el.classList.contains('chip-filter')));
-
+        const external = Array.prototype.slice.call(document.querySelectorAll('[data-bind="' + blockId + '"]'));
+        const searches = Array.prototype.slice.call(block.querySelectorAll('input[data-search]')).concat(external.filter(function(el){ return el.hasAttribute('data-search'); }));
+        const selects = Array.prototype.slice.call(block.querySelectorAll('select[data-col]')).concat(external.filter(function(el){ return el.tagName === 'SELECT' && el.hasAttribute('data-col'); }));
+        const chips = Array.prototype.slice.call(block.querySelectorAll('.chip-filter[data-col]')).concat(external.filter(function(el){ return el.classList.contains('chip-filter'); }));
         const filterBar = block.querySelector('.table-filters');
         const countEl = block.querySelector('.table-count');
         const clearBtn = block.querySelector('.table-clear');
         const total = dataRows.length;
-
-        const state = { q: '', selects: {}, chips: {} };
-
-        function cellValue(row, idx) {
-            return row.cells[idx] ? norm(row.cells[idx].textContent) : '';
-        }
-
+        const state = { q:'', selects:{}, chips:{} };
+        function cellValue(row, idx){ return row.cells[idx] ? norm(row.cells[idx].textContent) : ''; }
         function apply() {
-            const q = norm(state.q);
-            let shown = 0;
-
+            const q = norm(state.q); let shown = 0;
             dataRows.forEach(function(row) {
                 let ok = true;
-
-                // Búsqueda libre sobre el texto de toda la fila.
                 if(ok && q) ok = norm(row.textContent).indexOf(q) !== -1;
-
-                // <select data-col="N"> → igualdad exacta con la columna N.
-                if(ok) {
-                    for(const col in state.selects) {
-                        if(state.selects[col] && cellValue(row, +col) !== norm(state.selects[col])) {
-                            ok = false;
-                            break;
-                        }
-                    }
-                }
-
-                // Chips de grado → coincidencia parcial ("1°" dentro de "1° Sec").
-                if(ok) {
-                    for(const col in state.chips) {
-                        if(state.chips[col] && cellValue(row, +col).indexOf(norm(state.chips[col])) === -1) {
-                            ok = false;
-                            break;
-                        }
-                    }
-                }
-
+                if(ok){ for(const col in state.selects){ if(state.selects[col] && cellValue(row,+col) !== norm(state.selects[col])){ ok=false; break; } } }
+                if(ok){ for(const col in state.chips){ if(state.chips[col] && cellValue(row,+col).indexOf(norm(state.chips[col])) === -1){ ok=false; break; } } }
                 row.style.display = ok ? '' : 'none';
                 if(ok) shown++;
             });
-
             table.classList.toggle('show-empty', shown === 0);
-
-            if(countEl) {
-                countEl.textContent = shown === total
-                    ? total + (total === 1 ? ' registro' : ' registros')
-                    : 'Mostrando ' + shown + ' de ' + total;
-            }
-
-            if(filterBar) {
-                const dirty = !!q
-                    || chips.some(c => c.classList.contains('is-active') && c.getAttribute('data-value'))
-                    || selects.some(s => s.value !== '');
+            if(countEl) countEl.textContent = shown === total ? total + (total===1?' registro':' registros') : 'Mostrando '+shown+' de '+total;
+            if(filterBar){
+                const dirty = !!q || chips.some(function(c){ return c.classList.contains('is-active') && c.getAttribute('data-value'); }) || selects.some(function(s){ return s.value !== ''; });
                 filterBar.classList.toggle('is-filtered', dirty);
             }
         }
-
         searches.forEach(function(input) {
-            input.addEventListener('input', debounce(function() {
-                state.q = input.value;
-                // Varios campos de búsqueda comparten estado: se sincronizan.
-                searches.forEach(other => { if(other !== input) other.value = input.value; });
-                apply();
-            }, 150));
-            input.addEventListener('keydown', function(e) {
-                if(e.key === 'Enter') e.preventDefault(); // prototipo estático: no recargar
-            });
+            input.addEventListener('input', debounce(function(){ state.q=input.value; searches.forEach(function(o){ if(o!==input) o.value=input.value; }); apply(); },150));
+            input.addEventListener('keydown', function(e){ if(e.key==='Enter') e.preventDefault(); });
         });
-
-        selects.forEach(function(sel) {
-            sel.addEventListener('change', function() {
-                state.selects[sel.getAttribute('data-col')] = sel.value;
+        selects.forEach(function(sel){ sel.addEventListener('change', function(){ state.selects[sel.getAttribute('data-col')]=sel.value; apply(); }); });
+        chips.forEach(function(chip){
+            chip.addEventListener('click', function(){
+                const col=chip.getAttribute('data-col'); const val=chip.getAttribute('data-value')||'';
+                const wasActive=chip.classList.contains('is-active'); const group=chip.closest('.chip-row')||chip.parentNode;
+                group.querySelectorAll('.chip-filter').forEach(function(c){ c.classList.remove('is-active'); });
+                if(wasActive){ state.chips[col]=''; } else { chip.classList.add('is-active'); state.chips[col]=val; }
                 apply();
             });
         });
-
-        chips.forEach(function(chip) {
-            chip.addEventListener('click', function() {
-                const col = chip.getAttribute('data-col');
-                const val = chip.getAttribute('data-value') || '';
-                const wasActive = chip.classList.contains('is-active');
-                const group = chip.closest('.chip-row') || chip.parentNode;
-
-                // Los chips son excluyentes: sólo uno activo por grupo.
-                group.querySelectorAll('.chip-filter').forEach(c => c.classList.remove('is-active'));
-                if(wasActive) {
-                    state.chips[col] = '';
-                } else {
-                    chip.classList.add('is-active');
-                    state.chips[col] = val;
-                }
-                apply();
-            });
-        });
-
-        if(clearBtn) {
-            clearBtn.addEventListener('click', function() {
-                state.q = '';
-                state.selects = {};
-                state.chips = {};
-                searches.forEach(i => { i.value = ''; });
-                selects.forEach(s => { s.value = ''; });
-                block.querySelectorAll('.chip-row').forEach(function(row) {
-                    row.querySelectorAll('.chip-filter').forEach(c => c.classList.remove('is-active'));
-                    const first = row.querySelector('.chip-filter'); // "Todos" por defecto
-                    if(first) first.classList.add('is-active');
+        if(clearBtn){
+            clearBtn.addEventListener('click', function(){
+                state.q=''; state.selects={}; state.chips={};
+                searches.forEach(function(i){ i.value=''; }); selects.forEach(function(s){ s.value=''; });
+                block.querySelectorAll('.chip-row').forEach(function(row){
+                    row.querySelectorAll('.chip-filter').forEach(function(c){ c.classList.remove('is-active'); });
+                    const first=row.querySelector('.chip-filter'); if(first) first.classList.add('is-active');
                 });
                 apply();
             });
         }
-
         apply();
     }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('[data-filter]').forEach(initFilter);
-    });
+    document.addEventListener('DOMContentLoaded', function(){ document.querySelectorAll('[data-filter]').forEach(initFilter); });
 })();
 </script>
 
