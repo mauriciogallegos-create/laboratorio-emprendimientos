@@ -7,12 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="css/prototipo.css">
-<style>
-  .screen-nav { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 40px; }
-  .screen-nav a { color: #ccc; text-decoration: none; font-size: 12px; background: rgba(255,255,255,.06); padding: 6px 12px; border-radius: 99px; border: 1px solid rgba(255,255,255,.1); }
-  .screen-nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
-</style>
 </head>
 <body>
 
@@ -32,8 +28,11 @@
     <div id="dashboard" class="web-frame">
       <aside class="web-sidebar">
         <div class="web-sidebar-logo">
-          <h2>🛡️ VíaSegura</h2>
-          <small>Panel Institucional</small>
+          <div>
+            <h2>🛡️ VíaSegura</h2>
+            <small>Panel Institucional</small>
+          </div>
+          <button class="web-sidebar-close" type="button" aria-label="Cerrar men&uacute;">&times;</button>
         </div>
         <div class="web-nav-item active">📊 Dashboard</div>
         <div class="web-nav-item">👥 Estudiantes</div>
@@ -46,10 +45,11 @@
       </aside>
       <main class="web-main">
         <div class="web-topbar">
-          <div><h2 style="font-size:22px; font-weight:700;">Dashboard</h2><p class="body-sm">Colegio ABC · Resumen del día</p></div>
-          <div style="display:flex; align-items:center; gap:12px;">
-            <div style="background:var(--bg); border-radius:8px; padding:8px 14px; font-size:13px; color:var(--text-muted);">🔍 Buscar...</div>
-            <div style="width:38px; height:38px; border-radius:50%; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center;">🏫</div>
+          <button class="web-menu-btn" type="button" aria-label="Abrir menú" aria-expanded="false">&#9776;</button>
+          <div><h2>Dashboard</h2><p class="body-sm">Colegio ABC · Resumen del día</p></div>
+          <div class="web-topbar-actions">
+            <input class="input topbar-search" type="search" data-search data-bind="dash" placeholder="🔍 Buscar incidencia..." aria-label="Buscar en incidencias recientes">
+            <div class="topbar-avatar">🏫</div>
           </div>
         </div>
         <div class="web-content">
@@ -60,15 +60,15 @@
             <div class="kpi-card red"><div class="kpi-number">2</div><div class="kpi-label">🔴 Emergencias</div></div>
           </div>
 
-          <div style="display:grid; grid-template-columns: 2fr 1fr; gap:20px;">
+          <div class="panel-grid map-side">
             <div>
               <h3 style="font-size:16px; font-weight:700; margin-bottom:12px;">📍 Mapa de incidencias</h3>
               <div class="web-map">
-                <span class="map-pin" style="position:absolute; top:30%; left:35%;">🔴</span>
-                <span class="map-pin" style="position:absolute; top:55%; left:60%;">🟡</span>
-                <span class="map-pin" style="position:absolute; top:40%; left:75%;">🟡</span>
-                <span class="map-pin" style="position:absolute; top:65%; left:25%;">🟡</span>
-                <span class="map-pin" style="position:absolute; top:25%; left:55%;">🟢</span>
+                <div class="heatmap-point heat-high" style="top:30%; left:35%;"></div>
+                <div class="heatmap-point heat-medium" style="top:55%; left:60%;"></div>
+                <div class="heatmap-point heat-medium" style="top:40%; left:75%;"></div>
+                <div class="heatmap-point heat-medium" style="top:65%; left:25%;"></div>
+                <div class="heatmap-point heat-low" style="top:25%; left:55%;"></div>
               </div>
             </div>
             <div>
@@ -103,25 +103,43 @@
           </div>
 
           <h3 style="font-size:16px; font-weight:700; margin:24px 0 12px;">⚠️ Incidencias recientes</h3>
-          <div style="background:var(--surface); border-radius:var(--radius-card); box-shadow:var(--shadow); overflow:hidden;">
-            <table class="web-table">
-              <tr><th>Tipo</th><th>Zona</th><th>Reportado por</th><th>Hora</th><th>Estado</th></tr>
-              <tr><td><span class="chip chip-amber">⚠️ Cruce peligroso</span></td><td>Zona A</td><td>Estudiante</td><td>15:20</td><td><span class="chip chip-amber">En revisión</span></td></tr>
-              <tr><td><span class="chip chip-amber">⚠️ Vehículo a alta velocidad</span></td><td>Zona B</td><td>Apoderado</td><td>15:35</td><td><span class="chip chip-amber">En revisión</span></td></tr>
-              <tr><td><span class="chip chip-red">🚨 Emergencia</span></td><td>Zona A</td><td>Estudiante</td><td>15:42</td><td><span class="chip chip-red">Atendida</span></td></tr>
-              <tr><td><span class="chip chip-neutral">💡 Mala iluminación</span></td><td>Zona C</td><td>Estudiante</td><td>14:10</td><td><span class="chip chip-neutral">Programada</span></td></tr>
-            </table>
+          <p class="table-hint">Desliza la tabla para ver todas las columnas →</p>
+          <div data-filter="dash">
+            <div class="table-filters">
+              <select class="input select" data-col="4" aria-label="Filtrar por estado">
+                <option value="">Estado: todos</option>
+                <option value="En revisión">En revisión</option>
+                <option value="Atendida">Atendida</option>
+                <option value="Programada">Programada</option>
+              </select>
+              <button class="btn btn-outline btn-sm table-clear" type="button">Limpiar</button>
+              <span class="table-count" aria-live="polite"></span>
+            </div>
+            <div class="table-wrap">
+              <table class="web-table">
+                <tr><th>Tipo</th><th>Zona</th><th>Reportado por</th><th>Hora</th><th>Estado</th></tr>
+                <tr><td><span class="chip chip-amber">⚠️ Cruce peligroso</span></td><td>Zona A</td><td>Estudiante</td><td>15:20</td><td><span class="chip chip-amber">En revisión</span></td></tr>
+                <tr><td><span class="chip chip-amber">⚠️ Vehículo a alta velocidad</span></td><td>Zona B</td><td>Apoderado</td><td>15:35</td><td><span class="chip chip-amber">En revisión</span></td></tr>
+                <tr><td><span class="chip chip-red">🚨 Emergencia</span></td><td>Zona A</td><td>Estudiante</td><td>15:42</td><td><span class="chip chip-red">Atendida</span></td></tr>
+                <tr><td><span class="chip chip-neutral">💡 Mala iluminación</span></td><td>Zona C</td><td>Estudiante</td><td>14:10</td><td><span class="chip chip-neutral">Programada</span></td></tr>
+                <tr class="table-empty"><td colspan="5">Sin incidencias que coincidan con el filtro.</td></tr>
+              </table>
+            </div>
           </div>
         </div>
       </main>
+      <div class="sidebar-backdrop"></div>
     </div>
 
     <!-- ESTUDIANTES -->
     <div id="estudiantes" class="web-frame">
       <aside class="web-sidebar">
         <div class="web-sidebar-logo">
-          <h2>🛡️ VíaSegura</h2>
-          <small>Panel Institucional</small>
+          <div>
+            <h2>🛡️ VíaSegura</h2>
+            <small>Panel Institucional</small>
+          </div>
+          <button class="web-sidebar-close" type="button" aria-label="Cerrar men&uacute;">&times;</button>
         </div>
         <div class="web-nav-item">📊 Dashboard</div>
         <div class="web-nav-item active">👥 Estudiantes</div>
@@ -134,22 +152,36 @@
       </aside>
       <main class="web-main">
         <div class="web-topbar">
-          <div><h2 style="font-size:22px; font-weight:700;">Estudiantes</h2><p class="body-sm">Colegio ABC · 350 registrados</p></div>
-          <div style="display:flex; align-items:center; gap:12px;">
-            <div style="background:var(--bg); border-radius:8px; padding:8px 14px; font-size:13px; color:var(--text-muted);">🔍 Buscar estudiante...</div>
+          <button class="web-menu-btn" type="button" aria-label="Abrir menú" aria-expanded="false">&#9776;</button>
+          <div><h2>Estudiantes</h2><p class="body-sm">Colegio ABC · 350 registrados</p></div>
+          <div class="web-topbar-actions">
+            <input class="input topbar-search" type="search" data-search data-bind="estudiantes" placeholder="🔍 Buscar estudiante..." aria-label="Buscar estudiante">
             <button class="btn btn-primary btn-sm" style="width:auto; background:var(--success);">+ NUEVO ESTUDIANTE</button>
           </div>
         </div>
         <div class="web-content">
-          <div style="display:flex; gap:8px; margin-bottom:16px;">
-            <span class="chip chip-neutral" style="background:var(--primary); color:#fff;">Todos (350)</span>
-            <span class="chip chip-neutral">1° (58)</span>
-            <span class="chip chip-neutral">2° (61)</span>
-            <span class="chip chip-neutral">3° (54)</span>
-            <span class="chip chip-neutral">4° (87)</span>
-            <span class="chip chip-neutral">5° (90)</span>
-          </div>
-          <table class="web-table" style="width:100%;">
+          <div data-filter="estudiantes">
+            <div class="chip-row">
+              <button class="chip chip-neutral chip-filter is-active" type="button" data-col="2" data-value="">Todos (350)</button>
+              <button class="chip chip-neutral chip-filter" type="button" data-col="2" data-value="1°">1° (58)</button>
+              <button class="chip chip-neutral chip-filter" type="button" data-col="2" data-value="2°">2° (61)</button>
+              <button class="chip chip-neutral chip-filter" type="button" data-col="2" data-value="3°">3° (54)</button>
+              <button class="chip chip-neutral chip-filter" type="button" data-col="2" data-value="4°">4° (87)</button>
+              <button class="chip chip-neutral chip-filter" type="button" data-col="2" data-value="5°">5° (90)</button>
+            </div>
+            <div class="table-filters">
+              <select class="input select" data-col="3" aria-label="Filtrar por estado de tarjeta">
+                <option value="">Estado: todos</option>
+                <option value="Activa">Activa</option>
+                <option value="Pendiente">Pendiente</option>
+                <option value="Desactivada">Desactivada</option>
+              </select>
+              <button class="btn btn-outline btn-sm table-clear" type="button">Limpiar</button>
+              <span class="table-count" aria-live="polite"></span>
+            </div>
+            <p class="table-hint">Desliza la tabla para ver todas las columnas →</p>
+            <div class="table-wrap">
+            <table class="web-table" style="width:100%;">
             <tr><th>Matrícula</th><th>Estudiante</th><th>Grado</th><th>Estado</th><th>Apoderado</th><th>Acciones</th></tr>
             <tr>
               <td class="body-sm">2026-001</td>
@@ -191,17 +223,24 @@
               <td>Lucía Sánchez</td>
               <td><span style="color:var(--primary-soft); font-weight:600; cursor:pointer; font-size:13px;">Ver · Desactivar</span></td>
             </tr>
-          </table>
+            <tr class="table-empty"><td colspan="6">Sin estudiantes que coincidan con el filtro.</td></tr>
+            </table>
+          </div>
+          </div>
         </div>
       </main>
+      <div class="sidebar-backdrop"></div>
     </div>
 
     <!-- INCIDENCIAS / ZONAS -->
     <div id="incidencias" class="web-frame">
       <aside class="web-sidebar">
         <div class="web-sidebar-logo">
-          <h2>🛡️ VíaSegura</h2>
-          <small>Panel Institucional</small>
+          <div>
+            <h2>🛡️ VíaSegura</h2>
+            <small>Panel Institucional</small>
+          </div>
+          <button class="web-sidebar-close" type="button" aria-label="Cerrar men&uacute;">&times;</button>
         </div>
         <div class="web-nav-item">📊 Dashboard</div>
         <div class="web-nav-item">👥 Estudiantes</div>
@@ -214,19 +253,25 @@
       </aside>
       <main class="web-main">
         <div class="web-topbar">
-          <div><h2 style="font-size:22px; font-weight:700;">Incidencias</h2><p class="body-sm">Mapa de calor y lista de reportes</p></div>
-          <div style="display:flex; align-items:center; gap:12px;">
-            <div style="background:var(--bg); border-radius:8px; padding:8px 14px; font-size:13px; color:var(--text-muted);">📅 Últimos 7 días</div>
-            <select class="input select" style="width:auto; padding:8px;"><option>Gravedad: Todas</option></select>
+          <button class="web-menu-btn" type="button" aria-label="Abrir menú" aria-expanded="false">&#9776;</button>
+          <div><h2>Incidencias</h2><p class="body-sm">Mapa de calor y lista de reportes</p></div>
+          <div class="web-topbar-actions">
+            <div class="topbar-search">📅 Últimos 7 días</div>
+            <select class="input select" style="width:auto; padding:8px;" data-col="0" data-bind="incidencias" aria-label="Filtrar por gravedad">
+              <option value="">Gravedad: Todas</option>
+              <option value="Crítica">Crítica</option>
+              <option value="Media">Media</option>
+              <option value="Baja">Baja</option>
+            </select>
           </div>
         </div>
         <div class="web-content">
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+          <div class="panel-grid split">
             <div class="web-map" style="height:220px;">
-              <span class="map-pin" style="position:absolute; top:30%; left:35%;">🔴</span>
-              <span class="map-pin" style="position:absolute; top:55%; left:60%;">🟡</span>
-              <span class="map-pin" style="position:absolute; top:40%; left:75%;">🟡</span>
-              <span class="map-pin" style="position:absolute; top:65%; left:25%;">🟡</span>
+              <div class="heatmap-point heat-high" style="top:30%; left:35%;"></div>
+              <div class="heatmap-point heat-medium" style="top:55%; left:60%;"></div>
+              <div class="heatmap-point heat-medium" style="top:40%; left:75%;"></div>
+              <div class="heatmap-point heat-medium" style="top:65%; left:25%;"></div>
             </div>
             <div>
               <h3 style="font-size:15px; font-weight:700; margin-bottom:12px;">🌡️ Zonas de riesgo</h3>
@@ -239,18 +284,35 @@
           </div>
 
           <h3 style="font-size:16px; font-weight:700; margin:24px 0 12px;">⚠️ Lista de reportes</h3>
-          <div style="background:var(--surface); border-radius:var(--radius-card); box-shadow:var(--shadow); overflow:hidden;">
-            <table class="web-table" style="width:100%;">
-              <tr><th>Severidad</th><th>Tipo</th><th>Ubicación</th><th>Reportado por</th><th>Fecha · Hora (Lima)</th><th>Estado</th></tr>
-              <tr><td><span class="chip chip-red">Crítica</span></td><td>Vehículo a alta velocidad</td><td>Av. Aviación cdra. 21</td><td>Ana Mendoza</td><td>12 sep · 15:42</td><td><span class="chip chip-red">Atendida</span></td></tr>
-              <tr><td><span class="chip chip-amber">Media</span></td><td>Cruce peligroso</td><td>Cruce Jr. Talara / Av. México</td><td>Juan Pérez</td><td>12 sep · 15:20</td><td><span class="chip chip-amber">En revisión</span></td></tr>
-              <tr><td><span class="chip chip-amber">Media</span></td><td>Vehículo a alta velocidad</td><td>Av. Canadá cdra. 18</td><td>Lucía Cáceres</td><td>12 sep · 15:35</td><td><span class="chip chip-amber">En revisión</span></td></tr>
-              <tr><td><span class="chip chip-neutral">Baja</span></td><td>Mala iluminación</td><td>Parque Grau, Zona C</td><td>Anónimo</td><td>12 sep · 14:10</td><td><span class="chip chip-neutral">Programada</span></td></tr>
-              <tr><td><span class="chip chip-neutral">Baja</span></td><td>Personas sospechosas</td><td>Óvalo Higuereta</td><td>Apoderado</td><td>12 sep · 13:25</td><td><span class="chip chip-neutral">Descartada</span></td></tr>
-            </table>
+          <div data-filter="incidencias">
+            <div class="table-filters">
+              <input class="input" type="search" data-search placeholder="🔍 Buscar reporte..." aria-label="Buscar reporte">
+              <select class="input select" data-col="5" aria-label="Filtrar por estado">
+                <option value="">Estado: todos</option>
+                <option value="Atendida">Atendida</option>
+                <option value="En revisión">En revisión</option>
+                <option value="Programada">Programada</option>
+                <option value="Descartada">Descartada</option>
+              </select>
+              <button class="btn btn-outline btn-sm table-clear" type="button">Limpiar</button>
+              <span class="table-count" aria-live="polite"></span>
+            </div>
+            <p class="table-hint">Desliza la tabla para ver todas las columnas →</p>
+            <div class="table-wrap">
+              <table class="web-table" style="width:100%;">
+                <tr><th>Severidad</th><th>Tipo</th><th>Ubicación</th><th>Reportado por</th><th>Fecha · Hora (Lima)</th><th>Estado</th></tr>
+                <tr><td><span class="chip chip-red">Crítica</span></td><td>Vehículo a alta velocidad</td><td>Av. Aviación cdra. 21</td><td>Ana Mendoza</td><td>12 sep · 15:42</td><td><span class="chip chip-red">Atendida</span></td></tr>
+                <tr><td><span class="chip chip-amber">Media</span></td><td>Cruce peligroso</td><td>Cruce Jr. Talara / Av. México</td><td>Juan Pérez</td><td>12 sep · 15:20</td><td><span class="chip chip-amber">En revisión</span></td></tr>
+                <tr><td><span class="chip chip-amber">Media</span></td><td>Vehículo a alta velocidad</td><td>Av. Canadá cdra. 18</td><td>Lucía Cáceres</td><td>12 sep · 15:35</td><td><span class="chip chip-amber">En revisión</span></td></tr>
+                <tr><td><span class="chip chip-neutral">Baja</span></td><td>Mala iluminación</td><td>Parque Grau, Zona C</td><td>Anónimo</td><td>12 sep · 14:10</td><td><span class="chip chip-neutral">Programada</span></td></tr>
+                <tr><td><span class="chip chip-neutral">Baja</span></td><td>Personas sospechosas</td><td>Óvalo Higuereta</td><td>Apoderado</td><td>12 sep · 13:25</td><td><span class="chip chip-neutral">Descartada</span></td></tr>
+                <tr class="table-empty"><td colspan="6">Sin reportes que coincidan con el filtro.</td></tr>
+              </table>
+            </div>
           </div>
         </div>
       </main>
+      <div class="sidebar-backdrop"></div>
     </div>
 
     <!-- DETALLE INCIDENCIA -->
@@ -258,14 +320,14 @@
       <aside class="web-sidebar" style="width:0; display:none;"></aside>
       <main class="web-main">
         <div class="web-topbar">
-          <div><h2 style="font-size:20px; font-weight:700;">← Detalle de incidencia</h2><p class="body-sm">Reporte #INC-2026-0142</p></div>
-          <div style="display:flex; gap:10px;">
+          <div><h2 class="sm">← Detalle de incidencia</h2><p class="body-sm">Reporte #INC-2026-0142</p></div>
+          <div class="web-topbar-actions">
             <button class="btn btn-primary btn-sm" style="width:auto;">✅ Marcar atendida</button>
             <button class="btn btn-outline btn-sm" style="width:auto; background:transparent; border:2px solid var(--border); color:var(--text);">▦ Exportar</button>
           </div>
         </div>
         <div class="web-content" style="max-width:760px; margin:0 auto;">
-          <div class="kpi-grid" style="grid-template-columns: repeat(2,1fr);">
+          <div class="kpi-grid kpi-grid-2">
             <div class="kpi-card" style="text-align:left;"><div class="body-sm">Reportado por</div><div style="font-weight:600; margin-top:4px;">Juan Pérez</div><div class="body-sm">3° Sec · Estudiante</div></div>
             <div class="kpi-card" style="text-align:left;"><div class="body-sm">Fecha y hora</div><div style="font-weight:600; margin-top:4px;">12 sep · 3:20 PM</div><div class="body-sm">GMT-5 · Lima, Perú</div></div>
           </div>
@@ -274,7 +336,7 @@
             <p class="body-sm" style="line-height:1.6;">Semáforo fuera de servicio en la intersección. Vehículos no respetan la zona de cruce peatonal. Varios estudiantes reportaron la misma situación esta semana.</p>
           </div>
           <div class="web-map" style="height:220px;">
-            <span class="map-pin" style="position:absolute; top:45%; left:55%;">🔴</span>
+            <div class="heatmap-point heat-high" style="top:45%; left:55%;"></div>
           </div>
           <p class="body-sm" style="margin:10px 0 0; text-align:center;">📍 Av. Aviación con Jr. Talara, San Borja</p>
         </div>
@@ -283,6 +345,269 @@
 
   </div>
 </div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Coordenadas base en San Borja, Lima
+    const center = [-12.1065, -77.0041];
+    
+    // Datos de ejemplo para el mapa de calor: [lat, lng, intensidad]
+    const heatData = [
+        [-12.1050, -77.0020, 1.0], // Alta (rojo)
+        [-12.1070, -77.0050, 0.6], // Media
+        [-12.1080, -77.0030, 0.6], // Media
+        [-12.1040, -77.0060, 0.6], // Media
+        [-12.1090, -77.0010, 0.2]  // Baja (verde)
+    ];
+
+    const mapInstances = [];
+
+    function initMap(el, zoom, withHeatmap) {
+        if(!el) return;
+        el.innerHTML = ''; // Limpiar pines estáticos
+        el.style.background = '#e5e5e5'; // Color de fondo base
+        el.style.display = 'block'; // Reset para Leaflet
+
+        // Inicializar Leaflet
+        const map = L.map(el, { scrollWheelZoom: false }).setView(center, zoom);
+        mapInstances.push(map);
+        
+        // Capa de mapa base (CARTO Light)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+        }).addTo(map);
+
+        if(withHeatmap) {
+            // Añadir capa de calor
+            L.heatLayer(heatData, {
+                radius: 25,
+                blur: 15,
+                maxZoom: 17,
+                gradient: {0.4: 'green', 0.6: 'yellow', 1.0: 'red'}
+            }).addTo(map);
+        } else {
+            // Añadir solo un marcador para el detalle
+            L.marker([-12.1050, -77.0020]).addTo(map);
+        }
+    }
+
+    // Inicializar los mapas
+    const maps = document.querySelectorAll('.web-map');
+    if(maps.length >= 3) {
+        initMap(maps[0], 15, true); // Dashboard
+        initMap(maps[1], 15, true); // Incidencias
+        initMap(maps[2], 16, false); // Detalle
+    }
+    // Recalcular tamaño de los mapas al rotar/cambiar el ancho de la ventana
+    let resizeTimer;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+            mapInstances.forEach(function(m) { m.invalidateSize(); });
+        }, 150);
+    });
+});
+
+// Sidebar colapsable en móvil
+document.querySelectorAll('.web-frame').forEach(function(frame) {
+    const btn = frame.querySelector('.web-menu-btn');
+    if(!btn) return;
+
+    const backdrop = frame.querySelector('.sidebar-backdrop');
+    const closeBtn = frame.querySelector('.web-sidebar-close');
+
+    function setOpen(open) {
+        frame.classList.toggle('sidebar-open', open);
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    btn.addEventListener('click', function() {
+        setOpen(!frame.classList.contains('sidebar-open'));
+    });
+    if(backdrop) backdrop.addEventListener('click', function() { setOpen(false); });
+    if(closeBtn) closeBtn.addEventListener('click', function() { setOpen(false); });
+    document.addEventListener('keydown', function(e) {
+        if(e.key === 'Escape') setOpen(false);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Filtros interactivos de tablas
+//
+// Antes los controles de filtrado eran decorativos: el <select> "Gravedad:
+// Todas" y los chips de grado no hacían nada, y los "Buscar..." del topbar
+// eran <div> que no acceptaban escritura. Ahora cada bloque
+// <div data-filter="id"> agrupa una barra de filtros y su tabla, y los
+// controles externos (data-bind="id") se enlazan al mismo bloque.
+// ---------------------------------------------------------------------------
+(function() {
+    // Normaliza para que "critica" encuentre "Crítica" y "atencion" -> "atención".
+    const norm = function(s) {
+        return (s === null || s === undefined ? '' : s)
+            .toString()
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .trim();
+    };
+
+    function debounce(fn, ms) {
+        let t;
+        return function() {
+            const args = arguments;
+            clearTimeout(t);
+            t = setTimeout(function() { fn.apply(null, args); }, ms);
+        };
+    }
+
+    function initFilter(block) {
+        const table = block.querySelector('table');
+        if(!table) return;
+
+        // La cabecera son los <th> de la primera fila; el resto son datos.
+        // La fila .table-empty NO es un dato: es el marcador de "sin resultados".
+        const rows = Array.prototype.slice.call(table.rows);
+        const isHead = rows.length > 0 && rows[0].cells.length > 0 && rows[0].cells[0].tagName === 'TH';
+        const dataRows = (isHead ? rows.slice(1) : rows)
+            .filter(function(r) { return !r.classList.contains('table-empty'); });
+
+        const blockId = block.getAttribute('data-filter');
+        const external = Array.prototype.slice.call(
+            document.querySelectorAll('[data-bind="' + blockId + '"]')
+        );
+
+        const searches = Array.prototype.slice.call(block.querySelectorAll('input[data-search]'))
+            .concat(external.filter(el => el.hasAttribute('data-search')));
+        const selects = Array.prototype.slice.call(block.querySelectorAll('select[data-col]'))
+            .concat(external.filter(el => el.tagName === 'SELECT' && el.hasAttribute('data-col')));
+        const chips = Array.prototype.slice.call(block.querySelectorAll('.chip-filter[data-col]'))
+            .concat(external.filter(el => el.classList.contains('chip-filter')));
+
+        const filterBar = block.querySelector('.table-filters');
+        const countEl = block.querySelector('.table-count');
+        const clearBtn = block.querySelector('.table-clear');
+        const total = dataRows.length;
+
+        const state = { q: '', selects: {}, chips: {} };
+
+        function cellValue(row, idx) {
+            return row.cells[idx] ? norm(row.cells[idx].textContent) : '';
+        }
+
+        function apply() {
+            const q = norm(state.q);
+            let shown = 0;
+
+            dataRows.forEach(function(row) {
+                let ok = true;
+
+                // Búsqueda libre sobre el texto de toda la fila.
+                if(ok && q) ok = norm(row.textContent).indexOf(q) !== -1;
+
+                // <select data-col="N"> → igualdad exacta con la columna N.
+                if(ok) {
+                    for(const col in state.selects) {
+                        if(state.selects[col] && cellValue(row, +col) !== norm(state.selects[col])) {
+                            ok = false;
+                            break;
+                        }
+                    }
+                }
+
+                // Chips de grado → coincidencia parcial ("1°" dentro de "1° Sec").
+                if(ok) {
+                    for(const col in state.chips) {
+                        if(state.chips[col] && cellValue(row, +col).indexOf(norm(state.chips[col])) === -1) {
+                            ok = false;
+                            break;
+                        }
+                    }
+                }
+
+                row.style.display = ok ? '' : 'none';
+                if(ok) shown++;
+            });
+
+            table.classList.toggle('show-empty', shown === 0);
+
+            if(countEl) {
+                countEl.textContent = shown === total
+                    ? total + (total === 1 ? ' registro' : ' registros')
+                    : 'Mostrando ' + shown + ' de ' + total;
+            }
+
+            if(filterBar) {
+                const dirty = !!q
+                    || chips.some(c => c.classList.contains('is-active') && c.getAttribute('data-value'))
+                    || selects.some(s => s.value !== '');
+                filterBar.classList.toggle('is-filtered', dirty);
+            }
+        }
+
+        searches.forEach(function(input) {
+            input.addEventListener('input', debounce(function() {
+                state.q = input.value;
+                // Varios campos de búsqueda comparten estado: se sincronizan.
+                searches.forEach(other => { if(other !== input) other.value = input.value; });
+                apply();
+            }, 150));
+            input.addEventListener('keydown', function(e) {
+                if(e.key === 'Enter') e.preventDefault(); // prototipo estático: no recargar
+            });
+        });
+
+        selects.forEach(function(sel) {
+            sel.addEventListener('change', function() {
+                state.selects[sel.getAttribute('data-col')] = sel.value;
+                apply();
+            });
+        });
+
+        chips.forEach(function(chip) {
+            chip.addEventListener('click', function() {
+                const col = chip.getAttribute('data-col');
+                const val = chip.getAttribute('data-value') || '';
+                const wasActive = chip.classList.contains('is-active');
+                const group = chip.closest('.chip-row') || chip.parentNode;
+
+                // Los chips son excluyentes: sólo uno activo por grupo.
+                group.querySelectorAll('.chip-filter').forEach(c => c.classList.remove('is-active'));
+                if(wasActive) {
+                    state.chips[col] = '';
+                } else {
+                    chip.classList.add('is-active');
+                    state.chips[col] = val;
+                }
+                apply();
+            });
+        });
+
+        if(clearBtn) {
+            clearBtn.addEventListener('click', function() {
+                state.q = '';
+                state.selects = {};
+                state.chips = {};
+                searches.forEach(i => { i.value = ''; });
+                selects.forEach(s => { s.value = ''; });
+                block.querySelectorAll('.chip-row').forEach(function(row) {
+                    row.querySelectorAll('.chip-filter').forEach(c => c.classList.remove('is-active'));
+                    const first = row.querySelector('.chip-filter'); // "Todos" por defecto
+                    if(first) first.classList.add('is-active');
+                });
+                apply();
+            });
+        }
+
+        apply();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('[data-filter]').forEach(initFilter);
+    });
+})();
+</script>
 
 </body>
 </html>
