@@ -1665,12 +1665,81 @@
     if (btn) btn.textContent = '📷 Escanear con la cámara';
   }
 
+  // Normaliza texto (minusculas, sin acentos) para comparar nombres de colegios.
+  function normalizeQrText(s) {
+    var t = String(s == null ? '' : s).toLowerCase().trim();
+    if (t.normalize) t = t.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return t.replace(/\s+/g, ' ');
+  }
+
+  // Convierte el texto decodificado del QR en una institucion del catalogo.
+  // Acepta: id (inst-arequipa-07), codigo MINEDU (7012345), JSON {id|code|ie},
+  // URL con id=/code=/ie= o el nombre del colegio.
+  function institutionFromQr(raw) {
+    var candidate = String(raw == null ? '' : raw).trim();
+    if (!candidate) return null;
+    if (candidate.charAt(0) === '{') {
+      try {
+        var payload = JSON.parse(candidate);
+        candidate = String(payload.id || payload.code || payload.codigo || payload.institution || payload.ie || payload.colegio || '');
+      } catch (e) { /* no es JSON valido: se usa el texto tal cual */ }
+    }
+    var q = candidate.match(/(?:[?&]|\/)(?:id|code|codigo|ie|institution)=([^&#\s]+)/i);
+    if (q) {
+      try { candidate = decodeURIComponent(q[1]); } catch (e) { candidate = q[1]; }
+    }
+    candidate = candidate.trim();
+    if (!candidate) return null;
+    var insts = Store.institutions();
+    var i;
+    for (i = 0; i < insts.length; i++) if (insts[i].id === candidate) return insts[i];
+    for (i = 0; i < insts.length; i++) if (String(insts[i].code) === candidate) return insts[i];
+    var wanted = normalizeQrText(candidate);
+    if (!wanted) return null;
+    for (i = 0; i < insts.length; i++) if (normalizeQrText(insts[i].name) === wanted) return insts[i];
+    var partial = [];
+    for (i = 0; i < insts.length; i++) if (normalizeQrText(insts[i].name).indexOf(wanted) >= 0) partial.push(insts[i]);
+    return partial.length === 1 ? partial[0] : null;
+  }
+
+  // Aplica el colegio detectado por el QR con el mismo estado que una seleccion manual.
+  function selectInstitutionFromQr(inst) {
+    Store.state.selectedInstitutionId = inst.id;
+    Store.state.safeSchoolId = inst.id;
+    Store.state.grade = null;
+    renderGradesForInstitution(inst);
+    renderProfile();
+    renderInstitutions(document.querySelector('[data-list="institutions"]'));
+    var preview = el('reg2-preview');
+    if (preview) {
+      preview.innerHTML =
+        '<div class="institution-item selected">' +
+          '<div class="inst-icon"><img class="inst-icon-img" src="' + institutionImage(inst) + '" alt=""></div>' +
+          '<div style="flex:1; min-width:0;">' +
+            '<div style="font-size:14px; font-weight:600;">' + escapeHtml(inst.name) +
+            ' <span class="chip chip-neutral" style="font-size:10px; padding:2px 6px;">' + escapeHtml(humanLevels(instNiveles(inst))) + '</span></div>' +
+            '<div class="body-sm">' + escapeHtml(inst.district) + ' · ' + escapeHtml(inst.address) + '</div>' +
+            '<div class="body-sm" style="opacity:.8;">Código: ' + escapeHtml(inst.code || '—') + '</div>' +
+          '</div>' +
+          '<div class="inst-check"><div class="inst-check-dot"></div></div>' +
+        '</div>';
+    }
+  }
+
   function onQrDetected(data) {
     stopQrScan();
-    qrSetStatus('✅ QR leído: ' + data);
-    toast('QR detectado', 'success');
-    nativeVibrate(80);
-    setTimeout(function () { showScreen('reg3'); }, 700);
+    var inst = institutionFromQr(data);
+    if (inst) {
+      selectInstitutionFromQr(inst);
+      qrSetStatus('✅ Institución detectada: ' + inst.name);
+      toast('Colegio detectado: ' + inst.name, 'success');
+      nativeVibrate(80);
+      setTimeout(function () { showScreen('reg3'); }, 900);
+      return;
+    }
+    qrSetStatus('⚠️ Ese QR no corresponde a un colegio del catálogo. Vuelve a escanear o elige tu colegio en el paso anterior.');
+    toast('QR sin colegio reconocido', 'error');
+    nativeVibrate(120);
   }
 
   function decodeFrame(video, canvas) {
@@ -2266,6 +2335,8 @@
   }
 
   function init() {
+    if (init.__done) return;
+    init.__done = true;
     initTheme();
     injectStyles();
     bindLogin();
@@ -2341,6 +2412,9 @@
     showScreen: showScreen,
     startQrScan: startQrScan,
     stopQrScan: stopQrScan,
+    institutionFromQr: institutionFromQr,
+    selectInstitutionFromQr: selectInstitutionFromQr,
+    onQrDetected: onQrDetected,
     applyTheme: applyTheme,
     toggleTheme: toggleTheme,
     startGpsWatch: startGpsWatch,
