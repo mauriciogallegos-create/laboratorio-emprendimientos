@@ -782,9 +782,10 @@
     }
     institutions.forEach(function (inst, index) {
       const niv = instNiveles(inst);
-      if (!Store.state.selectedInstitutionId) Store.state.selectedInstitutionId = inst.id;
+      const chosenId = Store.state.selectedInstitutionId;
+      const isChosen = chosenId ? chosenId === inst.id : index === 0;
       const item = document.createElement('div');
-      item.className = 'institution-item' + (index === 0 ? ' selected' : '');
+      item.className = 'institution-item' + (isChosen ? ' selected' : '');
       item.setAttribute('data-institution-id', inst.id);
       item.setAttribute('data-levels', niv.join(' '));
       item.setAttribute('data-level', niv[0] || 'general');
@@ -796,7 +797,7 @@
           ' <span class="chip chip-neutral" style="font-size:10px; padding:2px 6px;">' + escapeHtml(humanLevels(niv)) + '</span></div>' +
           '<div class="body-sm">' + escapeHtml(inst.district) + ' · ' + escapeHtml(inst.address) + '</div>' +
         '</div>' +
-        '<div class="inst-check">' + (index === 0 ? '<div class="inst-check-dot"></div>' : '') + '</div>';
+        '<div class="inst-check">' + (isChosen ? '<div class="inst-check-dot"></div>' : '') + '</div>';
       item.addEventListener('click', function () {
         container.querySelectorAll('.institution-item').forEach(function (n) {
           n.classList.remove('selected');
@@ -807,6 +808,7 @@
         const check = item.querySelector('.inst-check');
         if (check) check.innerHTML = '<div class="inst-check-dot"></div>';
         Store.state.selectedInstitutionId = inst.id;
+        Store.state.safeSchoolId = inst.id;
         Store.state.grade = null;
         renderGradesForInstitution(inst);
         renderProfile();
@@ -1314,18 +1316,15 @@
   }
 
   function safeSchool() {
-    const id = Store.state.safeSchoolId;
-    if (id) {
-      const found = Store.institution(id);
-      if (found) return found;
-    }
+    const chosen = Store.institution(Store.state.selectedInstitutionId);
+    if (chosen) return chosen;
     const u = Store.state.user;
     if (u && u.institutionId) {
       const own = Store.institution(u.institutionId);
       if (own) return own;
     }
-    const selected = Store.institution(Store.state.selectedInstitutionId);
-    return selected || Store.institutions()[0] || null;
+    const fallback = Store.institution(Store.state.safeSchoolId);
+    return fallback || Store.institutions()[0] || null;
   }
 
   function populateSafeSchoolSelect() {
@@ -1422,7 +1421,11 @@
     if (select) {
       select.addEventListener('change', function () {
         Store.state.safeSchoolId = select.value;
+        Store.state.selectedInstitutionId = select.value || null;
+        Store.state.grade = null;
         renderSafePoints();
+        renderProfile();
+        renderInstitutions(document.querySelector('[data-list="institutions"]'));
       });
     }
     document.querySelectorAll('[data-list="safe-filters"] .safe-filter').forEach(function (chip) {
@@ -2076,9 +2079,11 @@
   }
 
   function currentInstitution() {
+    const chosen = Store.institution(Store.state.selectedInstitutionId);
+    if (chosen) return chosen;
     const u = Store.state.user;
     if (u && u.institutionId) return Store.institution(u.institutionId) || Store.institutions()[0];
-    return Store.institutions()[0];
+    return Store.institutions()[0] || null;
   }
 
   function mapScreenId(container) {
@@ -2196,6 +2201,10 @@
     const g = currentGps();
     const url = kind === 'route' ? routeEmbedUrl(inst, g) : placeEmbedUrl(g ? g.lat : inst.lat, g ? g.lng : inst.lng);
     if (frame.getAttribute('src') !== url) frame.src = url;
+    const gmapsLink = container.parentNode
+      ? container.parentNode.querySelector('.map-actions[data-for="' + container.id + '"] .map-gmaps')
+      : null;
+    if (gmapsLink) gmapsLink.setAttribute('href', googleMapsUrl(inst));
     // Si todavia no hay GPS, la primera fijacion debe refrescar el embed.
     maps.embedUpdated[container.id] = g ? Date.now() : 0;
   }
