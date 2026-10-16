@@ -1557,6 +1557,70 @@
     else { renderInstitutionalPanel(); showScreen('panel'); }
   }
 
+  // Etiquetas e iconos por rol, para el mensaje de bienvenida.
+  const ROLE_LABELS = {
+    superadmin: 'Administrador',
+    director: 'Director',
+    seguridad: 'Personal de seguridad',
+    docente: 'Docente',
+    apoderado: 'Apoderado',
+    estudiante: 'Estudiante'
+  };
+  const ROLE_ICONS = {
+    superadmin: '🛠',
+    director: '🏫',
+    seguridad: '🛡',
+    docente: '📚',
+    apoderado: '👪',
+    estudiante: '🎒'
+  };
+
+  function welcomeName(user) {
+    if (!user) return 'Usuario';
+    if (user.role === ROLES.APODERADO) return user.apoderadoNombre || user.name || 'Apoderado';
+    return user.name || 'Usuario';
+  }
+
+  // Muestra una tarjeta de bienvenida con el rol y el nombre de quien ingresa.
+  function showWelcome(user) {
+    if (!user) return;
+    renderUserNames();
+    const role = user.role || ROLES.ESTUDIANTE;
+    const label = ROLE_LABELS[role] || 'Usuario';
+    const icon = ROLE_ICONS[role] || '👋';
+    const name = welcomeName(user);
+    const inst = Store.institutionName(user.institutionId);
+    const existente = el('vs-welcome');
+    if (existente) existente.parentNode.removeChild(existente);
+    const ov = document.createElement('div');
+    ov.id = 'vs-welcome';
+    ov.className = 'vs-welcome';
+    ov.innerHTML =
+      '<div class="vs-welcome-card">' +
+        '<div class="vs-welcome-icon">' + icon + '</div>' +
+        '<div class="vs-welcome-role">' + escapeHtml(label) + '</div>' +
+        '<div class="vs-welcome-title">¡Bienvenido/a, ' + escapeHtml(name) + '!</div>' +
+        '<div class="vs-welcome-sub">Has ingresado como ' + escapeHtml(label) +
+          (inst ? ' de ' + escapeHtml(inst) : '') + '. Ya puedes empezar.</div>' +
+        '<button class="btn btn-primary vs-welcome-btn" type="button" style="width:100%;">EMPEZAR</button>' +
+      '</div>';
+    document.body.appendChild(ov);
+    function cerrar() {
+      ov.classList.remove('show');
+      setTimeout(function () {
+        if (ov.parentNode) ov.parentNode.removeChild(ov);
+      }, 260);
+    }
+    ov.addEventListener('click', function (ev) { if (ev.target === ov) cerrar(); });
+    const btn = ov.querySelector('.vs-welcome-btn');
+    if (btn) btn.addEventListener('click', cerrar);
+    const raf = (typeof window !== 'undefined' && window.requestAnimationFrame)
+      ? window.requestAnimationFrame.bind(window)
+      : function (cb) { setTimeout(cb, 16); };
+    raf(function () { ov.classList.add('show'); });
+    setTimeout(cerrar, 7000);
+  }
+
   function bindLogin() {
     const form = el('login-form');
     if (!form) return;
@@ -1575,8 +1639,8 @@
       AuthRepository.signIn(data.email, data.password)
         .then(function (user) {
           Store.state.user = user;
-          toast('Bienvenido, ' + user.name, 'success');
           routeAfterLogin(user);
+          showWelcome(user);
         })
         .catch(function (e) {
           renderErrors(errorsBox, [e.userMessage || e.message || 'No se pudo iniciar sesión.']);
@@ -1624,7 +1688,19 @@
       'transition:all .25s;z-index:99999;max-width:86%;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.25);' +
       'pointer-events:none;}' +
       '.vs-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}' +
-      '.vs-toast.success{background:#2E7D32;}.vs-toast.error{background:#C62828;}';
+      '.vs-toast.success{background:#2E7D32;}.vs-toast.error{background:#C62828;}' +
+      '.vs-welcome{position:fixed;inset:0;background:rgba(16,24,32,.55);display:flex;align-items:center;' +
+      'justify-content:center;z-index:100000;opacity:0;transition:opacity .25s;padding:24px;}' +
+      '.vs-welcome.show{opacity:1;}' +
+      '.vs-welcome-card{background:#fff;border-radius:16px;padding:28px 22px;max-width:340px;width:100%;' +
+      'text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.3);transform:translateY(16px);transition:transform .3s;}' +
+      '.vs-welcome.show .vs-welcome-card{transform:translateY(0);}' +
+      '.vs-welcome-icon{width:72px;height:72px;border-radius:50%;background:var(--primary,#2563EB);color:#fff;' +
+      'font-size:34px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;}' +
+      '.vs-welcome-title{font-size:20px;font-weight:800;color:#1C2836;margin:0 0 10px;}' +
+      '.vs-welcome-role{display:inline-block;background:var(--primary,#2563EB);color:#fff;font-size:12px;' +
+      'font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:4px 12px;border-radius:999px;margin-bottom:12px;}' +
+      '.vs-welcome-sub{font-size:13px;color:#5B6B7B;margin:0 0 20px;line-height:1.5;}';
     document.head.appendChild(style);
   }
 
@@ -2478,7 +2554,8 @@
         if (typeof window.goToScreen === 'function') window.goToScreen('home');
         renderProfile();
         renderUserNames();
-        toast('Cuenta creada. ¡Bienvenido/a!', 'success');
+        toast('Cuenta creada correctamente.', 'success');
+        showWelcome(registered);
       });
     }
   }
