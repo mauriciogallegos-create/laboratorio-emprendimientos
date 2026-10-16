@@ -192,11 +192,11 @@
         </div>
         <div class="input-group">
           <label class="input-label">Nombres</label>
-          <input class="input" placeholder="Juan Alberto">
+          <input id="reg3-nombres" class="input" placeholder="Juan Alberto">
         </div>
         <div class="input-group">
           <label class="input-label">Apellidos</label>
-          <input class="input" placeholder="Pérez Gómez">
+          <input id="reg3-apellidos" class="input" placeholder="Pérez Gómez">
         </div>
         <div style="display:flex; gap:10px;">
           <div class="input-group" style="flex:1;">
@@ -217,7 +217,7 @@
           <button class="btn btn-outline btn-sm" style="margin-top:10px;" data-capture="reg3-preview" type="button">📷 TOMAR FOTO</button>
           <div id="reg3-preview" class="photo-preview"></div>
         </div>
-        <button class="btn btn-primary">CONTINUAR</button>
+          <button id="reg3-continue" class="btn btn-primary" type="button">CONTINUAR</button>
       </div>
     </div>
 
@@ -238,25 +238,25 @@
         <p class="subtitle" style="margin-bottom:20px;">Paso 4 de 4 · Recibirá las alertas</p>
         <div class="input-group">
           <label class="input-label">Nombre completo</label>
-          <input class="input" placeholder="María Gómez">
+          <input id="reg4-apoderado-nombre" class="input" placeholder="María Gómez">
         </div>
         <div class="input-group">
           <label class="input-label">Relación</label>
-          <select class="input select"><option>Madre</option><option>Padre</option><option>Tutor / Tutora</option></select>
+          <select id="reg4-apoderado-relacion" class="input select"><option>Madre</option><option>Padre</option><option>Tutor / Tutora</option></select>
         </div>
         <div class="input-group">
           <label class="input-label">Teléfono celular</label>
-          <input class="input" placeholder="+51 987 654 321">
+          <input id="reg4-apoderado-tel" class="input" placeholder="+51 987 654 321">
         </div>
         <div class="input-group">
           <label class="input-label">Email</label>
-          <input class="input" placeholder="maria.gomez@gmail.com">
+          <input id="reg4-apoderado-email" class="input" placeholder="maria.gomez@gmail.com">
         </div>
         <div class="checkbox-group">
           <div class="checkbox-box" style="background:var(--primary); border-color:var(--primary); display:flex; align-items:center; justify-content:center; color:#fff; font-size:12px;">✓</div>
           <div class="checkbox-text">Autorizo el seguimiento de ubicación durante los recorridos de mi hijo/hija.</div>
         </div>
-        <button class="btn btn-primary">CREAR CUENTA</button>
+        <button id="reg4-crear" class="btn btn-primary" type="button">CREAR CUENTA</button>
       </div>
     </div>
 
@@ -269,7 +269,7 @@
         <span class="topbar-icon" style="background:var(--primary-light);">👤</span>
       </div>
       <div class="content">
-        <h2 class="greeting">Hola, Juan</h2>
+        <h2 class="greeting" data-home-name>Hola, Juan</h2>
         <p class="subtitle" style="margin-bottom:16px;" data-home-subtitle>I.E. Micaela Bastidas · Cercado, Arequipa</p>
         <div class="card card-row" style="margin-bottom:16px;">
           <img class="inst-thumb" data-home-photo src="img/colegio-primaria.jpg" alt="Foto de la I.E.">
@@ -318,7 +318,7 @@
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <div><div style="font-size:11px; color:var(--text-muted);">Geocerca de Seguridad</div><div style="font-size:13px; font-weight:700; color:var(--success);" data-gps-geofence>Buscando…</div></div>
-            <button class="btn btn-outline btn-sm" style="width:auto; padding:6px 12px; font-size:11px; margin-left: 10px;">Ajustar</button>
+             <button id="gps-ajustar-recorrido" class="btn btn-outline btn-sm" style="width:auto; padding:6px 12px; font-size:11px; margin-left: 10px;">Ajustar</button>
           </div>
         </div>
         
@@ -372,7 +372,7 @@
         <span class="topbar-icon" style="background:var(--primary-light);">👤</span>
       </div>
       <div class="content" style="opacity:.4;">
-        <h2 class="greeting">Hola, Juan</h2>
+        <h2 class="greeting" data-emerg-name>Hola, Juan</h2>
         <p class="subtitle" style="margin-bottom:16px;">I.E. Micaela Bastidas</p>
         <div class="status-card"><div class="status-circle green">✓</div><div class="status-text green">No estás en recorrido</div></div>
       </div>
@@ -404,7 +404,7 @@
           <div class="card-row" style="margin-bottom:12px;">
             <div class="card-icon red">🚨</div>
             <div>
-              <div class="body" style="font-weight:600;">Juan Pérez</div>
+              <div class="body" style="font-weight:600;" data-alerta-name>Juan Pérez</div>
               <div class="body-sm">I.E. Micaela Bastidas · 4:35 PM</div>
             </div>
           </div>
@@ -469,9 +469,9 @@
         </div>
         <p class="school-photo-credit" data-profile-credit>Foto referencial: Escuela Primaria de Pariamarca · Wikimedia Commons (CC BY-SA 4.0)</p>
         <div class="profile-head card">
-          <div class="profile-avatar">JP</div>
+          <div class="profile-avatar" data-profile-avatar>JP</div>
           <div style="flex:1;">
-            <div class="body" style="font-weight:700;">Juan Pérez</div>
+            <div class="body" style="font-weight:700;" data-profile-name>Juan Pérez</div>
             <div class="body-sm" data-profile-grade>Estudiante</div>
           </div>
           <span class="chip chip-green">Activo</span>
@@ -525,7 +525,7 @@
         <div class="section-title">Recientes</div>
         <div class="card" style="margin-bottom:10px;">
           <div class="body" style="font-weight:600;">🔔 Salida registrada</div>
-          <div class="body-sm">Juan salió del colegio a las 1:45 PM.</div>
+          <div class="body-sm" data-notif-child>Juan salió del colegio a las 1:45 PM.</div>
         </div>
         <div class="card" style="margin-bottom:10px;">
           <div class="body" style="font-weight:600;">🚨 Alerta de emergencia</div>
@@ -736,14 +736,14 @@
         <span class="topbar-icon" style="background:var(--primary-light);">👩</span>
       </div>
       <div class="content">
-        <h2 class="greeting" style="font-size:22px;">Hola, María</h2>
-        <p class="subtitle" style="margin-bottom:16px;">Acompañando a Juan</p>
+        <h2 class="greeting" style="font-size:22px;" data-padre-name>Hola, María</h2>
+        <p class="subtitle" style="margin-bottom:16px;" data-padre-child>Acompañando a Juan</p>
         <div class="section-title">Mis estudiantes</div>
         <div data-list="children"></div>
         <div class="card card-row" style="border-left:4px solid var(--success);">
           <div style="width:44px; height:44px; border-radius:50%; background:var(--primary-light); color:#fff; display:flex; align-items:center; justify-content:center; font-size:18px;">👦</div>
           <div style="flex:1;">
-            <div class="body" style="font-weight:600;">Juan</div>
+            <div class="body" style="font-weight:600;" data-padre-child-name>Juan</div>
             <div class="body-sm">I.E. Micaela Bastidas → Casa</div>
           </div>
           <span class="chip chip-green">🟢 En recorrido</span>
@@ -760,7 +760,7 @@
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <div><div style="font-size:11px; color:var(--text-muted);">Geocerca de Seguridad</div><div style="font-size:13px; font-weight:700; color:var(--success);" data-gps-geofence>Buscando…</div></div>
-            <button class="btn btn-outline btn-sm" style="width:auto; padding:6px 12px; font-size:11px; margin-left: 10px;">Ajustar</button>
+             <button id="gps-ajustar-padre" class="btn btn-outline btn-sm" style="width:auto; padding:6px 12px; font-size:11px; margin-left: 10px;">Ajustar</button>
           </div>
         </div>
         <div class="route-info">
@@ -801,7 +801,7 @@
           <div class="card-row">
             <div class="card-icon red">🚨</div>
             <div>
-              <div class="body" style="font-weight:700;">Juan ha enviado una alerta</div>
+              <div class="body" style="font-weight:700;" data-padre-alert-child>Juan ha enviado una alerta</div>
               <div class="body-sm">I.E. Micaela Bastidas · 4:36 PM</div>
             </div>
           </div>
@@ -809,7 +809,7 @@
         <div class="vs-map"></div>
         <p class="body-sm" style="text-align:center; margin:8px 0 16px; color:var(--danger); font-weight:600;">Última ubicación: Av. Goyeneche 210, Cercado, Arequipa</p>
         <div style="display:flex; gap:10px; margin-bottom:20px;">
-            <button class="btn btn-primary alert-action" id="padre-call-juan" style="flex:1;">📞 LLAMAR A JUAN</button>
+            <button class="btn btn-primary alert-action" id="padre-call-juan" style="flex:1;" data-padre-call-child>📞 LLAMAR A JUAN</button>
             <button class="btn btn-primary alert-action" id="padre-call-colegio" style="flex:1;">📞 LLAMAR AL COLEGIO</button>
         </div>
         <button class="btn btn-outline" id="padre-alerta-back" style="width:100%; margin-bottom:20px;">VOLVER</button>

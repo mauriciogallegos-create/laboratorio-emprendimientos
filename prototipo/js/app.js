@@ -643,9 +643,16 @@
   // ui/parents.js
   // ===========================================================================
   function renderParentHome() {
+    const u = Store.state.user;
+    const apodName = (u && (u.apoderadoNombre || u.name)) ? (u.apoderadoNombre || u.name) : null;
+    const apodFirst = apodName ? apodName.split(' ')[0] : 'Apoderado';
+    const children = Store.studentsForUser();
+    const childFirst = (children[0] && children[0].name) ? children[0].name.split(' ')[0] : (u && u.name ? u.name.split(' ')[0] : 'tu hijo/a');
+    document.querySelectorAll('[data-padre-name]').forEach(function (n) { n.textContent = 'Hola, ' + apodFirst; });
+    document.querySelectorAll('[data-padre-child]').forEach(function (n) { n.textContent = 'Acompañando a ' + childFirst; });
+    document.querySelectorAll('[data-padre-child-name]').forEach(function (n) { n.textContent = childFirst; });
     const list = document.querySelector('[data-list="children"]');
     if (list) {
-      const children = Store.studentsForUser();
       clearChildren(list);
       if (!children.length) {
         list.innerHTML = '<p class="empty">No tienes estudiantes asociados.</p>';
@@ -662,7 +669,6 @@
         });
       }
     }
-    // Confirmación de ingreso/salida SOLO si existe un evento fiable.
     const events = document.querySelector('[data-list="child-events"]');
     if (events) {
       events.innerHTML = '<p class="empty">Aún no hay eventos fiables de ingreso/salida registrados hoy.</p>';
@@ -947,8 +953,25 @@
     return found || insts[0] || null;
   }
 
+  function renderUserNames() {
+    const u = Store.state.user;
+    const fullName = (u && u.name) ? u.name : 'Estudiante';
+    const first = fullName.split(' ')[0];
+    const initials = fullName.trim() ? fullName.trim().split(/\s+/).map(function (p) { return p[0]; }).join('').slice(0, 2).toUpperCase() : 'V';
+    document.querySelectorAll('[data-profile-name], [data-alerta-name]').forEach(function (el) { el.textContent = fullName; });
+    const av = document.querySelector('[data-profile-avatar]');
+    if (av) av.textContent = initials;
+    document.querySelectorAll('[data-home-name], [data-emerg-name]').forEach(function (el) { el.textContent = 'Hola, ' + first; });
+    document.querySelectorAll('[data-notif-child]').forEach(function (el) { el.textContent = first + ' salió del colegio a las 1:45 PM.'; });
+    document.querySelectorAll('[data-padre-child-name]').forEach(function (el) { el.textContent = first; });
+    document.querySelectorAll('[data-padre-alert-child]').forEach(function (el) { el.textContent = first + ' ha enviado una alerta'; });
+    document.querySelectorAll('[data-padre-call-child]').forEach(function (el) { el.textContent = '📞 LLAMAR A ' + first.toUpperCase(); });
+  }
+
   function renderProfile() {
     const inst = profileInstitution();
+    const u = Store.state.user;
+    renderUserNames();
     if (!inst) return;
     document.querySelectorAll('[data-profile-institution]').forEach(function (n) { n.textContent = inst.name; });
     const zoneEl = document.querySelector('[data-profile-zone]');
@@ -2312,7 +2335,66 @@
     });
   }
 
-  // Pila de navegacion para el boton "atras" del dispositivo.
+  function bindLocationAdjust() {
+    const btnRec = el('gps-ajustar-recorrido');
+    const btnPad = el('gps-ajustar-padre');
+    function adjustLocation() {
+      const inst = currentInstitution();
+      const current = currentGps();
+      const promptText = 'Ingresa tu ubicación para "poner otro sitio" (latitud,longitud)\nEjemplo: -16.4090,-71.5370';
+      const val = window.prompt(promptText, current ? (current.lat + ',' + current.lng) : (inst ? (inst.lat + ',' + inst.lng) : ''));
+      if (!val || !val.trim()) return;
+      const parts = val.trim().split(/[,;\s]+/);
+      if (parts.length < 2) return;
+      const lat = parseFloat(parts[0].replace(',', '.'));
+      const lng = parseFloat(parts[1].replace(',', '.'));
+      if (isNaN(lat) || isNaN(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+        toast('Coordenadas inválidas', 'error');
+        return;
+      }
+      Store.state.gps = { lat: lat, lng: lng, acc: null, ts: Date.now() };
+      updateGpsUi();
+      refreshEmbeds();
+      toast('Ubicación actualizada', 'success');
+    }
+    if (btnRec) btnRec.addEventListener('click', adjustLocation);
+    if (btnPad) btnPad.addEventListener('click', adjustLocation);
+  }
+
+  function bindRegistration() {
+    const btn3 = el('reg3-continue');
+    const btn4 = el('reg4-crear');
+    if (btn3) {
+      btn3.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        if (typeof window.goToScreen === 'function') window.goToScreen('reg4');
+      });
+    }
+    if (btn4) {
+      btn4.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        const nombres = (el('reg3-nombres') || {}).value || '';
+        const apellidos = (el('reg3-apellidos') || {}).value || '';
+        const gradeSel = el('reg3-grade');
+        const grade = (gradeSel && gradeSel.value) ? gradeSel.value : Store.state.grade;
+        const nombreApoderado = (el('reg4-apoderado-nombre') || {}).value || 'Apoderado';
+        const nombreEstudiante = (nombres + ' ' + apellidos).trim() || 'Estudiante';
+        const registered = {
+          uid: 'u-reg-' + Date.now().toString(36),
+          name: nombreEstudiante,
+          apoderadoNombre: nombreApoderado,
+          role: ROLES.ESTUDIANTE,
+          institutionId: Store.state.selectedInstitutionId || (Store.state.safeSchoolId || null)
+        };
+        Store.state.user = registered;
+        Store.state.grade = grade || null;
+        if (typeof window.goToScreen === 'function') window.goToScreen('home');
+        renderProfile();
+        renderUserNames();
+        toast('Cuenta creada. ¡Bienvenido/a!', 'success');
+      });
+    }
+  }
   let rawGoToScreen = null;
   const navHistory = [];
 
@@ -2350,6 +2432,8 @@
     bindEsp32();
     bindAlertActions();
     bindEmergencyActions();
+    bindLocationAdjust();
+    bindRegistration();
     if (typeof window.goToScreen === 'function' && !window.goToScreen.__vsWrapped) {
       rawGoToScreen = window.goToScreen;
       const wrappedGoToScreen = function (id) {
