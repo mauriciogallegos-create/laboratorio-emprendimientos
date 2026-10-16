@@ -252,10 +252,10 @@
   ];
 
   const DEMO_USERS = [
-    { uid: 'u-super', name: 'Admin Plataforma', email: 'admin@viasegura.pe', password: 'demo123', role: ROLES.SUPERADMIN, institutionId: null },
-    { uid: 'u-dir', name: 'Dir. Ana Torres', email: 'director@ie-mb.pe', password: 'demo123', role: ROLES.DIRECTOR, institutionId: 'inst-arequipa-01' },
-    { uid: 'u-seg', name: 'Vigilante Luis Rojas', email: 'seguridad@ie-mb.pe', password: 'demo123', role: ROLES.SEGURIDAD, institutionId: 'inst-arequipa-01' },
-    { uid: 'u-apod', name: 'Madre Julia Quispe', email: 'apoderado@ie-mb.pe', password: 'demo123', role: ROLES.APODERADO, institutionId: 'inst-arequipa-01' }
+    { uid: 'u-super', name: 'Admin Plataforma', email: 'admin@viasegura.pe', password: 'demo123', role: ROLES.SUPERADMIN, institutionId: null, gender: null },
+    { uid: 'u-dir', name: 'Dir. Ana Torres', email: 'director@ie-mb.pe', password: 'demo123', role: ROLES.DIRECTOR, institutionId: 'inst-arequipa-01', gender: 'femenino' },
+    { uid: 'u-seg', name: 'Vigilante Luis Rojas', email: 'seguridad@ie-mb.pe', password: 'demo123', role: ROLES.SEGURIDAD, institutionId: 'inst-arequipa-01', gender: 'masculino' },
+    { uid: 'u-apod', name: 'Madre Julia Quispe', email: 'apoderado@ie-mb.pe', password: 'demo123', role: ROLES.APODERADO, institutionId: 'inst-arequipa-01', gender: 'femenino' }
   ];
 
   const DEMO_STUDENTS = [
@@ -339,7 +339,14 @@
   };
 
   function sanitizeUser(u) {
-    return { uid: u.uid, name: u.name, role: u.role, institutionId: u.institutionId };
+    return {
+      uid: u.uid,
+      name: u.name,
+      role: u.role,
+      institutionId: u.institutionId,
+      gender: u.gender || null,
+      apoderadoNombre: u.apoderadoNombre || null
+    };
   }
 
   // ===========================================================================
@@ -1557,15 +1564,7 @@
     else { renderInstitutionalPanel(); showScreen('panel'); }
   }
 
-  // Etiquetas e iconos por rol, para el mensaje de bienvenida.
-  const ROLE_LABELS = {
-    superadmin: 'Administrador',
-    director: 'Director',
-    seguridad: 'Personal de seguridad',
-    docente: 'Docente',
-    apoderado: 'Apoderado',
-    estudiante: 'Estudiante'
-  };
+  // Etiquetas e iconos por rol, con forma femenina/masculina, para la bienvenida.
   const ROLE_ICONS = {
     superadmin: '🛠',
     director: '🏫',
@@ -1574,6 +1573,16 @@
     apoderado: '👪',
     estudiante: '🎒'
   };
+
+  function roleLabel(role, gender) {
+    const fem = gender === 'femenino';
+    if (role === ROLES.APODERADO) return fem ? 'Apoderada' : 'Apoderado';
+    if (role === ROLES.DIRECTOR) return fem ? 'Directora' : 'Director';
+    if (role === ROLES.SUPERADMIN) return fem ? 'Administradora' : 'Administrador';
+    if (role === ROLES.SEGURIDAD) return 'Personal de seguridad';
+    if (role === ROLES.DOCENTE) return 'Docente';
+    return 'Estudiante';
+  }
 
   function welcomeName(user) {
     if (!user) return 'Usuario';
@@ -1586,9 +1595,11 @@
     if (!user) return;
     renderUserNames();
     const role = user.role || ROLES.ESTUDIANTE;
-    const label = ROLE_LABELS[role] || 'Usuario';
+    const gender = user.gender || null;
+    const label = roleLabel(role, gender);
     const icon = ROLE_ICONS[role] || '👋';
     const name = welcomeName(user);
+    const saludo = gender === 'femenino' ? 'Bienvenida' : (gender === 'masculino' ? 'Bienvenido' : 'Te damos la bienvenida');
     const inst = Store.institutionName(user.institutionId);
     const existente = el('vs-welcome');
     if (existente) existente.parentNode.removeChild(existente);
@@ -1599,7 +1610,7 @@
       '<div class="vs-welcome-card">' +
         '<div class="vs-welcome-icon">' + icon + '</div>' +
         '<div class="vs-welcome-role">' + escapeHtml(label) + '</div>' +
-        '<div class="vs-welcome-title">¡Bienvenido/a, ' + escapeHtml(name) + '!</div>' +
+        '<div class="vs-welcome-title">' + escapeHtml(saludo) + ', ' + escapeHtml(name) + '!</div>' +
         '<div class="vs-welcome-sub">Has ingresado como ' + escapeHtml(label) +
           (inst ? ' de ' + escapeHtml(inst) : '') + '. Ya puedes empezar.</div>' +
         '<button class="btn btn-primary vs-welcome-btn" type="button" style="width:100%;">EMPEZAR</button>' +
@@ -2180,7 +2191,7 @@
   // ===========================================================================
   // Mapa: Google Maps real (embed sin API key) + GPS en vivo del dispositivo
   // ===========================================================================
-  const maps = { instances: {}, kinds: {}, embedUpdated: {} };
+  const maps = { instances: {}, kinds: {}, embedUpdated: {}, setAt: {}, watch: {} };
   const gps = { watchId: null, started: false };
   const ROUTE_MAPS = ['recorrido', 'anomalia', 'padre'];
 
@@ -2388,6 +2399,25 @@
       '&daddr=' + school[0] + ',' + school[1] + '&hl=es&output=embed';
   }
 
+  // Carga un iframe de mapa y arma un "watchdog": si el iframe no termina de
+  // cargar en 6 s (fallo de red, carga perezosa, etc.) se reintenta una vez.
+  // Asi el mapa de la ruta nunca se queda en gris de forma permanente.
+  function setMapSrc(container, frame, url) {
+    frame.__vsLoaded = false;
+    const id = container.id;
+    const token = { timer: null };
+    maps.watch[id] = token;
+    frame.onload = function () { frame.__vsLoaded = true; };
+    frame.src = url;
+    if (token.timer) clearTimeout(token.timer);
+    token.timer = setTimeout(function () {
+      if (maps.watch[id] !== token) return;
+      if (frame.__vsLoaded) return;
+      const sep = url.indexOf('?') >= 0 ? '&' : '?';
+      frame.src = url + sep + 'vsl=' + Date.now();
+    }, 6000);
+  }
+
   // Actualiza los iframes de Google Maps (con throttle) cuando cambia el GPS.
   function refreshEmbeds() {
     const now = Date.now();
@@ -2398,10 +2428,11 @@
       const frame = maps.instances[id];
       if (!frame) return;
       if (now - (maps.embedUpdated[id] || 0) < 10000) return;
+      const container = el(id);
       const kind = maps.kinds[id] || 'place';
       const url = kind === 'route' ? routeEmbedUrl(inst, g) : placeEmbedUrl(g ? g.lat : inst.lat, g ? g.lng : inst.lng);
       if (frame.getAttribute('src') !== url) {
-        frame.src = url;
+        setMapSrc(container || { id: id }, frame, url);
         maps.embedUpdated[id] = now;
       }
     });
@@ -2440,12 +2471,13 @@
     maps.kinds[container.id] = kind;
 
     let frame = container.querySelector('iframe');
-    if (!frame) {
+    const isNew = !frame;
+    if (isNew) {
       clearChildren(container);
       frame = document.createElement('iframe');
       frame.className = 'vs-map-frame';
       frame.title = 'Mapa de Google Maps';
-      frame.setAttribute('loading', 'lazy');
+      frame.setAttribute('loading', 'eager');
       frame.setAttribute('allowfullscreen', '');
       frame.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
       container.appendChild(frame);
@@ -2455,13 +2487,21 @@
 
     const g = currentGps();
     const url = kind === 'route' ? routeEmbedUrl(inst, g) : placeEmbedUrl(g ? g.lat : inst.lat, g ? g.lng : inst.lng);
-    if (frame.getAttribute('src') !== url) frame.src = url;
+    const now = Date.now();
+    // Al re-entrar a la pantalla, recargar el mapa con cache-buster (por si la
+    // 1ra carga fallo y quedo en gris). Si acaba de cargarse (< 3 s) no se toca.
+    if (isNew || now - (maps.setAt[container.id] || 0) > 3000) {
+      const sep = url.indexOf('?') >= 0 ? '&' : '?';
+      const target = isNew ? url : url + sep + 'vsl=' + now;
+      setMapSrc(container, frame, target);
+      maps.setAt[container.id] = now;
+    }
     const gmapsLink = container.parentNode
       ? container.parentNode.querySelector('.map-actions[data-for="' + container.id + '"] .map-gmaps')
       : null;
     if (gmapsLink) gmapsLink.setAttribute('href', googleMapsUrl(inst));
     // Si todavia no hay GPS, la primera fijacion debe refrescar el embed.
-    maps.embedUpdated[container.id] = g ? Date.now() : 0;
+    maps.embedUpdated[container.id] = g ? now : 0;
   }
 
   function attachMapActions(container, frame, inst, kind) {
@@ -2540,12 +2580,15 @@
         const apellidos = (el('reg3-apellidos') || {}).value || '';
         const gradeSel = el('reg3-grade');
         const grade = (gradeSel && gradeSel.value) ? gradeSel.value : Store.state.grade;
+        const sexoSel = el('reg3-sexo');
+        const gender = (sexoSel && sexoSel.value) ? sexoSel.value : null;
         const nombreApoderado = (el('reg4-apoderado-nombre') || {}).value || 'Apoderado';
         const nombreEstudiante = (nombres + ' ' + apellidos).trim() || 'Estudiante';
         const registered = {
           uid: 'u-reg-' + Date.now().toString(36),
           name: nombreEstudiante,
           apoderadoNombre: nombreApoderado,
+          gender: gender,
           role: ROLES.ESTUDIANTE,
           institutionId: Store.state.selectedInstitutionId || (Store.state.safeSchoolId || null)
         };
