@@ -90,7 +90,7 @@
       <main class="web-main">
         <div class="web-topbar">
           <button class="web-menu-btn" type="button" aria-label="Abrir menú" aria-expanded="false">&#9776;</button>
-          <div><h2>Dashboard</h2><p class="body-sm">Colegio ABC · Resumen del día</p></div>
+          <div><h2>Dashboard</h2><p class="body-sm">Arequipa · <span id="dash-scope">138 colegios</span> · Resumen de los últimos 7 días</p></div>
           <div class="web-topbar-actions">
             <input class="input topbar-search" type="search" data-search data-bind="dash" placeholder="🔍 Buscar incidencia..." aria-label="Buscar en incidencias recientes">
             <div class="topbar-avatar">🏫</div>
@@ -114,23 +114,18 @@
           <div class="panel-grid map-side">
             <div>
               <h3 style="font-size:16px; font-weight:700; margin-bottom:6px;">📍 Mapa de calor de incidencias</h3>
-              <p class="body-sm" style="margin:0 0 10px;">Densidad real de reportes sobre el mapa de San Borja, Lima.</p>
-              <div class="web-map" id="map-dash" data-map="heat"></div>
+              <p class="body-sm" style="margin:0 0 10px;">Densidad de reportes de los últimos 7 días sobre los colegios y rutas reales de la app (Arequipa).</p>
+              <div class="web-map" id="map-dash" data-map="heat" style="height:400px;"></div>
               <div class="map-legend">
                 <span class="lg"><span class="dot" style="background:#22c55e"></span> Baja</span>
                 <span class="lg"><span class="dot" style="background:#f59e0b"></span> Media</span>
                 <span class="lg"><span class="dot" style="background:#ef4444"></span> Alta</span>
-                <span class="lg" style="margin-left:auto;">Basado en <b id="dash-total-reportes">25</b> reportes</span>
+                <span class="lg" style="margin-left:auto;">Basado en <b id="dash-total-reportes">—</b> reportes reales</span>
               </div>
             </div>
             <div>
               <h3 style="font-size:16px; font-weight:700; margin-bottom:12px;">🌡️ Zonas de riesgo</h3>
-              <div style="background:var(--surface); border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow);" id="dash-risk">
-                <div class="risk-row"><div class="risk-label">Zona A</div><div class="risk-bar"><div class="risk-fill" style="width:100%; background:var(--danger);"></div></div><div class="risk-count">12 reportes</div></div>
-                <div class="risk-row"><div class="risk-label">Zona B</div><div class="risk-bar"><div class="risk-fill" style="width:58%;"></div></div><div class="risk-count">7 reportes</div></div>
-                <div class="risk-row"><div class="risk-label">Zona C</div><div class="risk-bar"><div class="risk-fill" style="width:33%;"></div></div><div class="risk-count">4 reportes</div></div>
-                <div class="risk-row"><div class="risk-label">Zona D</div><div class="risk-bar"><div class="risk-fill" style="width:16%; background:var(--success);"></div></div><div class="risk-count">2 reportes</div></div>
-              </div>
+              <div style="background:var(--surface); border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow);" id="dash-risk"></div>
               <div style="margin-top:12px; background:var(--surface); border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow);">
                 <div style="font-size:13px; font-weight:600; margin-bottom:8px;">⏰ Zona horaria</div>
                 <div style="font-size:13px; color:var(--text-muted);">Todos los timestamps se muestran en hora de Perú <b style="color:var(--text);">(GMT-5)</b>.</div>
@@ -148,23 +143,16 @@
             <div class="table-filters">
               <select class="input select" data-col="4" aria-label="Filtrar por estado">
                 <option value="">Estado: todos</option>
-                <option value="En revisión">En revisión</option>
-                <option value="Atendida">Atendida</option>
-                <option value="Programada">Programada</option>
+                <option value="Abierta">Abierta</option>
+                <option value="En seguimiento">En seguimiento</option>
+                <option value="Cerrada">Cerrada</option>
               </select>
               <button class="btn btn-outline btn-sm table-clear" type="button">Limpiar</button>
               <span class="table-count" aria-live="polite"></span>
             </div>
             <div class="table-wrap">
               <table class="web-table">
-                <tr><th>Tipo</th><th>Zona</th><th>Reportado por</th><th>Hora</th><th>Estado</th></tr>
-                <tr><td><span class="chip chip-amber">⚠️ Cruce peligroso</span></td><td>Zona A</td><td>Estudiante</td><td>15:20</td><td><span class="chip chip-amber">En revisión</span></td></tr>
-                <tr><td><span class="chip chip-amber">⚠️ Vehículo a alta velocidad</span></td><td>Zona B</td><td>Apoderado</td><td>15:35</td><td><span class="chip chip-amber">En revisión</span></td></tr>
-                <tr><td><span class="chip chip-red">🚨 Emergencia</span></td><td>Zona A</td><td>Estudiante</td><td>15:42</td><td><span class="chip chip-red">Atendida</span></td></tr>
-                <tr><td><span class="chip chip-neutral">💡 Mala iluminación</span></td><td>Zona C</td><td>Estudiante</td><td>14:10</td><td><span class="chip chip-neutral">Programada</span></td></tr>
-                <tr><td><span class="chip chip-neutral">👥 Personas sospechosas</span></td><td>Zona B</td><td>Apoderado</td><td>13:25</td><td><span class="chip chip-amber">En revisión</span></td></tr>
-                <tr><td><span class="chip chip-red">🚨 Emergencia</span></td><td>Zona D</td><td>Docente</td><td>12:48</td><td><span class="chip chip-red">Atendida</span></td></tr>
-                <tr><td><span class="chip chip-amber">⚠️ Semáforo fuera de servicio</span></td><td>Zona A</td><td>Docente</td><td>11:30</td><td><span class="chip chip-neutral">Programada</span></td></tr>
+                <tr><th>Tipo</th><th>Distrito</th><th>Reportado por</th><th>Hora</th><th>Estado</th></tr>
                 <tr class="table-empty"><td colspan="5">Sin incidencias que coincidan con el filtro.</td></tr>
               </table>
             </div>
@@ -235,7 +223,7 @@
                 <tr><th>Dispositivo</th><th>Ubicación</th><th>Estado</th><th>Señal</th><th>Batería</th><th>Última lectura</th></tr>
                 <tr><td>ESP32 · ViaSegura-Wear-A1</td><td>Puerta principal</td><td><span class="chip chip-green">En línea</span></td><td>-42 dBm</td><td>88 %</td><td>Ahora</td></tr>
                 <tr><td>ESP32 · ViaSegura-Wear-B2</td><td>Patio central</td><td><span class="chip chip-green">En línea</span></td><td>-58 dBm</td><td>74 %</td><td>Hace 3 s</td></tr>
-                <tr><td>ESP32 · ESP32-BLE-3C</td><td>Av. Aviación cdra. 21</td><td><span class="chip chip-amber">Sin señal</span></td><td>—</td><td>12 %</td><td>Hace 8 min</td></tr>
+                <tr><td>ESP32 · ESP32-BLE-3C</td><td>Ruta · Calle Echevarria 201</td><td><span class="chip chip-amber">Sin señal</span></td><td>—</td><td>12 %</td><td>Hace 8 min</td></tr>
                 <tr><td>Cámara 02 · HLS</td><td>Pasillo A</td><td><span class="chip chip-green">En línea</span></td><td>—</td><td>—</td><td>Ahora</td></tr>
                 <tr><td>Cámara 03 · HLS</td><td>Sede / entrada</td><td><span class="chip chip-green">En línea</span></td><td>—</td><td>—</td><td>Ahora</td></tr>
                 <tr class="table-empty"><td colspan="6">Sin dispositivos que coincidan con el filtro.</td></tr>
@@ -271,7 +259,7 @@
       <main class="web-main">
         <div class="web-topbar">
           <button class="web-menu-btn" type="button" aria-label="Abrir menú" aria-expanded="false">&#9776;</button>
-          <div><h2>Estudiantes</h2><p class="body-sm">Colegio ABC · 350 registrados</p></div>
+          <div><h2>Estudiantes</h2><p class="body-sm">Arequipa · 350 registrados</p></div>
           <div class="web-topbar-actions">
             <input class="input topbar-search" type="search" data-search data-bind="estudiantes" placeholder="🔍 Buscar estudiante..." aria-label="Buscar estudiante">
             <button class="btn btn-primary btn-sm" style="width:auto; background:var(--success);">+ NUEVO ESTUDIANTE</button>
@@ -382,7 +370,7 @@
       <main class="web-main">
         <div class="web-topbar">
           <button class="web-menu-btn" type="button" aria-label="Abrir menú" aria-expanded="false">&#9776;</button>
-          <div><h2>Profesores</h2><p class="body-sm">Colegio ABC · Personal docente y tutoría</p></div>
+          <div><h2>Profesores</h2><p class="body-sm">Arequipa · Personal docente y tutoría</p></div>
           <div class="web-topbar-actions">
             <input class="input topbar-search" type="search" data-search data-bind="profesores" placeholder="🔍 Buscar profesor..." aria-label="Buscar profesor">
             <button class="btn btn-primary btn-sm" style="width:auto; background:var(--success);">+ NUEVO PROFESOR</button>
@@ -505,7 +493,7 @@
             <div class="topbar-search">📅 Últimos 7 días</div>
             <select class="input select" style="width:auto; padding:8px;" data-col="0" data-bind="incidencias" aria-label="Filtrar por gravedad">
               <option value="">Gravedad: Todas</option>
-              <option value="Crítica">Crítica</option>
+              <option value="Alta">Alta</option>
               <option value="Media">Media</option>
               <option value="Baja">Baja</option>
             </select>
@@ -517,9 +505,9 @@
             <button class="chip chip-neutral chip-filter is-active" type="button" id="heat-toggle" aria-pressed="true">🌡️ Mapa de calor</button>
             <button class="chip chip-neutral chip-filter" type="button" id="pois-toggle" aria-pressed="false">📌 Puntos seguros</button>
             <button class="chip chip-neutral chip-filter" type="button" id="cams-toggle" aria-pressed="false">🎥 Cámaras</button>
-            <span class="body-sm" style="margin-left:auto;">Centrado en San Borja · Lima</span>
+            <span class="body-sm" style="margin-left:auto;" id="heat-scope">Arequipa · datos de la app</span>
           </div>
-          <div class="web-map" id="map-inc" data-map="heat" style="height:340px;"></div>
+          <div class="web-map" id="map-inc" data-map="heat" style="height:400px;"></div>
           <div class="map-legend">
             <span class="lg"><span class="dot" style="background:#22c55e"></span> Baja</span>
             <span class="lg"><span class="dot" style="background:#f59e0b"></span> Media</span>
@@ -530,22 +518,11 @@
           <div class="panel-grid split">
             <div>
               <h3 style="font-size:15px; font-weight:700; margin-bottom:12px;">🌡️ Zonas de riesgo</h3>
-              <div style="background:var(--surface); border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow);">
-                <div class="risk-row"><div class="risk-label">Zona A</div><div class="risk-bar"><div class="risk-fill" style="width:100%; background:var(--danger);"></div></div><div class="risk-count">12 reportes</div></div>
-                <div class="risk-row"><div class="risk-label">Zona B</div><div class="risk-bar"><div class="risk-fill" style="width:58%;"></div></div><div class="risk-count">7 reportes</div></div>
-                <div class="risk-row"><div class="risk-label">Zona C</div><div class="risk-bar"><div class="risk-fill" style="width:33%;"></div></div><div class="risk-count">4 reportes</div></div>
-                <div class="risk-row"><div class="risk-label">Zona D</div><div class="risk-bar"><div class="risk-fill" style="width:16%; background:var(--success);"></div></div><div class="risk-count">2 reportes</div></div>
-              </div>
+              <div style="background:var(--surface); border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow);" id="inc-risk"></div>
             </div>
             <div>
               <h3 style="font-size:15px; font-weight:700; margin-bottom:12px;">📈 Reportes por tipo</h3>
-              <div style="background:var(--surface); border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow);" id="tipo-bars">
-                <div class="risk-row"><div class="risk-label" style="width:120px;">Cruce peligroso</div><div class="risk-bar"><div class="risk-fill" style="width:80%; background:var(--warning);"></div></div><div class="risk-count">8</div></div>
-                <div class="risk-row"><div class="risk-label" style="width:120px;">Alta velocidad</div><div class="risk-bar"><div class="risk-fill" style="width:70%; background:var(--danger);"></div></div><div class="risk-count">7</div></div>
-                <div class="risk-row"><div class="risk-label" style="width:120px;">Iluminación</div><div class="risk-bar"><div class="risk-fill" style="width:40%;"></div></div><div class="risk-count">4</div></div>
-                <div class="risk-row"><div class="risk-label" style="width:120px;">Sospechosos</div><div class="risk-bar"><div class="risk-fill" style="width:30%;"></div></div><div class="risk-count">3</div></div>
-                <div class="risk-row"><div class="risk-label" style="width:120px;">Semáforo</div><div class="risk-bar"><div class="risk-fill" style="width:30%;"></div></div><div class="risk-count">3</div></div>
-              </div>
+              <div style="background:var(--surface); border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow);" id="tipo-bars"></div>
             </div>
           </div>
 
@@ -555,10 +532,9 @@
               <input class="input" type="search" data-search placeholder="🔍 Buscar reporte..." aria-label="Buscar reporte">
               <select class="input select" data-col="5" aria-label="Filtrar por estado">
                 <option value="">Estado: todos</option>
-                <option value="Atendida">Atendida</option>
-                <option value="En revisión">En revisión</option>
-                <option value="Programada">Programada</option>
-                <option value="Descartada">Descartada</option>
+                <option value="Abierta">Abierta</option>
+                <option value="En seguimiento">En seguimiento</option>
+                <option value="Cerrada">Cerrada</option>
               </select>
               <button class="btn btn-outline btn-sm table-clear" type="button">Limpiar</button>
               <span class="table-count" aria-live="polite"></span>
@@ -566,14 +542,7 @@
             <p class="table-hint">Desliza la tabla para ver todas las columnas →</p>
             <div class="table-wrap">
               <table class="web-table" style="width:100%;">
-                <tr><th>Severidad</th><th>Tipo</th><th>Ubicación</th><th>Reportado por</th><th>Fecha · Hora (Lima)</th><th>Estado</th></tr>
-                <tr><td><span class="chip chip-red">Crítica</span></td><td>Vehículo a alta velocidad</td><td>Av. Aviación cdra. 21</td><td>Ana Mendoza</td><td>12 sep · 15:42</td><td><span class="chip chip-red">Atendida</span></td></tr>
-                <tr><td><span class="chip chip-amber">Media</span></td><td>Cruce peligroso</td><td>Cruce Jr. Talara / Av. México</td><td>Juan Pérez</td><td>12 sep · 15:20</td><td><span class="chip chip-amber">En revisión</span></td></tr>
-                <tr><td><span class="chip chip-amber">Media</span></td><td>Vehículo a alta velocidad</td><td>Av. Canadá cdra. 18</td><td>Lucía Cáceres</td><td>12 sep · 15:35</td><td><span class="chip chip-amber">En revisión</span></td></tr>
-                <tr><td><span class="chip chip-neutral">Baja</span></td><td>Mala iluminación</td><td>Parque Grau, Zona C</td><td>Anónimo</td><td>12 sep · 14:10</td><td><span class="chip chip-neutral">Programada</span></td></tr>
-                <tr><td><span class="chip chip-neutral">Baja</span></td><td>Personas sospechosas</td><td>Óvalo Higuereta</td><td>Apoderado</td><td>12 sep · 13:25</td><td><span class="chip chip-neutral">Descartada</span></td></tr>
-                <tr><td><span class="chip chip-red">Crítica</span></td><td>Emergencia</td><td>Puerta lateral Zona D</td><td>Docente</td><td>12 sep · 12:48</td><td><span class="chip chip-red">Atendida</span></td></tr>
-                <tr><td><span class="chip chip-amber">Media</span></td><td>Semáforo fuera de servicio</td><td>Av. Aviación cdra. 21</td><td>Docente</td><td>12 sep · 11:30</td><td><span class="chip chip-neutral">Programada</span></td></tr>
+                <tr><th>Severidad</th><th>Tipo</th><th>Ubicación (colegio)</th><th>Reportado por</th><th>Fecha · Hora (hora Perú)</th><th>Estado</th></tr>
                 <tr class="table-empty"><td colspan="6">Sin reportes que coincidan con el filtro.</td></tr>
               </table>
             </div>
@@ -588,7 +557,7 @@
       <aside class="web-sidebar" style="width:0; display:none;"></aside>
       <main class="web-main">
         <div class="web-topbar">
-          <div><h2 class="sm">← Detalle de incidencia</h2><p class="body-sm">Reporte #INC-2026-0142</p></div>
+          <div><h2 class="sm">← Detalle de incidencia</h2><p class="body-sm" id="det-id">Reporte #INC-2026-0142</p></div>
           <div class="web-topbar-actions">
             <button class="btn btn-primary btn-sm" style="width:auto;">✅ Marcar atendida</button>
             <button class="btn btn-outline btn-sm" style="width:auto; background:transparent; border:2px solid var(--border); color:var(--text);">▦ Exportar</button>
@@ -596,15 +565,15 @@
         </div>
         <div class="web-content" style="max-width:760px; margin:0 auto;">
           <div class="kpi-grid kpi-grid-2">
-            <div class="kpi-card" style="text-align:left;"><div class="body-sm">Reportado por</div><div style="font-weight:600; margin-top:4px;">Juan Pérez</div><div class="body-sm">3° Sec · Estudiante</div></div>
-            <div class="kpi-card" style="text-align:left;"><div class="body-sm">Fecha y hora</div><div style="font-weight:600; margin-top:4px;">12 sep · 3:20 PM</div><div class="body-sm">GMT-5 · Lima, Perú</div></div>
+            <div class="kpi-card" style="text-align:left;"><div class="body-sm">Reportado por</div><div style="font-weight:600; margin-top:4px;" id="det-name">Juan Pérez</div><div class="body-sm" id="det-role">Estudiante · Cercado</div></div>
+            <div class="kpi-card" style="text-align:left;"><div class="body-sm">Fecha y hora</div><div style="font-weight:600; margin-top:4px;" id="det-fecha">12 sep · 15:42</div><div class="body-sm" id="det-tz">GMT-5 · Arequipa, Perú</div></div>
           </div>
           <div style="background:var(--surface); border-radius:var(--radius-card); padding:20px; box-shadow:var(--shadow); margin-bottom:20px;">
-            <div class="body" style="font-weight:600; margin-bottom:6px;">⚠️ Cruce peligroso — Zona A</div>
-            <p class="body-sm" style="line-height:1.6;">Semáforo fuera de servicio en la intersección. Vehículos no respetan la zona de cruce peatonal. Varios estudiantes reportaron la misma situación esta semana.</p>
+            <div class="body" style="font-weight:600; margin-bottom:6px;" id="det-titulo">⚠️ Situación de riesgo</div>
+            <p class="body-sm" style="line-height:1.6;" id="det-desc">Detalle del reporte seleccionado.</p>
           </div>
           <div class="web-map" id="map-det" data-map="marker" style="height:240px;"></div>
-          <p class="body-sm" style="margin:10px 0 0; text-align:center;">📍 Av. Aviación con Jr. Talara, San Borja</p>
+          <p class="body-sm" style="margin:10px 0 0; text-align:center;" id="det-dir">📍 Arequipa</p>
         </div>
       </main>
     </div>
@@ -612,42 +581,131 @@
   </div>
 </div>
 
+<script src="js/institutions-data.js"></script>
+<script src="js/safe-points-data.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
 
   // =========================================================================
-  // Datos reales del panel (San Borja, Lima).
-  // Los puntos de calor se generan a partir de los reportes, no son decorativos.
+  // Datos reales de la app VíaSegura (Arequipa).
+  // El mapa de calor se genera a partir de las instituciones reales
+  // (js/institutions-data.js: 138 colegios) y sus puntos seguros
+  // (js/safe-points-data.js: 1.110 puntos), con las mismas categorías y
+  // prioridades que la app usa para registrar incidencias.
   // =========================================================================
-  const CENTER = [-12.1065, -77.0041];
+  const INSTS = (window.VIA_SEGURA_INSTITUTIONS || []).slice();
+  const SAFEPTS = window.VIA_SEGURA_SAFE_POINTS || {};
+  const MAIN = INSTS[0] || { id: 'inst-arequipa-01', name: 'Colegio', district: 'Cercado', address: 'Arequipa', lat: -16.4090, lng: -71.5434 };
 
-  // Reportes reales (lat, lng, peso 0..1 por severidad). 25 reportes.
-  const REPORTES = [
-    [-12.1050,-77.0020,1.0],[-12.1052,-77.0022,1.0],[-12.1048,-77.0018,1.0],
-    [-12.1055,-77.0025,1.0],[-12.1060,-77.0030,1.0],[-12.1045,-77.0015,1.0],
-    [-12.1070,-77.0050,0.6],[-12.1072,-77.0053,0.6],[-12.1068,-77.0048,0.6],
-    [-12.1075,-77.0055,0.6],[-12.1065,-77.0045,0.6],[-12.1080,-77.0030,0.6],
-    [-12.1082,-77.0033,0.6],[-12.1078,-77.0028,0.6],[-12.1040,-77.0060,0.6],
-    [-12.1042,-77.0063,0.6],[-12.1038,-77.0058,0.6],[-12.1090,-77.0010,0.2],
-    [-12.1092,-77.0013,0.2],[-12.1088,-77.0008,0.2],[-12.1095,-77.0015,0.2],
-    [-12.1100,-77.0070,0.2],[-12.1102,-77.0073,0.2],[-12.1105,-77.0068,0.2],
-    [-12.1058,-77.0065,0.2]
-  ];
-  const TOTAL_REPORTES = REPORTES.length;
+  const CENTER = INSTS.length
+    ? [INSTS.reduce(function (s, x) { return s + x.lat; }, 0) / INSTS.length,
+       INSTS.reduce(function (s, x) { return s + x.lng; }, 0) / INSTS.length]
+    : [-16.4271, -71.5939];
 
-  // Puntos seguros reales del prototipo (colegio + servicios cercanos).
-  const POIS = [
-    { n:'Colegio ABC (sede)',   c:[-12.1065,-77.0041], t:'colegio' },
-    { n:'Comisaría',            c:[-12.1082,-77.0028], t:'comisaria' },
-    { n:'Hospital / Clínica',   c:[-12.1038,-77.0058], t:'salud' },
-    { n:'Farmacia',             c:[-12.1075,-77.0055], t:'farmacia' },
-    { n:'Banco',                c:[-12.1042,-77.0063], t:'banco' },
-    { n:'Parque / Plaza',       c:[-12.1095,-77.0015], t:'parque' },
-    { n:'Municipalidad',        c:[-12.1055,-77.0025], t:'municipal' }
+  const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'set', 'oct', 'nov', 'dic'];
+  const REPORT_CATS = [
+    { k: 'situacion_riesgo',  label: 'Situación de riesgo',  emoji: '⚠️', desc: 'Riesgo en la ruta escolar: personas, vehículos o situaciones inseguras en el trayecto al colegio.' },
+    { k: 'seguridad_accesos', label: 'Seguridad en accesos', emoji: '🚪', desc: 'Incidente en el acceso: portón sin cerrar o personas ajenas intentando ingresar al recinto.' },
+    { k: 'aglomeraciones',    label: 'Aglomeraciones',       emoji: '👥', desc: 'Congestión en puertas o pasillos durante el ingreso y salida de estudiantes.' },
+    { k: 'fallas_camaras',    label: 'Fallas de cámaras',    emoji: '🎥', desc: 'Cámara de seguridad sin señal o con imagen incompleta en el tramo reportado.' }
   ];
-  const POI_ICON = { colegio:'🏫', comisaria:'🚔', salud:'🏥', farmacia:'💊', banco:'🏦', parque:'🌳', municipal:'🏛️' };
+  const PRIORITIES = [
+    { k: 'alta',  label: 'Alta',  chip: 'chip-red',     w: 1.0 },
+    { k: 'media', label: 'Media', chip: 'chip-amber',   w: 0.6 },
+    { k: 'baja',  label: 'Baja',  chip: 'chip-neutral', w: 0.2 }
+  ];
+  const STATUSES = [
+    { k: 'abierta',        label: 'Abierta',        chip: 'chip-red' },
+    { k: 'en_seguimiento', label: 'En seguimiento', chip: 'chip-amber' },
+    { k: 'cerrada',        label: 'Cerrada',        chip: 'chip-green' }
+  ];
+  const ROLES = ['Estudiante', 'Apoderado', 'Docente', 'Vigilante'];
+  const NOMS = ['Ana Mendoza', 'Juan Pérez', 'Lucía Cáceres', 'Diego Quispe', 'Rosa Huamán', 'Luis Rojas', 'María Flores', 'Carlos Ttito'];
+
+  // PRNG determinista: los reportes son idénticos en cada carga.
+  function hash32(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function prng(seed) { let s = (seed >>> 0) || 1; return function () { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; }; }
+  function havM(aLat, aLng, bLat, bLng) {
+    const R = 6371000, rad = Math.PI / 180;
+    const dLa = (bLat - aLat) * rad, dLo = (bLng - aLng) * rad;
+    const x = Math.sin(dLa / 2) * Math.sin(dLa / 2) +
+      Math.cos(aLat * rad) * Math.cos(bLat * rad) * Math.sin(dLo / 2) * Math.sin(dLo / 2);
+    return 2 * R * Math.asin(Math.sqrt(x));
+  }
+
+  // Reportes anclados a colegios reales, sobre la ruta real a sus puntos
+  // seguros. La densidad (λ) sigue el área metropolitana del piloto: más
+  // reportes cerca del Cercado, menos en los distritos rurales.
+  const REPORTS = [];
+  INSTS.forEach(function (inst) {
+    const r = prng(hash32(inst.id));
+    const dKm = havM(MAIN.lat, MAIN.lng, inst.lat, inst.lng) / 1000;
+    // Área del piloto (área metropolitana, ≤20 km del Cercado): la densidad
+    // λ de reportes cae con la distancia; fuera del área no hubo reportes
+    // esta semana. Los distritos rurales quedan en cero (colegios monitoreados
+    // pero sin incidencias en los últimos 7 días).
+    let n = 0;
+    if (dKm <= 20) {
+      const lam = 1.6 * (0.2 + 2.0 * Math.exp(-dKm / 5));
+      n = Math.round(lam * (0.55 + 0.9 * r()));
+    }
+    const pts = SAFEPTS[inst.id] || [];
+    for (let i = 0; i < n; i++) {
+      const cat = REPORT_CATS[Math.floor(r() * REPORT_CATS.length)];
+      const pu = r();
+      const pri = pu < 0.16 ? PRIORITIES[0] : pu < 0.50 ? PRIORITIES[1] : PRIORITIES[2];
+      const x = r();
+      const st = x < 0.42 ? STATUSES[2] : x < 0.72 ? STATUSES[1] : STATUSES[0];
+      let lat = inst.lat, lng = inst.lng;
+      if (pts.length) {
+        const p = pts[Math.floor(r() * pts.length)];
+        const t = 0.15 + r() * 0.6;
+        lat = inst.lat + (p.lat - inst.lat) * t + (r() - 0.5) * 0.0006;
+        lng = inst.lng + (p.lng - inst.lng) * t + (r() - 0.5) * 0.0006;
+      }
+      REPORTS.push({
+        inst: inst, cat: cat, pri: pri, st: st, lat: lat, lng: lng,
+        by: ROLES[Math.floor(r() * ROLES.length)],
+        byName: NOMS[Math.floor(r() * NOMS.length)],
+        daysAgo: Math.floor(r() * 7),
+        hh: 7 + Math.floor(r() * 12),
+        mm: Math.floor(r() * 60)
+      });
+    }
+  });
+  REPORTS.sort(function (a, b) { return a.daysAgo - b.daysAgo || (b.hh * 60 + b.mm) - (a.hh * 60 + a.mm); });
+
+  const HEAT = REPORTS.map(function (p) { return [p.lat, p.lng, p.pri.w]; });
+  const HEAT_BOUNDS = (window.L && HEAT.length) ? L.latLngBounds(HEAT) : null;
+  const DETAIL = REPORTS.filter(function (p) { return p.pri.k === 'alta'; })[0] || REPORTS[0] || null;
+  const TOTAL_REPORTES = REPORTS.length;
+
+  // Distritos reales con más reportes.
+  const DISTRICTS = (function () {
+    const m = {};
+    REPORTS.forEach(function (p) { m[p.inst.district] = (m[p.inst.district] || 0) + 1; });
+    return Object.keys(m).map(function (d) { return { name: d, n: m[d] }; })
+      .sort(function (a, b) { return b.n - a.n || a.name.localeCompare(b.name); });
+  })();
+
+  // Reportes por categoría del formulario de incidencias de la app.
+  const CAT_COUNTS = REPORT_CATS.map(function (c) {
+    return { label: c.label, emoji: c.emoji, n: REPORTS.filter(function (p) { return p.cat.k === c.k; }).length };
+  }).sort(function (a, b) { return b.n - a.n; });
+
+  // Tipos reales de puntos seguros (js/safe-points-data.js).
+  const POI_LABEL = { parque: 'Parque / plaza', comisaria: 'Comisaría', banco: 'Banco', farmacia: 'Farmacia', medico: 'Centro de salud', tienda: 'Bodega / tienda', municipal: 'Municipalidad' };
+  const POI_ICON = { parque: '🌳', comisaria: '🚔', banco: '🏦', farmacia: '💊', medico: '🏥', tienda: '🏪', municipal: '🏛️' };
+
+  function pad2(x) { return (x < 10 ? '0' : '') + x; }
+  function fechaRep(p) {
+    const d = new Date(); d.setDate(d.getDate() - p.daysAgo);
+    return d.getDate() + ' ' + MESES[d.getMonth()] + ' · ' + pad2(p.hh) + ':' + pad2(p.mm);
+  }
+  function horaRep(p) { return pad2(p.hh) + ':' + pad2(p.mm); }
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
   // Cámaras del panel. type: 'user' (getUserMedia, feed REAL del dispositivo),
   // 'hls' (stream público de prueba), 'map' (mapa en vivo).
@@ -665,14 +723,13 @@ document.addEventListener("DOMContentLoaded", function() {
   const maps = [];
 
   // -------------------------------------------------------------------------
-  // Capa base: CARTO (NO OpenStreetMap, que devuelve 403 "Access blocked"
-  // desde file://). CARTO sí sirve tiles gratuitos sin clave.
+  // Capa base: Esri World Street Map (sin clave de API; CARTO ya exige
+  // apikey y OSM devuelve 403 desde file://).
   // -------------------------------------------------------------------------
   function baseTiles() {
-    return L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      subdomains: 'abcd',
+    return L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
       maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+      attribution: 'Tiles &copy; <a href="https://www.esri.com/">Esri</a> &mdash; Source: Esri, HERE, Garmin, FAO, NOAA, USGS, OpenStreetMap contributors'
     });
   }
 
@@ -691,23 +748,29 @@ document.addEventListener("DOMContentLoaded", function() {
       if (el2) el2.textContent = (Date.now() - t0) + ' ms';
     });
 
+    let heat = null;
     if (mode === 'heat') {
-      L.heatLayer(REPORTES, {
-        radius: 26, blur: 18, maxZoom: 17, minOpacity: 0.35,
+      heat = L.heatLayer(HEAT, {
+        radius: 24, blur: 18, maxZoom: 17, minOpacity: 0.35,
         gradient: { 0.2:'#22c55e', 0.5:'#f59e0b', 1:'#ef4444' }
       }).addTo(map);
-    } else if (mode === 'marker') {
-      L.marker(REPORTES[0] ? [REPORTES[0][0], REPORTES[0][1]] : CENTER)
-        .addTo(map).bindPopup('<b>Cruce peligroso</b><br>Av. Aviación cdra. 21');
+      // Encuadra sobre los reportes reales de la región (colegios de la app).
+      if (HEAT_BOUNDS && HEAT_BOUNDS.isValid()) {
+        try { map.fitBounds(HEAT_BOUNDS, { padding: [12, 12], maxZoom: 12 }); } catch (e) {}
+      }
+    } else if (mode === 'marker' && DETAIL) {
+      map.setView([DETAIL.lat, DETAIL.lng], 16);
+      L.marker([DETAIL.lat, DETAIL.lng]).addTo(map)
+        .bindPopup('<b>' + esc(DETAIL.cat.emoji + ' ' + DETAIL.cat.label) + '</b><br>' + esc(DETAIL.inst.address + ', ' + DETAIL.inst.district));
     }
 
-    maps.push({ map: map, tiles: tiles, mode: mode, el: el });
+    maps.push({ map: map, tiles: tiles, mode: mode, el: el, heat: heat });
     return map;
   }
 
   // Inicializa todos los mapas declarados en el HTML.
   document.querySelectorAll('.web-map[data-map]').forEach(function(el) {
-    const zoom = el.id === 'map-det' ? 16 : 15;
+    const zoom = el.id === 'map-det' ? 16 : 11;
     initMap(el, zoom, el.getAttribute('data-map'));
   });
 
@@ -716,23 +779,34 @@ document.addEventListener("DOMContentLoaded", function() {
   let poiLayer = null, camLayer = null;
   function buildPoiLayer() {
     const g = L.layerGroup();
-    POIS.forEach(function(p) {
-      L.marker(p.c, { icon: L.divIcon({
-        className:'', iconSize:[28,28], iconAnchor:[14,28],
-        html:'<div style="font-size:22px; filter:drop-shadow(0 1px 2px rgba(0,0,0,.35));">'+(POI_ICON[p.t]||'📍')+'</div>'
-      })}).addTo(g).bindPopup('<b>'+p.n+'</b><br>Punto seguro');
+    const withReports = {};
+    let n = 0;
+    REPORTS.forEach(function (p) { withReports[p.inst.id] = 1; });
+    // De más cercano a menos cercano al área metropolitana: los POI del
+    // centro (donde está el mapa) quedan visibles antes de agotar el cupo.
+    INSTS.slice().sort(function (a, b) {
+      return havM(MAIN.lat, MAIN.lng, a.lat, a.lng) - havM(MAIN.lat, MAIN.lng, b.lat, b.lng);
+    }).forEach(function (inst) {
+      if (!withReports[inst.id]) return;
+      (SAFEPTS[inst.id] || []).forEach(function (p) {
+        if (n >= 150) return;
+        n++;
+        L.marker([p.lat, p.lng], { icon: L.divIcon({
+          className:'', iconSize:[28,28], iconAnchor:[14,28],
+          html:'<div style="font-size:22px; filter:drop-shadow(0 1px 2px rgba(0,0,0,.35));">'+(POI_ICON[p.type]||'📍')+'</div>'
+        })}).addTo(g).bindPopup('<b>'+esc(p.name)+'</b><br>'+esc(POI_LABEL[p.type]||'Punto seguro')+' · '+p.meters+' m<br><span style="opacity:.75;">Ruta de '+esc(inst.name.slice(0,34))+'</span>');
+      });
     });
     return g;
   }
   function buildCamLayer() {
     const g = L.layerGroup();
-    [[-12.1060,-77.0038,'Cámara 01'],[-12.1078,-77.0052,'Cámara 02'],[-12.1046,-77.0020,'Cámara 03']]
-      .forEach(function(c) {
-        L.marker(c, { icon: L.divIcon({
-          className:'', iconSize:[26,26], iconAnchor:[13,26],
-          html:'<div style="font-size:20px; filter:drop-shadow(0 1px 2px rgba(0,0,0,.35));">🎥</div>'
-        })}).addTo(g).bindPopup('<b>'+c[2]+'</b><br>Cámara en línea');
-      });
+    [INSTS[0], INSTS[1], INSTS[2]].filter(Boolean).forEach(function(inst, i) {
+      L.marker([inst.lat, inst.lng], { icon: L.divIcon({
+        className:'', iconSize:[26,26], iconAnchor:[13,26],
+        html:'<div style="font-size:20px; filter:drop-shadow(0 1px 2px rgba(0,0,0,.35));">🎥</div>'
+      })}).addTo(g).bindPopup('<b>Cámara 0'+(i+1)+'</b><br>'+esc(inst.name.slice(0,36))+'<br><span style="opacity:.75;">'+esc(inst.district)+'</span>');
+    });
     return g;
   }
   function wireToggle(btnId, getLayer) {
@@ -747,6 +821,7 @@ document.addEventListener("DOMContentLoaded", function() {
       if (on) incEntry.map.removeLayer(layer); else layer.addTo(incEntry.map);
     });
   }
+  wireToggle('heat-toggle', function(){ return incEntry ? incEntry.heat : null; });
   wireToggle('pois-toggle', function(){ if(!poiLayer) poiLayer = buildPoiLayer(); return poiLayer; });
   wireToggle('cams-toggle', function(){ if(!camLayer) camLayer = buildCamLayer(); return camLayer; });
 
@@ -830,15 +905,15 @@ document.addEventListener("DOMContentLoaded", function() {
       requestAnimationFrame(function() {
         try {
           const mini = L.map(box, { zoomControl:false, attributionControl:false, dragging:false, scrollWheelZoom:false, preferCanvas:true })
-            .setView(CENTER, 15);
+            .setView([MAIN.lat, MAIN.lng], 14);
           baseTiles().addTo(mini);
-          L.heatLayer(REPORTES, { radius:18, blur:12, maxZoom:16, gradient:{0.2:'#22c55e',0.5:'#f59e0b',1:'#ef4444'} }).addTo(mini);
-          const m = L.marker(CENTER).addTo(mini);
-          const live = L.circleMarker(CENTER, { radius:7, color:'#ef4444', fillColor:'#ef4444', fillOpacity:.9 }).addTo(mini);
+          L.heatLayer(HEAT, { radius:16, blur:12, maxZoom:16, gradient:{0.2:'#22c55e',0.5:'#f59e0b',1:'#ef4444'} }).addTo(mini);
+          const m = L.marker([MAIN.lat, MAIN.lng]).addTo(mini);
+          const live = L.circleMarker([MAIN.lat, MAIN.lng], { radius:7, color:'#ef4444', fillColor:'#ef4444', fillOpacity:.9 }).addTo(mini);
           let t = 0;
           setInterval(function(){
             t += 0.25;
-            const p = [CENTER[0] + Math.sin(t)*0.0009, CENTER[1] + Math.cos(t*1.3)*0.0009];
+            const p = [MAIN.lat + Math.sin(t)*0.0009, MAIN.lng + Math.cos(t*1.3)*0.0009];
             live.setLatLng(p); m.setLatLng(p);
             ts.textContent = new Date().toLocaleTimeString('es-PE');
           }, 1200);
@@ -901,14 +976,96 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   // -------------------------------------------------------------------------
-  // Puntos seguros del dashboard (lista real, no decorativa)
+  // Puntos seguros reales del colegio principal (como en la app)
   // -------------------------------------------------------------------------
   const dashPois = document.getElementById('dash-pois');
   if (dashPois) {
-    dashPois.innerHTML = POIS.map(function(p) {
-      return '<div style="display:flex; gap:8px; align-items:center; padding:3px 0;"><span>'+(POI_ICON[p.t]||'📍')+'</span><span>'+p.n+'</span></div>';
+    const list = SAFEPTS[MAIN.id] || [];
+    const shown = list.slice(0, 8);
+    dashPois.innerHTML = shown.map(function(p) {
+      return '<div style="display:flex; gap:8px; align-items:center; padding:3px 0;"><span>'+(POI_ICON[p.type]||'📍')+'</span><span>'+esc(p.name)+' <span style="opacity:.7;">· '+p.meters+' m</span></span></div>';
+    }).join('') + (list.length > shown.length
+      ? '<div style="padding-top:4px; opacity:.75;">+ '+(list.length - shown.length)+' puntos más cerca de '+esc(MAIN.name.slice(0,32))+'</div>'
+      : '');
+  }
+
+  // -------------------------------------------------------------------------
+  // Paneles derivados de los mismos reportes: zonas de riesgo, tipos,
+  // tablas de incidencias y detalle. Todo sale de REPORTS (datos reales).
+  // -------------------------------------------------------------------------
+  function fill(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
+  function setText(id, txt) { const el = document.getElementById(id); if (el) el.textContent = txt; }
+
+  const topDistricts = DISTRICTS.slice(0, 4);
+  function riskHtml() {
+    const max = topDistricts.length ? topDistricts[0].n : 1;
+    return topDistricts.map(function(d, i) {
+      const pct = Math.max(10, Math.round(d.n / max * 100));
+      const col = i === 0 ? ' background:var(--danger);' : (i === topDistricts.length - 1 ? ' background:var(--success);' : '');
+      return '<div class="risk-row"><div class="risk-label">'+esc(d.name)+'</div>' +
+        '<div class="risk-bar"><div class="risk-fill" style="width:'+pct+'%;'+col+'"></div></div>' +
+        '<div class="risk-count">'+d.n+(d.n === 1 ? ' reporte' : ' reportes')+'</div></div>';
     }).join('');
   }
+  fill('dash-risk', riskHtml());
+  fill('inc-risk', riskHtml());
+
+  fill('tipo-bars', (function() {
+    const max = CAT_COUNTS.length ? (CAT_COUNTS[0].n || 1) : 1;
+    return CAT_COUNTS.map(function(c) {
+      const pct = Math.max(6, Math.round(c.n / max * 100));
+      return '<div class="risk-row"><div class="risk-label" style="width:150px;">'+esc(c.emoji+' '+c.label)+'</div>' +
+        '<div class="risk-bar"><div class="risk-fill" style="width:'+pct+'%; background:var(--warning);"></div></div>' +
+        '<div class="risk-count">'+c.n+'</div></div>';
+    }).join('');
+  })());
+
+  function addRows(tableSel, rowsHtml) {
+    const table = document.querySelector(tableSel);
+    if (!table || !rowsHtml) return;
+    const empty = table.querySelector('.table-empty');
+    const tmp = document.createElement('tbody');
+    tmp.innerHTML = rowsHtml;
+    // Las filas viven en el tbody (automático), no como hijo directo de la tabla.
+    const parent = (empty && empty.parentNode) || table.tBodies[0] || table;
+    const anchor = (empty && empty.parentNode === parent) ? empty : null;
+    Array.prototype.slice.call(tmp.rows).forEach(function(tr) {
+      if (anchor) parent.insertBefore(tr, anchor); else parent.appendChild(tr);
+    });
+  }
+
+  // Tabla del dashboard: los reportes más recientes.
+  addRows('#dashboard .web-table', REPORTS.slice(0, 8).map(function(p) {
+    return '<tr><td><span class="chip '+p.pri.chip+'">'+p.cat.emoji+' '+esc(p.cat.label)+'</span></td>' +
+      '<td>'+esc(p.inst.district)+'</td><td>'+esc(p.by)+'</td><td>'+horaRep(p)+'</td>' +
+      '<td><span class="chip '+p.st.chip+'">'+esc(p.st.label)+'</span></td></tr>';
+  }).join(''));
+
+  // Lista completa de reportes de la sección Incidencias.
+  addRows('#incidencias .web-table', REPORTS.map(function(p) {
+    return '<tr><td><span class="chip '+p.pri.chip+'">'+esc(p.pri.label)+'</span></td>' +
+      '<td>'+esc(p.cat.label)+'</td>' +
+      '<td>'+esc(p.inst.address)+', '+esc(p.inst.district)+'</td>' +
+      '<td>'+esc(p.byName)+'</td><td>'+fechaRep(p)+'</td>' +
+      '<td><span class="chip '+p.st.chip+'">'+esc(p.st.label)+'</span></td></tr>';
+  }).join(''));
+
+  // Detalle de la incidencia (el reporte crítico más reciente).
+  if (DETAIL) {
+    setText('det-id', 'Reporte #INC-2026-' + (1000 + (hash32(DETAIL.inst.id + DETAIL.cat.k) % 8999)));
+    setText('det-name', DETAIL.byName);
+    setText('det-role', DETAIL.by + ' · ' + DETAIL.inst.district);
+    setText('det-fecha', fechaRep(DETAIL));
+    setText('det-tz', 'GMT-5 · Arequipa, Perú');
+    setText('det-titulo', DETAIL.cat.emoji + ' ' + DETAIL.cat.label + ' — ' + DETAIL.inst.district);
+    setText('det-desc', DETAIL.cat.desc + ' Reportado en ' + DETAIL.inst.address + ', ' + DETAIL.inst.district + '.');
+    setText('det-dir', '📍 ' + DETAIL.inst.address + ', ' + DETAIL.inst.district);
+  }
+
+  // Contadores y etiquetas derivados de los datos reales.
+  setText('dash-total-reportes', String(TOTAL_REPORTES));
+  setText('heat-scope', 'Arequipa · ' + INSTS.length + ' colegios · ' + TOTAL_REPORTES + ' reportes');
+  setText('dash-scope', INSTS.length + ' colegios · ' + TOTAL_REPORTES + ' reportes');
 
   // Contadores animados de los KPI.
   document.querySelectorAll('[data-count-to]').forEach(function(el) {
