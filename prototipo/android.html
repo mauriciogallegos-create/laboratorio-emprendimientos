@@ -405,10 +405,10 @@
             <div class="card-icon red">🚨</div>
             <div>
               <div class="body" style="font-weight:600;" data-alerta-name>Juan Pérez</div>
-              <div class="body-sm">I.E. Micaela Bastidas · 4:35 PM</div>
+              <div class="body-sm"><span data-alerta-school>I.E. Micaela Bastidas</span> · 4:35 PM</div>
             </div>
           </div>
-          <div style="background:var(--danger-bg); border-radius:8px; padding:10px; font-size:12px; color:var(--danger); margin-bottom:12px;"> Última ubicación: Av. Goyeneche 210, Cercado, Arequipa</div>
+          <div style="background:var(--danger-bg); border-radius:8px; padding:10px; font-size:12px; color:var(--danger); margin-bottom:12px;"> Última ubicación: <span data-alerta-location>I.E. Micaela Bastidas · Cercado, Arequipa</span></div>
           <div style="display:flex; gap:10px;">
             <button class="btn btn-outline alert-action" id="alerta-call" style="flex:1;">📞 LLAMAR</button>
             <button class="btn btn-outline alert-action" id="alerta-sms" style="flex:1;">💬 MENSAJE</button>
@@ -699,8 +699,12 @@
       </div>
       <div class="content" style="padding-top:16px;">
         <div class="input-group">
+          <label class="input-label" for="incidencia-school">Colegio</label>
+          <select id="incidencia-school" class="input select"></select>
+        </div>
+        <div class="input-group">
           <label class="input-label">Tipo de incidencia</label>
-          <select class="input select">
+          <select id="incidencia-tipo" class="input select">
             <option>Cruce peligroso</option>
             <option>Vehículo a alta velocidad</option>
             <option>Mala iluminación</option>
@@ -710,20 +714,20 @@
         </div>
         <div class="input-group">
           <label class="input-label">Descripción (opcional)</label>
-          <textarea class="input" rows="3" style="resize:none;" placeholder="Describe brevemente lo ocurrido..."></textarea>
+          <textarea id="incidencia-desc" class="input" rows="3" style="resize:none;" placeholder="Describe brevemente lo ocurrido..."></textarea>
         </div>
         <div class="card" style="background:var(--success-bg); border:1px solid var(--success);">
           <div class="card-row">
             <div class="card-icon green"></div>
             <div>
               <div class="body" style="font-weight:600;">Ubicación detectada</div>
-              <div class="body-sm">Av. Goyeneche 210, Cercado, Arequipa</div>
+              <div class="body-sm" data-incidencia-address>—</div>
             </div>
           </div>
         </div>
         <button class="btn btn-outline btn-sm" style="width:100%; margin-bottom:16px;" data-capture="incidencia-preview" type="button">📷 Agregar foto</button>
         <div id="incidencia-preview" class="photo-preview"></div>
-        <button class="btn btn-primary">ENVIAR REPORTE</button>
+        <button class="btn btn-primary" id="incidencia-enviar">ENVIAR REPORTE</button>
       </div>
     </div>
 
@@ -802,12 +806,12 @@
             <div class="card-icon red">🚨</div>
             <div>
               <div class="body" style="font-weight:700;" data-padre-alert-child>Juan ha enviado una alerta</div>
-              <div class="body-sm">I.E. Micaela Bastidas · 4:36 PM</div>
+              <div class="body-sm"><span data-alerta-school>I.E. Micaela Bastidas</span> · 4:36 PM</div>
             </div>
           </div>
         </div>
         <div class="vs-map"></div>
-        <p class="body-sm" style="text-align:center; margin:8px 0 16px; color:var(--danger); font-weight:600;">Última ubicación: Av. Goyeneche 210, Cercado, Arequipa</p>
+        <p class="body-sm" style="text-align:center; margin:8px 0 16px; color:var(--danger); font-weight:600;">Última ubicación: <span data-alerta-location>I.E. Micaela Bastidas · Cercado, Arequipa</span></p>
         <div style="display:flex; gap:10px; margin-bottom:20px;">
             <button class="btn btn-primary alert-action" id="padre-call-juan" style="flex:1;" data-padre-call-child>📞 LLAMAR A JUAN</button>
             <button class="btn btn-primary alert-action" id="padre-call-colegio" style="flex:1;">📞 LLAMAR AL COLEGIO</button>

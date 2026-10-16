@@ -966,6 +966,15 @@
     document.querySelectorAll('[data-padre-child-name]').forEach(function (el) { el.textContent = first; });
     document.querySelectorAll('[data-padre-alert-child]').forEach(function (el) { el.textContent = first + ' ha enviado una alerta'; });
     document.querySelectorAll('[data-padre-call-child]').forEach(function (el) { el.textContent = '📞 LLAMAR A ' + first.toUpperCase(); });
+    const inst = currentInstitution();
+    if (inst) {
+      document.querySelectorAll('[data-alerta-school]').forEach(function (el) { el.textContent = inst.name; });
+    }
+    const gps = Store.state.gps;
+    const locText = (gps && gps.lat != null)
+      ? 'Lat ' + Number(gps.lat).toFixed(4) + ', Lng ' + Number(gps.lng).toFixed(4)
+      : (inst ? inst.name + ' · ' + (inst.district || 'Arequipa') + ', Arequipa' : 'Ubicación no disponible');
+    document.querySelectorAll('[data-alerta-location]').forEach(function (el) { el.textContent = locText; });
   }
 
   function renderProfile() {
@@ -1461,6 +1470,85 @@
   }
 
   // ===========================================================================
+  // ui/incidencias.js · Reporte de incidencia redactado por el estudiante.
+  // El colegio se elige ARRIBA y la ubicación detectada es la del colegio.
+  // ===========================================================================
+  function incidentInstitution() {
+    const chosen = Store.institution(Store.state.incidentInstitutionId);
+    if (chosen) return chosen;
+    return currentInstitution();
+  }
+
+  function populateIncidentSchoolSelect() {
+    const select = el('incidencia-school');
+    if (!select) return;
+    const insts = Store.institutions().slice().sort(function (a, b) {
+      return String(a.district || '').localeCompare(String(b.district || '')) ||
+        String(a.name || '').localeCompare(String(b.name || ''));
+    });
+    clearChildren(select);
+    let currentDistrict = null;
+    let group = null;
+    insts.forEach(function (inst) {
+      if (inst.district !== currentDistrict) {
+        currentDistrict = inst.district;
+        group = document.createElement('optgroup');
+        group.label = currentDistrict || 'Otras zonas';
+        select.appendChild(group);
+      }
+      const opt = document.createElement('option');
+      opt.value = inst.id;
+      opt.textContent = inst.name;
+      group.appendChild(opt);
+    });
+    const chosen = incidentInstitution();
+    select.value = chosen ? chosen.id : '';
+  }
+
+  function updateIncidentAddress() {
+    const inst = incidentInstitution();
+    const text = inst
+      ? inst.name + ' · ' + (inst.district || 'Arequipa') + ', Arequipa'
+      : 'Selecciona un colegio';
+    document.querySelectorAll('[data-incidencia-address]').forEach(function (n) { n.textContent = text; });
+  }
+
+  function bindIncidentReport() {
+    populateIncidentSchoolSelect();
+    updateIncidentAddress();
+    const select = el('incidencia-school');
+    if (select) {
+      select.addEventListener('change', function () {
+        Store.state.incidentInstitutionId = select.value || null;
+        updateIncidentAddress();
+      });
+    }
+    const btn = el('incidencia-enviar');
+    if (btn) {
+      btn.addEventListener('click', function () {
+        const u = Store.state.user;
+        const inst = incidentInstitution();
+        const category = (el('incidencia-tipo') || {}).value || 'Otro';
+        const description = (el('incidencia-desc') || {}).value || '';
+        Store.state.incidents.unshift({
+          id: 'inc-' + Date.now(),
+          institutionId: inst ? inst.id : (u ? u.institutionId : null),
+          category: category,
+          description: description || 'Incidencia reportada desde el colegio.',
+          priority: 'media',
+          status: 'abierta',
+          createdAt: new Date().toISOString(),
+          reportedBy: u ? u.name : 'Anónimo'
+        });
+        renderIncidentList(document.querySelector('[data-list="incidents"]'));
+        if (el('incidencia-desc')) el('incidencia-desc').value = '';
+        toast('Incidencia registrada correctamente.', 'success');
+        showScreen('home');
+      });
+    }
+  }
+
+  // ===========================================================================
   // ui/auth.js
   // ===========================================================================
   function routeAfterLogin(user) {
@@ -1531,9 +1619,10 @@
     const style = document.createElement('style');
     style.id = 'vs-runtime-styles';
     style.textContent =
-      '.vs-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);' +
+      '.vs-toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);' +
       'background:#1C2836;color:#fff;padding:12px 18px;border-radius:8px;font-size:13px;opacity:0;' +
-      'transition:all .25s;z-index:99999;max-width:86%;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.25);}' +
+      'transition:all .25s;z-index:99999;max-width:86%;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.25);' +
+      'pointer-events:none;}' +
       '.vs-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}' +
       '.vs-toast.success{background:#2E7D32;}.vs-toast.error{background:#C62828;}';
     document.head.appendChild(style);
@@ -2166,6 +2255,7 @@
       updateGpsUi();
     }
     if (id === 'puntos') { populateSafeSchoolSelect(); renderSafePoints(); }
+    if (id === 'incidencia') { populateIncidentSchoolSelect(); updateIncidentAddress(); }
     if (id === 'esp32') renderEsp32();
     if (id === 'recorrido' || id === 'padre') startGpsWatch();
   }
@@ -2421,6 +2511,7 @@
     bindLogin();
     bindPanelEntry();
     bindIncidentForm();
+    bindIncidentReport();
     bindPhotoCapture();
     bindQrScanner();
     bindInstitutions();
