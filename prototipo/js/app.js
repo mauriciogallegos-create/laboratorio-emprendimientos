@@ -2209,20 +2209,17 @@
   // `origin` puede ser un arreglo [lat,lng] o el objeto GPS { lat, lng }.
   function routeEmbedUrl(inst, origin) {
     const school = [inst.lat, inst.lng];
-    let from;
-    if (Array.isArray(origin)) {
+    let from = null;
+    if (Array.isArray(origin) && origin.length >= 2) {
       from = origin;
-    } else if (origin && typeof origin.lat === 'number') {
+    } else if (origin && typeof origin.lat === 'number' && typeof origin.lng === 'number') {
       from = [origin.lat, origin.lng];
-    } else {
-      from = homeCoords(inst);
     }
+    // Sin GPS real NO se inventa un origen: se muestra solo el destino para que
+    // "mi ubicación" nunca sea un punto falso cerca del colegio.
+    if (!from) return 'https://maps.google.com/maps?daddr=' + school[0] + ',' + school[1] + '&hl=es&output=embed';
     return 'https://maps.google.com/maps?saddr=' + from[0] + ',' + from[1] +
       '&daddr=' + school[0] + ',' + school[1] + '&hl=es&output=embed';
-  }
-
-  function homeCoords(inst) {
-    return [inst.lat - 0.0062, inst.lng + 0.0060];
   }
 
   // Actualiza los iframes de Google Maps (con throttle) cuando cambia el GPS.

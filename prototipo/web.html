@@ -48,9 +48,46 @@
 .heat-controls .chip { cursor:pointer; }
 @media (max-width:1100px){ .cam-grid { grid-template-columns: repeat(2,1fr); } }
 @media (max-width:680px){ .cam-grid { grid-template-columns: 1fr; } }
+
+/* ===== LOGIN tipo Django: bloquea TODO el panel hasta autenticarse ===== */
+body:not(.vs-authed) { overflow:hidden; }
+#vs-login { position:fixed; inset:0; z-index:100000; display:flex; align-items:center; justify-content:center;
+  background: radial-gradient(1200px 620px at 50% -10%, #1b4a7a 0%, #0f2740 55%, #0a1a2b 100%); padding:20px; }
+body.vs-authed #vs-login { display:none; }
+.vs-login-card { width:100%; max-width:400px; background:var(--surface); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,.45);
+  padding:32px 30px 24px; border-top:5px solid #0F2A4A; }
+.vs-login-logo { width:56px; height:56px; margin:0 auto 14px; border-radius:14px; display:flex; align-items:center; justify-content:center;
+  font-size:28px; background:linear-gradient(135deg,#1B4E9B,#0F2A4A); color:#fff; box-shadow:var(--shadow-lg); }
+.vs-login-card h1 { text-align:center; font-size:22px; color:var(--text); margin-bottom:2px; }
+.vs-login-sub { text-align:center; font-size:13px; color:var(--text-muted); margin-bottom:22px; }
+.vs-login-card label { display:block; font-size:12px; font-weight:600; color:var(--text-muted); margin:14px 0 6px; text-transform:uppercase; letter-spacing:.4px; }
+.vs-login-card input { width:100%; padding:11px 12px; border:1px solid var(--border); border-radius:10px; font-size:14px; background:var(--bg); color:var(--text); outline:none; }
+.vs-login-card input:focus { border-color:#1B4E9B; box-shadow:0 0 0 3px rgba(27,78,155,.15); background:#fff; }
+.vs-login-btn { width:100%; margin-top:20px; padding:12px; border:0; border-radius:10px; background:linear-gradient(135deg,#1B4E9B,#0F2A4A); color:#fff; font-size:14px; font-weight:600; cursor:pointer; }
+.vs-login-btn:hover { filter:brightness(1.08); }
+.vs-login-msg { display:none; margin-top:14px; padding:10px 12px; border-radius:8px; font-size:13px; background:var(--danger-bg); color:var(--danger); }
+.vs-login-msg.show { display:block; }
+.vs-login-help { text-align:center; font-size:11px; color:var(--text-muted); margin-top:16px; }
+.web-nav-item.vs-logout { cursor:pointer; }
 </style>
 </head>
 <body>
+
+<!-- ===== ACCESO (login tipo Django): se exige usuario y contraseña ===== -->
+<div id="vs-login">
+  <form class="vs-login-card" id="vs-login-form" autocomplete="off" novalidate>
+    <div class="vs-login-logo">🛡️</div>
+    <h1>VíaSegura</h1>
+    <p class="vs-login-sub">Panel Web Institucional · Acceso restringido</p>
+    <label for="vs-user">Usuario</label>
+    <input id="vs-user" name="username" type="text" placeholder="admin" autocomplete="username" required>
+    <label for="vs-pass">Contraseña</label>
+    <input id="vs-pass" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required>
+    <button type="submit" class="vs-login-btn">Iniciar sesión</button>
+    <div class="vs-login-msg" id="vs-login-msg" role="alert"></div>
+    <p class="vs-login-help">Solo personal autorizado (administración tipo Django)</p>
+  </form>
+</div>
 
 <div class="screen-group">
   <h2>🏫 VíaSegura — Panel Web Institucional</h2>
@@ -842,6 +879,57 @@ document.addEventListener("DOMContentLoaded", function() {
   const camsTotalEl = document.getElementById('cams-total');
   const dashCamsEl = document.getElementById('dash-cams');
 
+  // Una sola captura de la webcam local se comparte entre todas las "user"
+  // (cam1 y cam5). Así basta aceptar el permiso una vez y no fallan las dos.
+  let localCamStream = null;
+  let localCamError = '';
+
+  function applyUserStream(box, st, ts, stream) {
+    if (!box || box.querySelector('video')) return;
+    const v = document.createElement('video');
+    v.autoplay = true; v.playsInline = true; v.muted = true; v.srcObject = stream;
+    box.innerHTML = ''; box.appendChild(v);
+    if (st) st.innerHTML = '<b style="color:#16a34a">● En vivo</b> (webcam local)';
+    const card = box.closest('.cam-card');
+    const b = card ? card.querySelector('.cam-actions button') : null;
+    if (b) b.remove();
+    if (ts && !ts.dataset.ticking) {
+      ts.dataset.ticking = '1';
+      setInterval(function(){ ts.textContent = new Date().toLocaleTimeString('es-PE'); }, 1000);
+    }
+  }
+
+  function startUserCam(id, st, ts, btn) {
+    const box = document.getElementById('box-'+id);
+    if (!box || box.querySelector('video')) return;
+    if (localCamStream) { if (btn) btn.remove(); applyUserStream(box, st, ts, localCamStream); return; }
+    if (localCamError) { if (st) st.textContent = 'Sin permiso de cámara ('+localCamError+')'; return; }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      localCamError = 'no soportado';
+      if (st) st.textContent = 'Cámara no soportada en este navegador';
+      return;
+    }
+    if (st) st.textContent = 'Solicitando permiso…';
+    navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' }, audio:false })
+      .then(function(stream) {
+        localCamStream = stream;
+        document.querySelectorAll('[data-cam-user]').forEach(function(b) {
+          const card = b.closest('.cam-card');
+          applyUserStream(b, card ? card.querySelector('.cam-foot span') : null, card ? card.querySelector('.cam-foot b') : null, stream);
+        });
+      })
+      .catch(function(e) {
+        localCamError = (e && e.name) ? e.name : 'error';
+        if (st) st.textContent = 'Sin permiso de cámara ('+localCamError+')';
+      });
+  }
+
+  function startAllUserCams() {
+    CAMS.filter(function(c){ return c.type === 'user'; }).forEach(function(c){
+      startUserCam(c.id, document.getElementById('st-'+c.id), document.getElementById('ts-'+c.id), null);
+    });
+  }
+
   function camCard(c) {
     const card = document.createElement('div');
     card.className = 'cam-card';
@@ -860,23 +948,11 @@ document.addEventListener("DOMContentLoaded", function() {
     const ts = card.querySelector('#ts-'+c.id);
 
     if (c.type === 'user') {
+      box.setAttribute('data-cam-user', c.id);
       box.innerHTML = '<div class="cam-placeholder">Feed real del dispositivo.<br>Pulsa <b>▶ Iniciar</b> y acepta el permiso.</div>';
       const btn = document.createElement('button');
       btn.className = 'btn btn-primary btn-sm'; btn.style.width='auto'; btn.textContent = '▶ Iniciar';
-      btn.addEventListener('click', async function() {
-        st.textContent = 'Solicitando permiso…';
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' }, audio:false });
-          const v = document.createElement('video');
-          v.autoplay = true; v.playsInline = true; v.muted = true; v.srcObject = stream;
-          box.innerHTML = ''; box.appendChild(v);
-          st.innerHTML = '<b style="color:#16a34a">● En vivo</b> (webcam local)';
-          btn.remove();
-          setInterval(function(){ ts.textContent = new Date().toLocaleTimeString('es-PE'); }, 1000);
-        } catch(e) {
-          st.textContent = 'Sin permiso de cámara ('+ (e && e.name ? e.name : 'error') +')';
-        }
-      });
+      btn.addEventListener('click', function() { startUserCam(c.id, st, ts, btn); });
       actions.appendChild(btn);
     } else if (c.type === 'hls') {
       box.innerHTML = '<div class="cam-placeholder">Cargando stream HLS…</div>';
@@ -971,6 +1047,8 @@ document.addEventListener("DOMContentLoaded", function() {
       await loadHlsLib();
       // Reconstruye las tarjetas para que los streams HLS arranquen ya con la lib.
       buildCams();
+      // Arranca también las cámaras de webcam local (permiso una sola vez).
+      startAllUserCams();
       btnStartCams.textContent = '✅ Cámaras activas';
     });
   }
@@ -1170,6 +1248,62 @@ document.querySelectorAll('.web-frame').forEach(function(frame) {
         apply();
     }
     document.addEventListener('DOMContentLoaded', function(){ document.querySelectorAll('[data-filter]').forEach(initFilter); });
+})();
+</script>
+
+<script>
+/* ===== Control de acceso al panel (estilo Django) =====
+   Usuario: admin · Contraseña: viasegura2026
+   La sesión se guarda en sessionStorage: al cerrar la pestaña se pide de nuevo. */
+(function () {
+  var USER = 'admin';
+  var PASS = 'viasegura2026';
+  var KEY = 'vs-panel-auth';
+
+  var overlay = document.getElementById('vs-login');
+  var form = document.getElementById('vs-login-form');
+  var msg = document.getElementById('vs-login-msg');
+  var inputUser = document.getElementById('vs-user');
+  var inputPass = document.getElementById('vs-pass');
+
+  function setAuthed(on) { document.body.classList.toggle('vs-authed', !!on); }
+  function readSession() { try { return sessionStorage.getItem(KEY); } catch (e) { return null; } }
+  function writeSession(v) { try { v == null ? sessionStorage.removeItem(KEY) : sessionStorage.setItem(KEY, v); } catch (e) {} }
+
+  // El panel ya está maquetado detrás (Leaflet calcula bien su tamaño);
+  // el overlay lo tapa hasta iniciar sesión.
+  setAuthed(readSession() === 'ok');
+
+  if (form) {
+    form.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var u = (inputUser && inputUser.value ? inputUser.value : '').trim();
+      var p = inputPass && inputPass.value ? inputPass.value : '';
+      if (u === USER && p === PASS) {
+        writeSession('ok');
+        setAuthed(true);
+        if (msg) msg.classList.remove('show');
+        window.dispatchEvent(new Event('resize'));
+      } else {
+        if (msg) { msg.textContent = 'Usuario o contraseña incorrectos.'; msg.classList.add('show'); }
+        if (inputPass) { inputPass.value = ''; inputPass.focus(); }
+      }
+    });
+  }
+
+  // "Cerrar sesión" en las barras laterales: vuelve a pedir credenciales.
+  document.querySelectorAll('.web-nav-item').forEach(function (el) {
+    if (/cerrar\s*sesi/i.test(el.textContent)) {
+      el.classList.add('vs-logout');
+      el.addEventListener('click', function () {
+        writeSession(null);
+        setAuthed(false);
+        if (form) form.reset();
+        if (msg) msg.classList.remove('show');
+        if (inputUser) inputUser.focus();
+      });
+    }
+  });
 })();
 </script>
 
