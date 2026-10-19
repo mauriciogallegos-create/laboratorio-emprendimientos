@@ -98,7 +98,7 @@
             <input id="login-password" class="input" type="password" placeholder="••••••••" autocomplete="current-password">
           </div>
           <div id="login-errors" class="error-text" style="display:none;"></div>
-          <p class="body-sm" style="text-align:right; margin-bottom:20px; color:var(--primary-soft); font-weight:600;">¿Olvidaste tu contraseña?</p>
+          <p id="go-forgot" class="body-sm" style="text-align:right; margin-bottom:20px; color:var(--primary-soft); font-weight:600; cursor:pointer;">¿Olvidaste tu contraseña?</p>
           <button class="btn btn-primary" type="submit">INGRESAR</button>
         </form>
         <p class="body-sm" style="text-align:center; margin-top:20px;">¿No tienes cuenta? <span id="go-register" style="color:var(--primary-soft); font-weight:600; cursor:pointer;">Regístrate</span></p>
@@ -478,7 +478,7 @@
           <img data-profile-photo src="img/colegio-primaria.jpg" alt="Foto de la institución educativa">
           <div class="school-photo-caption" data-profile-institution>I.E. Micaela Bastidas</div>
         </div>
-        <p class="school-photo-credit" data-profile-credit>Foto referencial: Escuela Primaria de Pariamarca · Wikimedia Commons (CC BY-SA 4.0)</p>
+        <p class="school-photo-credit" data-profile-credit>Imagen de referencia del colegio</p>
         <div class="profile-head card">
           <div class="profile-avatar" data-profile-avatar>JP</div>
           <div style="flex:1;">
@@ -1025,7 +1025,8 @@ document.addEventListener('DOMContentLoaded', function () {
 <script src="js/jsQR.js"></script>
 <script src="js/firebase-adapter.js"></script>
 <script src="js/institutions-data.js"></script>
-<script src="js/school-photos-data.js"></script>
+    <script src="js/school-photos-data.js"></script>
+    <script src="js/school-photo-map.js"></script>
 <script src="js/safe-points-data.js"></script>
 <script src="js/poi-photos-data.js"></script>
 <script src="js/app.js"></script>

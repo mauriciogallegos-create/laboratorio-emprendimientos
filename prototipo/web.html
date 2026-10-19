@@ -235,8 +235,11 @@ body.vs-authed #vs-login { display:none; }
           <div style="margin-top:22px; background:var(--surface); border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow);">
             <div style="font-size:14px; font-weight:700; margin-bottom:6px;">ℹ️ Cómo funcionan estas cámaras</div>
             <p class="body-sm" style="line-height:1.6; margin:0;">
-              <b>Cámara 01</b> es un <b>feed real</b>: usa la cámara del dispositivo (webcam/cámara trasera) vía <code>getUserMedia</code>.
-              Para verla, pulsa <b>▶ INICIAR CÁMARAS</b> y acepta el permiso. <b>Cámaras 02–03</b> usan <b>HLS en vivo</b>
+              <b>Cámara 01</b> es un <b>feed real</b>: usa la cámara del dispositivo — <b>laptop, celular o tablet</b> — vía <code>getUserMedia</code>.
+              En celular pide primero la <b>cámara trasera</b>; si no existe (laptop/escritorio) usa <b>cualquier webcam</b> del equipo.
+              Para verla, pulsa <b>▶ INICIAR CÁMARAS</b> y acepta el permiso. Si el navegador no permite la cámara
+              (por ejemplo abriendo el archivo en <code>file://</code>), aparece el botón <b>📷 Usar cámara de este equipo</b>,
+              que abre la cámara del sistema. <b>Cámaras 02–03</b> usan <b>HLS en vivo</b>
               (stream público de prueba) y <b>04</b> es el mapa en vivo con la posición de los estudiantes.
               En producción, cada tarjeta se sustituye por la URL <code>HLS/RTSP</code> de la cámara IP del colegio
               (NVR o servidor de streaming), sin cambiar el panel.
@@ -899,28 +902,81 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
+  // Fallback universal: selector de archivos / cámara del sistema.
+  // Funciona en laptop, celular y tablet, y también si la página se abre en
+  // file:// (donde navigator.mediaDevices no existe porque no hay contexto seguro).
+  function openLocalPicker(onPick) {
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = 'image/*'; inp.setAttribute('capture', 'environment');
+    inp.style.display = 'none';
+    document.body.appendChild(inp);
+    inp.addEventListener('change', function () {
+      const f = inp.files && inp.files[0];
+      if (f) onPick(URL.createObjectURL(f), f);
+      setTimeout(function () { inp.remove(); }, 2000);
+    });
+    inp.click();
+  }
+
+  function showPickedImage(box, st, ts, url, file) {
+    if (!box) return;
+    box.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = url; img.alt = 'Foto tomada';
+    box.appendChild(img);
+    if (st) st.innerHTML = '<b style="color:#16a34a">● Foto lista</b> (' + ((file && file.name) || 'captura') + ')';
+    const card = box.closest('.cam-card');
+    const btn = card ? card.querySelector('.cam-actions button') : null;
+    if (btn) btn.remove();
+    if (ts && !ts.dataset.ticking) {
+      ts.dataset.ticking = '1';
+      setInterval(function () { ts.textContent = new Date().toLocaleTimeString('es-PE'); }, 1000);
+    }
+  }
+
+  function fallbackPicker(box, st, ts, label) {
+    const card = box ? box.closest('.cam-card') : null;
+    const actions = card ? card.querySelector('.cam-actions') : null;
+    if (st) st.textContent = label;
+    if (!actions || actions.querySelector('[data-fallback]')) return;
+    const btn = document.createElement('button');
+    btn.setAttribute('data-fallback', '1');
+    btn.className = 'btn btn-primary btn-sm'; btn.style.width = 'auto';
+    btn.textContent = '📷 Usar cámara de este equipo';
+    btn.addEventListener('click', function () {
+      openLocalPicker(function (url, file) { showPickedImage(box, st, ts, url, file); });
+    });
+    actions.appendChild(btn);
+  }
+
   function startUserCam(id, st, ts, btn) {
     const box = document.getElementById('box-'+id);
     if (!box || box.querySelector('video')) return;
     if (localCamStream) { if (btn) btn.remove(); applyUserStream(box, st, ts, localCamStream); return; }
-    if (localCamError) { if (st) st.textContent = 'Sin permiso de cámara ('+localCamError+')'; return; }
+    if (localCamError) { fallbackPicker(box, st, ts, 'Sin permiso de cámara ('+localCamError+')'); return; }
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      localCamError = 'no soportado';
-      if (st) st.textContent = 'Cámara no soportada en este navegador';
+      localCamError = 'inseguro';
+      fallbackPicker(box, st, ts, 'Este navegador no expone la cámara (ábrelo por http/https). Usa el botón de abajo.');
       return;
     }
     if (st) st.textContent = 'Solicitando permiso…';
-    navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' }, audio:false })
+    // 1) pide la cámara trasera (celular/tablet), 2) si no hay, cualquier
+    // cámara del equipo (laptop, escritorio, webcam USB).
+    navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ ideal:'environment' } }, audio:false })
+      .catch(function() { return navigator.mediaDevices.getUserMedia({ video:true, audio:false }); })
       .then(function(stream) {
         localCamStream = stream;
+        const track = stream.getVideoTracks()[0];
+        const dev = (track && track.label) ? track.label.replace(/\s*\([0-9a-f]{4}:[0-9a-f]{4}\)\s*$/i, '') : 'cámara del equipo';
         document.querySelectorAll('[data-cam-user]').forEach(function(b) {
           const card = b.closest('.cam-card');
           applyUserStream(b, card ? card.querySelector('.cam-foot span') : null, card ? card.querySelector('.cam-foot b') : null, stream);
         });
+        if (st) st.innerHTML = '<b style="color:#16a34a">● En vivo</b> (' + dev + ')';
       })
       .catch(function(e) {
         localCamError = (e && e.name) ? e.name : 'error';
-        if (st) st.textContent = 'Sin permiso de cámara ('+localCamError+')';
+        fallbackPicker(box, st, ts, 'Sin permiso de cámara ('+localCamError+')');
       });
   }
 

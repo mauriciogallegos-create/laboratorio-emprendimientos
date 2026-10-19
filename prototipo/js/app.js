@@ -251,6 +251,8 @@
     { id: 'inst-arequipa-130', name: 'I.E.I. Nueva Esperanza', code: 'IEI-SR-130', district: 'Santa Rita de Siguas', niveles: ['inicial'], address: 'Calle Las Flores 40, Santa Rita de Siguas', lat: -16.47950, lng: -72.01750 }
   ];
 
+  const DEMO_PASSWORD = 'demo123';
+
   const DEMO_USERS = [
     { uid: 'u-super', name: 'Admin Plataforma', email: 'admin@viasegura.pe', password: 'demo123', role: ROLES.SUPERADMIN, institutionId: null, gender: null },
     { uid: 'u-dir', name: 'Dir. Ana Torres', email: 'director@ie-mb.pe', password: 'demo123', role: ROLES.DIRECTOR, institutionId: 'inst-arequipa-01', gender: 'femenino' },
@@ -841,27 +843,66 @@
     return Math.abs(hashString(inst && inst.id ? inst.id : ''));
   }
 
+  // Foto real descargada y verificada por institucion (busqueda web en Google/
+  // Facebook). js/school-photo-map.js mapea inst-id -> archivo en img/escuelas/.
+  function schoolPhotoMap() {
+    return (typeof window !== 'undefined' && window.VIA_SEGURA_SCHOOL_PHOTO_MAP) || null;
+  }
+
+  function schoolPhotoReal(inst) {
+    const map = schoolPhotoMap();
+    if (!map || !inst || !inst.id) return null;
+    const e = map[inst.id];
+    if (!e) return null;
+    const src = typeof e === 'string' ? e : (e.file ? 'img/escuelas/' + e.file : (e.src || ''));
+    if (!src) return null;
+    return {
+      src: src,
+      page: typeof e === 'string' ? '' : (e.page || ''),
+      title: typeof e === 'string' ? '' : (e.title || ''),
+      placeholder: typeof e === 'string' ? false : !!e.placeholder
+    };
+  }
+
+  function sourceHost(url) {
+    if (!url) return '';
+    return String(url).replace(/^https?:\/\//i, '').split('/')[0].replace(/^www\./i, '');
+  }
+
   function photoForInstitution(inst) {
+    const real = schoolPhotoReal(inst);
+    if (real) {
+      return {
+        src: real.src,
+        title: (inst && inst.name) ? inst.name : '',
+        license: '', artist: '',
+        real: !real.placeholder,
+        placeholder: !!real.placeholder,
+        page: real.page
+      };
+    }
     const pool = (typeof window !== 'undefined' && window.VIA_SEGURA_SCHOOL_PHOTOS) || null;
     if (!pool || !pool.length) return null;
     return pool[institutionOrderIndex(inst) % pool.length];
   }
 
   function institutionImage(inst) {
-    const p = photoForInstitution(inst);
-    if (p && p.src) return p.src;
+    const real = schoolPhotoReal(inst);
+    if (real && real.src) return real.src;
     return 'img/colegio-' + highestLevel(inst) + '.jpg';
   }
 
   function institutionPhotoCredit(inst) {
-    const p = photoForInstitution(inst);
-    if (p && p.title) {
-      return 'Foto referencial: ' + p.title + ' · Wikimedia Commons (' + (p.license || 'CC') + ')';
+    const name = (inst && inst.name) ? inst.name : 'el colegio';
+    const real = schoolPhotoReal(inst);
+    if (real && real.placeholder) {
+      return 'Sin foto propia de ' + name + ' · tarjeta de referencia';
     }
-    const level = highestLevel(inst);
-    if (level === 'secundaria') return 'Foto referencial: Colegio José María Arguedas, San Sebastián de Sacraca · Wikimedia Commons (CC BY-SA 4.0)';
-    if (level === 'inicial') return 'Foto referencial: I.E.I. Divino Niño Jesús · Wikimedia Commons (CC BY-SA 4.0)';
-    return 'Foto referencial: Escuela Primaria de Pariamarca · Wikimedia Commons (CC BY-SA 4.0)';
+    if (real && real.src) {
+      const host = sourceHost(real.page);
+      return 'Foto real de ' + name + (host ? ' · ' + host : '');
+    }
+    return 'Imagen de referencia · sin foto propia de ' + name;
   }
 
   function poiPhoto(type, key) {
@@ -872,9 +913,12 @@
 
   function safePointPhoto(point, inst) {
     if (point.type === 'colegio') {
-      const src = institutionImage(inst);
-      const p = photoForInstitution(inst);
-      return { src: src, title: p ? p.title : '', license: p ? p.license : '', artist: p ? p.artist : '' };
+      return {
+        src: institutionImage(inst),
+        title: inst ? inst.name : '',
+        license: '', artist: '',
+        credit: institutionPhotoCredit(inst)
+      };
     }
     return poiPhoto(point.type, point.name);
   }
@@ -1518,9 +1562,11 @@
     card.setAttribute('data-name', point.name);
     card.style.cursor = 'pointer';
     if (isNearest) card.style.border = '2px solid var(--success)';
-    const credit = point.photo && point.photo.title
-      ? 'Foto referencial: ' + point.photo.title + ' · Wikimedia Commons (' + (point.photo.license || 'CC') + ')'
-      : '';
+    const credit = (point.photo && point.photo.credit)
+      ? point.photo.credit
+      : (point.photo && point.photo.title
+        ? 'Foto referencial: ' + point.photo.title + ' · Wikimedia Commons (' + (point.photo.license || 'CC') + ')'
+        : '');
     const media = point.photo && point.photo.src
       ? '<img class="sp-photo" src="' + escapeHtml(point.photo.src) + '" alt="' + escapeHtml(point.name) + '" loading="lazy"' +
         (credit ? ' title="' + escapeHtml(credit) + '"' : '') + ' onerror="this.replaceWith(Object.assign(document.createElement(\'div\'),{className:\'card-icon\',style:\'background:' + point.bg + '\',textContent:' + JSON.stringify(point.icon) + '}))">'
@@ -1774,6 +1820,28 @@
         })
         .then(function () { form.classList.remove('loading'); });
     });
+    const forgot = el('go-forgot');
+    if (forgot) {
+      forgot.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        const errorsBox = el('login-errors');
+        const emailEl = el('login-email');
+        const email = ((emailEl && emailEl.value) || '').trim();
+        if (!Validators.email(email)) {
+          renderErrors(errorsBox, ['Escribe tu correo arriba y pulsa de nuevo para recuperar tu contraseña.']);
+          if (emailEl) emailEl.focus();
+          return;
+        }
+        AuthRepository.resetPassword(email)
+          .then(function () {
+            renderErrors(errorsBox, []);
+            toast('Enviamos un enlace de recuperación a ' + email + '. Revisa tu correo (y la carpeta de spam).', 'success');
+          })
+          .catch(function (e) {
+            renderErrors(errorsBox, [e.userMessage || e.message || 'No se pudo enviar el enlace de recuperación.']);
+          });
+      });
+    }
   }
 
   // ===========================================================================
@@ -2724,21 +2792,59 @@
         const sexoSel = el('reg3-sexo');
         const gender = (sexoSel && sexoSel.value) ? sexoSel.value : null;
         const nombreApoderado = (el('reg4-apoderado-nombre') || {}).value || 'Apoderado';
+        const emailApoderado = (((el('reg4-apoderado-email') || {}).value) || '').trim();
+        const telApoderado = (el('reg4-apoderado-tel') || {}).value || '';
+        const relacionSel = el('reg4-apoderado-relacion');
+        const relacion = (relacionSel && relacionSel.value) ? relacionSel.value : 'Apoderado';
         const nombreEstudiante = (nombres + ' ' + apellidos).trim() || 'Estudiante';
+        const instId = Store.state.selectedInstitutionId || (Store.state.safeSchoolId || null);
         const registered = {
           uid: 'u-reg-' + Date.now().toString(36),
           name: nombreEstudiante,
           apoderadoNombre: nombreApoderado,
           gender: gender,
           role: ROLES.ESTUDIANTE,
-          institutionId: Store.state.selectedInstitutionId || (Store.state.safeSchoolId || null)
+          institutionId: instId
         };
         Store.state.user = registered;
         Store.state.grade = grade || null;
         if (typeof window.goToScreen === 'function') window.goToScreen('home');
         renderProfile();
         renderUserNames();
-        toast('Cuenta creada correctamente.', 'success');
+
+        // Crea (o reutiliza) la cuenta del apoderado y la vincula con el estudiante
+        // mediante guardianId, para que el apoderado pueda iniciar sesión con su
+        // correo y ver a su hijo/hija en el Historial y el Perfil.
+        if (emailApoderado && Validators.email(emailApoderado)) {
+          let apod = DEMO_USERS.filter(function (u) {
+            return u.email.toLowerCase() === emailApoderado.toLowerCase();
+          })[0];
+          if (!apod) {
+            apod = {
+              uid: 'u-apod-' + Date.now().toString(36),
+              name: nombreApoderado,
+              apoderadoNombre: nombreApoderado,
+              email: emailApoderado,
+              phone: telApoderado,
+              relacion: relacion,
+              password: DEMO_PASSWORD,
+              role: ROLES.APODERADO,
+              institutionId: instId,
+              gender: null
+            };
+            DEMO_USERS.push(apod);
+          }
+          Store.state.students.push({
+            id: 's-reg-' + Date.now().toString(36),
+            name: nombreEstudiante,
+            grade: grade || '',
+            institutionId: instId,
+            guardianId: apod.uid
+          });
+          toast('Cuenta creada. El apoderado entra con ' + emailApoderado + ' y contraseña ' + DEMO_PASSWORD + '.', 'success');
+        } else {
+          toast('Cuenta creada correctamente. Agrega el correo del apoderado para que pueda ingresar.', 'success');
+        }
         showWelcome(registered);
       });
     }
@@ -2831,12 +2937,14 @@
     Validators: Validators,
     Store: Store,
     AuthRepository: AuthRepository,
+    demoUsers: DEMO_USERS,
     renderCameras: renderCameras,
     renderIncidentList: renderIncidentList,
     renderParentHome: renderParentHome,
     renderHistorial: renderHistorial,
     syncPerfilNav: syncPerfilNav,
     institutionImage: institutionImage,
+    institutionPhotoCredit: institutionPhotoCredit,
     photoForInstitution: photoForInstitution,
     renderInstitutionalPanel: renderInstitutionalPanel,
     renderInstitutions: renderInstitutions,
