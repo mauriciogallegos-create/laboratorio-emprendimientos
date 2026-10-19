@@ -920,12 +920,17 @@
         '</div>' +
         '<div class="inst-check">' + (isChosen ? '<div class="inst-check-dot"></div>' : '') + '</div>';
       item.addEventListener('click', function () {
+        // Se necesitan dos toques: el primero selecciona el colegio y el
+        // segundo (sobre el mismo colegio ya seleccionado) avanza al paso 2.
+        const yaSeleccionado = item.getAttribute('data-armed') === '1';
         container.querySelectorAll('.institution-item').forEach(function (n) {
           n.classList.remove('selected');
+          n.removeAttribute('data-armed');
           const c = n.querySelector('.inst-check');
           if (c) c.innerHTML = '';
         });
         item.classList.add('selected');
+        item.setAttribute('data-armed', '1');
         const check = item.querySelector('.inst-check');
         if (check) check.innerHTML = '<div class="inst-check-dot"></div>';
         Store.state.selectedInstitutionId = inst.id;
@@ -933,9 +938,9 @@
         Store.state.grade = null;
         renderGradesForInstitution(inst);
         renderProfile();
-        // Al tocar un colegio queda seleccionado y avanza al siguiente paso,
-        // sin tener que desplazarse hasta el boton CONTINUAR.
-        if (typeof window.goToScreen === 'function') window.goToScreen('reg2');
+        if (yaSeleccionado && typeof window.goToScreen === 'function') {
+          window.goToScreen('reg2');
+        }
       });
       container.appendChild(item);
     });
