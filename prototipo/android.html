@@ -187,8 +187,11 @@
           <div class="step done"></div><div class="step done"></div><div class="step active"></div><div class="step"></div>
         </div>
         <div style="display:flex; flex-direction:column; align-items:center; margin-bottom:20px;">
-          <div style="width:80px; height:80px; border-radius:50%; background:var(--border); display:flex; align-items:center; justify-content:center; font-size:32px; color:var(--text-muted); border:2px dashed var(--text-muted);">📷</div>
-          <p class="body-sm" style="margin-top:8px;">Agregar foto (opcional)</p>
+          <div class="reg-photo" id="reg3-photo" role="button" tabindex="0" aria-label="Agregar foto del estudiante">
+            <img id="reg3-photo-img" class="reg-photo-img" alt="Foto del estudiante" hidden>
+            <span class="reg-photo-hint">📷</span>
+          </div>
+          <p class="body-sm" id="reg3-photo-label" style="margin-top:8px;">Agregar foto (opcional)</p>
         </div>
         <div class="input-group">
           <label class="input-label">Nombres</label>
@@ -833,6 +836,34 @@
         </div>
       </div>
     </div>
+
+    <!-- HISTORIAL APODERADO -->
+    <div id="historial" class="phone">
+      <div class="phone-label">17 · Historial (Apoderado)</div>
+      <div class="status-bar"><span>4:40 PM</span><span>📶 🔋</span></div>
+      <div class="topbar">
+        <span class="topbar-back" id="historial-back" style="font-size:22px; cursor:pointer;">←</span>
+        <span class="topbar-title">Historial</span>
+        <span class="topbar-icon" style="background:var(--primary-light);">🕓</span>
+      </div>
+      <div class="content">
+        <p class="subtitle" style="margin-bottom:16px;" data-historial-child>Actividad reciente</p>
+        <div class="filter-chips" data-list="historial-filters">
+          <span class="chip active" data-hist="todos" style="background:var(--primary); color:#fff;">Todo</span>
+          <span class="chip" data-hist="recorrido">Recorridos</span>
+          <span class="chip" data-hist="ingreso">Entradas</span>
+          <span class="chip" data-hist="alerta">Alertas</span>
+          <span class="chip" data-hist="incidencia">Incidencias</span>
+        </div>
+        <div data-list="historial"></div>
+      </div>
+      <div class="bottom-nav">
+        <a class="nav-item"><span class="nav-icon">🏠</span>Inicio</a>
+        <a class="nav-item active"><span class="nav-icon">🕓</span>Historial</a>
+        <a class="nav-item"><span class="nav-icon">👤</span>Perfil</a>
+      </div>
+    </div>
+
     <!-- PANEL INSTITUCIONAL -->
     <div id="panel" class="phone">
       <div class="phone-label">16 · Panel Institucional</div>
@@ -960,6 +991,16 @@ document.addEventListener('DOMContentLoaded', function () {
     // Flujo apoderado
     click('#padre .btn-danger', 'padre-alerta');
     click('#padre-alerta .btn-outline', 'padre');
+
+    // Navegacion del apoderado: Inicio / Historial / Perfil
+    click('#padre .topbar-icon', 'perfil');
+    click('#padre .bottom-nav a:nth-child(1)', 'padre');
+    click('#padre .bottom-nav a:nth-child(2)', 'historial');
+    click('#padre .bottom-nav a:nth-child(3)', 'perfil');
+    click('#historial .bottom-nav a:nth-child(1)', 'padre');
+    click('#historial .bottom-nav a:nth-child(2)', 'historial');
+    click('#historial .bottom-nav a:nth-child(3)', 'perfil');
+    click('#historial-back', 'padre');
 
     // Bottom nav (estudiante): Inicio / Ruta / Seguros / Perfil
     [['home', 'home'], ['home', 'recorrido'], ['home', 'puntos'], ['home', 'perfil'],

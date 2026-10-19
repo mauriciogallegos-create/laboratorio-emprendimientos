@@ -365,6 +365,7 @@
       institutionZonesOpen: false,
       safeSchoolId: null,
       safeType: 'todos',
+      historialType: 'todos',
       grade: null,
       gps: null,
       gpsError: null,
@@ -680,6 +681,103 @@
     if (events) {
       events.innerHTML = '<p class="empty">Aún no hay eventos fiables de ingreso/salida registrados hoy.</p>';
     }
+    renderHistorial();
+  }
+
+  // Historial del apoderado: recorridos, entradas/salidas, alertas e incidencias.
+  function childrenName() {
+    const u = Store.state.user;
+    const children = Store.studentsForUser();
+    if (children[0] && children[0].name) return children[0].name;
+    if (u && u.name) return u.name;
+    return 'Estudiante';
+  }
+
+  function historialEvents() {
+    const inst = currentInstitution();
+    const school = inst ? inst.name : 'su colegio';
+    const district = inst ? (inst.district || 'Arequipa') : 'Arequipa';
+    return [
+      { type: 'recorrido', icon: '🟢', title: 'Recorrido iniciado', time: 'Hoy · 7:10 AM', place: 'Casa → ' + school },
+      { type: 'ingreso', icon: '🏫', title: 'Llegada al colegio', time: 'Hoy · 7:45 AM', place: school + ' · ' + district },
+      { type: 'recorrido', icon: '🟢', title: 'Salida del colegio', time: 'Hoy · 1:45 PM', place: school + ' → Casa' },
+      { type: 'incidencia', icon: '⚠', title: 'Reporte de incidencia', time: 'Ayer · 5:20 PM', place: 'Vía pública cerca de ' + school },
+      { type: 'alerta', icon: '🚨', title: 'Alerta enviada', time: 'Ayer · 4:36 PM', place: 'Recorrido anómalo (45 min)' }
+    ];
+  }
+
+  function renderHistorial() {
+    const list = document.querySelector('[data-list="historial"]');
+    if (!list) return;
+    const first = childrenName().split(' ')[0];
+    const inst = currentInstitution();
+    document.querySelectorAll('[data-historial-child]').forEach(function (n) {
+      n.textContent = 'Actividad de ' + first + (inst ? ' · ' + inst.name : '');
+    });
+    const type = Store.state.historialType || 'todos';
+    document.querySelectorAll('[data-list="historial-filters"] .chip').forEach(function (c) {
+      c.classList.toggle('active', c.getAttribute('data-hist') === type);
+    });
+    const events = historialEvents().filter(function (e) {
+      return type === 'todos' || e.type === type;
+    });
+    clearChildren(list);
+    if (!events.length) {
+      list.innerHTML = '<p class="empty">No hay eventos de este tipo todavía.</p>';
+      return;
+    }
+    events.forEach(function (e) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.style.marginBottom = '10px';
+      card.innerHTML =
+        '<div style="display:flex; gap:12px; align-items:flex-start;">' +
+          '<div style="width:40px; height:40px; flex:0 0 40px; border-radius:50%; background:var(--primary-light); color:#fff; display:flex; align-items:center; justify-content:center; font-size:18px;">' + e.icon + '</div>' +
+          '<div style="flex:1; min-width:0;">' +
+            '<div class="body" style="font-weight:600;">' + escapeHtml(e.title) + '</div>' +
+            '<div class="body-sm">' + escapeHtml(e.time) + '</div>' +
+            '<div class="body-sm" style="color:var(--text-muted);">' + escapeHtml(e.place) + '</div>' +
+          '</div>' +
+        '</div>';
+      list.appendChild(card);
+    });
+  }
+
+  function bindHistorial() {
+    document.querySelectorAll('[data-list="historial-filters"] .chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        Store.state.historialType = chip.getAttribute('data-hist') || 'todos';
+        renderHistorial();
+      });
+    });
+  }
+
+  // La barra inferior de "Mi perfil" cambia segun el rol: el apoderado vuelve a
+  // su Inicio/Historial; el estudiante conserva Inicio/Ruta/Seguros.
+  function syncPerfilNav() {
+    const nav = document.querySelector('#perfil .bottom-nav');
+    if (!nav) return;
+    const u = Store.state.user;
+    const isApod = u && u.role === ROLES.APODERADO;
+    const items = isApod
+      ? [{ icon: '🏠', label: 'Inicio', target: 'padre' },
+         { icon: '🕓', label: 'Historial', target: 'historial' },
+         { icon: '👤', label: 'Perfil', target: 'perfil' }]
+      : [{ icon: '🏠', label: 'Inicio', target: 'home' },
+         { icon: '🗺', label: 'Ruta', target: 'recorrido' },
+         { icon: '🛡', label: 'Seguros', target: 'puntos' },
+         { icon: '👤', label: 'Perfil', target: 'perfil' }];
+    nav.innerHTML = items.map(function (it) {
+      return '<a class="nav-item' + (it.target === 'perfil' ? ' active' : '') + '">' +
+        '<span class="nav-icon">' + it.icon + '</span>' + it.label + '</a>';
+    }).join('');
+    nav.querySelectorAll('a').forEach(function (a, i) {
+      a.style.cursor = 'pointer';
+      a.onclick = function (ev) {
+        ev.preventDefault();
+        if (typeof window.goToScreen === 'function') window.goToScreen(items[i].target);
+      };
+    });
   }
 
   // ===========================================================================
@@ -733,10 +831,20 @@
     return 'primaria';
   }
 
+  // Posicion estable de la institucion dentro del listado completo. Sirve para
+  // repartir las fotos de forma distribuida (sin repetir en las primeras).
+  function institutionOrderIndex(inst) {
+    const list = (typeof window !== 'undefined' && window.VIA_SEGURA_INSTITUTIONS) || [];
+    if (inst && inst.id) {
+      for (let i = 0; i < list.length; i++) { if (list[i].id === inst.id) return i; }
+    }
+    return Math.abs(hashString(inst && inst.id ? inst.id : ''));
+  }
+
   function photoForInstitution(inst) {
     const pool = (typeof window !== 'undefined' && window.VIA_SEGURA_SCHOOL_PHOTOS) || null;
     if (!pool || !pool.length) return null;
-    return pool[Math.abs(hashString(inst && inst.id ? inst.id : '')) % pool.length];
+    return pool[institutionOrderIndex(inst) % pool.length];
   }
 
   function institutionImage(inst) {
@@ -825,6 +933,9 @@
         Store.state.grade = null;
         renderGradesForInstitution(inst);
         renderProfile();
+        // Al tocar un colegio queda seleccionado y avanza al siguiente paso,
+        // sin tener que desplazarse hasta el boton CONTINUAR.
+        if (typeof window.goToScreen === 'function') window.goToScreen('reg2');
       });
       container.appendChild(item);
     });
@@ -1789,35 +1900,58 @@
     });
   }
 
+  // Abre el selector de archivos/imagenes del dispositivo y entrega el archivo.
+  function openPhotoPicker(onFile) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.style.display = 'none';
+    input.addEventListener('change', function () {
+      const file = input.files && input.files[0];
+      if (file && typeof onFile === 'function') onFile(file);
+      if (input.parentNode) input.parentNode.removeChild(input);
+    });
+    document.body.appendChild(input);
+    input.click();
+  }
+
   function bindPhotoCapture() {
     document.querySelectorAll('[data-capture]').forEach(function (btn) {
       btn.addEventListener('click', function (ev) {
         ev.preventDefault();
         const targetId = btn.getAttribute('data-capture');
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.setAttribute('capture', 'environment');
-        input.style.display = 'none';
-        input.addEventListener('change', function () {
-          const file = input.files && input.files[0];
-          if (!file) return;
+        openPhotoPicker(function (file) {
           const container = el(targetId);
-          if (container) {
-            const url = URL.createObjectURL(file);
-            container.innerHTML = '<img src="' + url + '" alt="Foto capturada">' +
-              '<div class="photo-meta">' + escapeHtml(file.name) + ' · ' +
-              Math.round(file.size / 1024) + ' KB</div>';
-            container.classList.add('has-photo');
-          }
-          if (window.ViaSeguraBridge && typeof window.ViaSeguraBridge.showToast === 'function') {
-            try { window.ViaSeguraBridge.showToast('Foto agregada'); } catch (e) { /* opcional */ }
-          }
+          if (!container) return;
+          const url = URL.createObjectURL(file);
+          container.innerHTML = '<img src="' + url + '" alt="Foto capturada">' +
+            '<div class="photo-meta">' + escapeHtml(file.name) + ' · ' +
+            Math.round(file.size / 1024) + ' KB</div>';
+          container.classList.add('has-photo');
+          toast('Foto agregada', 'success');
         });
-        document.body.appendChild(input);
-        input.click();
       });
     });
+
+    // Circulo de foto del registro: al tocarlo se elige/toma la foto y se ve.
+    const circle = el('reg3-photo');
+    if (circle) {
+      const trigger = function (ev) {
+        if (ev) ev.preventDefault();
+        openPhotoPicker(function (file) {
+          const img = el('reg3-photo-img');
+          const label = el('reg3-photo-label');
+          if (img) { img.src = URL.createObjectURL(file); img.hidden = false; }
+          circle.classList.add('has-photo');
+          if (label) label.textContent = 'Foto agregada · toca para cambiarla';
+          toast('Foto agregada', 'success');
+        });
+      };
+      circle.addEventListener('click', trigger);
+      circle.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Enter' || ev.key === ' ') trigger(ev);
+      });
+    }
   }
 
   // ===========================================================================
@@ -2343,6 +2477,8 @@
     }
     if (id === 'puntos') { populateSafeSchoolSelect(); renderSafePoints(); }
     if (id === 'incidencia') { populateIncidentSchoolSelect(); updateIncidentAddress(); }
+    if (id === 'historial') renderHistorial();
+    if (id === 'perfil') syncPerfilNav();
     if (id === 'esp32') renderEsp32();
     if (id === 'recorrido' || id === 'padre') startGpsWatch();
   }
@@ -2637,6 +2773,7 @@
     bindInstitutions();
     bindSafePoints();
     bindProfile();
+    bindHistorial();
     bindEsp32();
     bindAlertActions();
     bindEmergencyActions();
@@ -2692,6 +2829,10 @@
     renderCameras: renderCameras,
     renderIncidentList: renderIncidentList,
     renderParentHome: renderParentHome,
+    renderHistorial: renderHistorial,
+    syncPerfilNav: syncPerfilNav,
+    institutionImage: institutionImage,
+    photoForInstitution: photoForInstitution,
     renderInstitutionalPanel: renderInstitutionalPanel,
     renderInstitutions: renderInstitutions,
     renderSafePoints: renderSafePoints,
