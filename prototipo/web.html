@@ -129,6 +129,7 @@ body.vs-authed #vs-login { display:none; }
           <button class="web-menu-btn" type="button" aria-label="Abrir menú" aria-expanded="false">&#9776;</button>
           <div><h2>Dashboard</h2><p class="body-sm">Arequipa · <span id="dash-scope">138 colegios</span> · Resumen de los últimos 7 días</p></div>
           <div class="web-topbar-actions">
+            <button class="theme-toggle" id="theme-toggle" title="Cambiar tema">🌙</button>
             <input class="input topbar-search" type="search" data-search data-bind="dash" placeholder="🔍 Buscar incidencia..." aria-label="Buscar en incidencias recientes">
             <div class="topbar-avatar">🏫</div>
           </div>
@@ -223,26 +224,25 @@ body.vs-authed #vs-login { display:none; }
       <main class="web-main">
         <div class="web-topbar">
           <button class="web-menu-btn" type="button" aria-label="Abrir menú" aria-expanded="false">&#9776;</button>
-          <div><h2>🎥 Directo</h2><p class="body-sm">Monitoreo en vivo de cámaras del recinto</p></div>
+          <div><h2>🎥 Directo</h2><p class="body-sm">2 cámaras institucionales (zonas comunes) + mapas de calor de salidas · Sin grabación de menores</p></div>
           <div class="web-topbar-actions">
             <div class="topbar-search">📡 <span id="cams-online">0</span> / <span id="cams-total">0</span> en línea</div>
-            <button class="btn btn-primary btn-sm" style="width:auto;" id="btn-cam-start">▶ INICIAR CÁMARAS</button>
+            <button class="btn btn-primary btn-sm" style="width:auto;" id="btn-cam-start">▶ ACTIVAR VISTAS</button>
           </div>
         </div>
         <div class="web-content">
           <div class="cam-grid" id="cam-grid"></div>
 
-          <div style="margin-top:22px; background:var(--surface); border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow);">
-            <div style="font-size:14px; font-weight:700; margin-bottom:6px;">ℹ️ Cómo funcionan estas cámaras</div>
+          <div style="margin-top:22px; background:var(--surface); border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow); border-left:4px solid #2563eb;">
+            <div style="font-size:14px; font-weight:700; margin-bottom:6px;">ℹ️ Privacidad y monitoreo de salidas</div>
             <p class="body-sm" style="line-height:1.6; margin:0;">
-              <b>Cámara 01</b> es un <b>feed real</b>: usa la cámara del dispositivo — <b>laptop, celular o tablet</b> — vía <code>getUserMedia</code>.
-              En celular pide primero la <b>cámara trasera</b>; si no existe (laptop/escritorio) usa <b>cualquier webcam</b> del equipo.
-              Para verla, pulsa <b>▶ INICIAR CÁMARAS</b> y acepta el permiso. Si el navegador no permite la cámara
-              (por ejemplo abriendo el archivo en <code>file://</code>), aparece el botón <b>📷 Usar cámara de este equipo</b>,
-              que abre la cámara del sistema. <b>Cámaras 02–03</b> usan <b>HLS en vivo</b>
-              (stream público de prueba) y <b>04</b> es el mapa en vivo con la posición de los estudiantes.
-              En producción, cada tarjeta se sustituye por la URL <code>HLS/RTSP</code> de la cámara IP del colegio
-              (NVR o servidor de streaming), sin cambiar el panel.
+              Por protección de menores, <b>no se graban ni muestran alumnos</b> en video. El panel usa <b>2 cámaras institucionales</b>
+              orientadas a <b>zonas comunes/exteriores</b> (acceso y perímetro) y <b>mapas de calor</b> para analizar la
+              <b>salida de estudiantes</b> de forma agregada (sin identificación individual).
+              <br><br>
+              <b>Cámara 01–02:</b> feed institucional (HLS/RTSP configurable con <code>VS_CAMERA1_STREAM</code> / <code>vs_cam2_stream</code>).
+              <b>Salidas 1 y 2:</b> mapas de calor de afluencia en cada salida del colegio.
+              <b>Flujo combinado / Afluencia:</b> resumen agregado para gestión de salida segura.
             </p>
           </div>
 
@@ -264,8 +264,10 @@ body.vs-authed #vs-login { display:none; }
                 <tr><td>ESP32 · ViaSegura-Wear-A1</td><td>Puerta principal</td><td><span class="chip chip-green">En línea</span></td><td>-42 dBm</td><td>88 %</td><td>Ahora</td></tr>
                 <tr><td>ESP32 · ViaSegura-Wear-B2</td><td>Patio central</td><td><span class="chip chip-green">En línea</span></td><td>-58 dBm</td><td>74 %</td><td>Hace 3 s</td></tr>
                 <tr><td>ESP32 · ESP32-BLE-3C</td><td>Ruta · Calle Echevarria 201</td><td><span class="chip chip-amber">Sin señal</span></td><td>—</td><td>12 %</td><td>Hace 8 min</td></tr>
-                <tr><td>Cámara 02 · HLS</td><td>Pasillo A</td><td><span class="chip chip-green">En línea</span></td><td>—</td><td>—</td><td>Ahora</td></tr>
-                <tr><td>Cámara 03 · HLS</td><td>Sede / entrada</td><td><span class="chip chip-green">En línea</span></td><td>—</td><td>—</td><td>Ahora</td></tr>
+                <tr><td>Cámara 01 · Acceso exterior</td><td>Zona común / acceso</td><td><span class="chip chip-green">En línea</span></td><td>—</td><td>—</td><td>Ahora</td></tr>
+                <tr><td>Cámara 02 · Perímetro</td><td>Zona común / perímetro</td><td><span class="chip chip-green">En línea</span></td><td>—</td><td>—</td><td>Ahora</td></tr>
+                <tr><td>Mapa calor · Salida 1</td><td>Salida principal</td><td><span class="chip chip-green">Activo</span></td><td>—</td><td>—</td><td>Ahora</td></tr>
+                <tr><td>Mapa calor · Salida 2</td><td>Salida secundaria</td><td><span class="chip chip-green">Activo</span></td><td>—</td><td>—</td><td>Ahora</td></tr>
                 <tr class="table-empty"><td colspan="6">Sin dispositivos que coincidan con el filtro.</td></tr>
               </table>
             </div>
@@ -616,11 +618,70 @@ body.vs-authed #vs-login { display:none; }
           <p class="body-sm" style="margin:10px 0 0; text-align:center;" id="det-dir">📍 Arequipa</p>
         </div>
       </main>
+    
+    <!-- MONITOREO FUERA DE COLEGIO -->
+    <div id="monitoreo" class="web-frame">
+      <aside class="web-sidebar">
+        <div class="web-sidebar-logo"><div><h2>🛡️ VíaSegura</h2><small>Panel Institucional</small></div><button class="web-sidebar-close">&times;</button></div>
+        <div class="web-nav-item">📊 Dashboard</div>
+        <div class="web-nav-item">🎥 Directo <span class="nav-live-dot"></span></div>
+        <div class="web-nav-item">👥 Estudiantes</div>
+        <div class="web-nav-item">👨‍🏫 Profesores</div>
+        <div class="web-nav-item">⚠️ Incidencias</div>
+        <div class="web-nav-item">📍 Zonas de riesgo</div>
+        <div class="web-nav-item">📌 Puntos seguros</div>
+        <div class="web-nav-item active">🛰️ Monitoreo Fuera</div>
+        <div class="web-nav-item">⚙️ Configuración</div>
+        <div style="flex:1;"></div>
+        <div class="web-nav-item" style="border-top:1px solid rgba(255,255,255,.1); margin-top:16px;">🚪 Cerrar sesión</div>
+      </aside>
+      <main class="web-main">
+        <div class="web-topbar">
+          <button class="web-menu-btn">&#9776;</button>
+          <div><h2>🛰️ Monitoreo Fuera de Colegio</h2><p class="body-sm">Geocercas, cruces, movimiento y alertas</p></div>
+          <div class="web-topbar-actions"></div>
+        </div>
+        <div class="web-content">
+          <div class="kpi-grid" id="mon-kpis">
+            <div class="kpi-card"><div class="kpi-number" id="mon-fuera">—</div><div class="kpi-label">Fuera de geocerca</div></div>
+            <div class="kpi-card amber"><div class="kpi-number" id="mon-dist">—</div><div class="kpi-label">Distancia al colegio</div></div>
+            <div class="kpi-card red"><div class="kpi-number" id="mon-riesgo">—</div><div class="kpi-label">Nivel de riesgo</div></div>
+            <div class="kpi-card green"><div class="kpi-number" id="mon-alertas">0</div><div class="kpi-label">Alertas</div></div>
+          </div>
+          <div class="panel-grid map-side">
+            <div>
+              <h3 style="font-size:16px; font-weight:700; margin-bottom:6px;">Mapa de geolocalización y riesgo</h3>
+              <p class="body-sm" style="margin:0 0 10px;">Riesgo por alejamiento del alumno (GPS) y rutas de referencia. Monitoreo activo <b>solo fuera</b> del perímetro.</p>
+              <div class="web-map" id="map-mon" style="height:440px;"></div>
+              <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:12px;align-items:center;">
+                <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#22c55e;margin-right:4px;vertical-align:middle;"></span>Bajo (≤150m)</span>
+                <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f59e0b;margin-right:4px;vertical-align:middle;"></span>Medio (150–500m)</span>
+                <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ef4444;margin-right:4px;vertical-align:middle;"></span>Alto (&gt;500m)</span>
+                <span><span style="display:inline-block;width:14px;height:3px;background:#3b82f6;margin-right:4px;vertical-align:middle;"></span>Rutas ref.</span>
+              </div>
+            </div>
+            <div>
+              <h3 style="font-size:16px; font-weight:700; margin-bottom:12px;">Estado y alertas</h3>
+              <div id="mon-status" style="background:var(--surface); border-radius:var(--radius-card); padding:14px; box-shadow:var(--shadow); margin-bottom:10px; font-size:13px;">
+                <div><b>Estado GPS:</b> <span id="mon-gps-state">Esperando ubicación…</span></div>
+                <div style="margin-top:6px;"><b>Velocidad:</b> <span id="mon-speed">—</span></div>
+                <div style="margin-top:6px;"><b>Última actualización:</b> <span id="mon-last">—</span></div>
+                <div style="margin-top:6px;"><b>Monitoreo:</b> <span id="mon-mode">Solo fuera del perímetro</span></div>
+              </div>
+              <div id="mon-alert-list" style="background:var(--surface); border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow); min-height:180px; max-height:280px; overflow:auto; font-size:13px;">Sin alertas</div>
+            </div>
+          </div>
+        </div>
+      </main>
+      <div class="sidebar-backdrop"></div>
     </div>
-
   </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
 <script src="js/institutions-data.js"></script>
 <script src="js/safe-points-data.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -749,15 +810,16 @@ document.addEventListener("DOMContentLoaded", function() {
 
   // Cámaras del panel. type: 'user' (getUserMedia, feed REAL del dispositivo),
   // 'hls' (stream público de prueba), 'map' (mapa en vivo).
+  // 2 cámaras institucionales (zonas comunes, sin grabación de menores) + mapas de calor de salidas
   const CAMS = [
-    { id:'cam1', name:'Cámara 01 · Acceso principal', type:'user',  badge:'EN VIVO', badgeCls:'live' },
-    { id:'cam2', name:'Cámara 02 · Pasillo A',        type:'hls',   badge:'HLS',     badgeCls:'hls',
-      src:'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8' },
-    { id:'cam3', name:'Cámara 03 · Sede / entrada',   type:'hls',   badge:'HLS',     badgeCls:'hls',
-      src:'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8' },
-    { id:'cam4', name:'Cámara 04 · Mapa en vivo',     type:'map',   badge:'MAPA',    badgeCls:'off' },
-    { id:'cam5', name:'Cámara 05 · Patio central',    type:'user',  badge:'EN VIVO', badgeCls:'live' },
-    { id:'cam6', name:'Cámara 06 · Zona de riesgo A', type:'off',   badge:'SIN SEÑAL', badgeCls:'off' }
+    { id:'cam1', name:'Cámara 01 · Acceso exterior (zona común)', type:'hls', badge:'EN VIVO', badgeCls:'live',
+      src: (window.VS_CAMERA1_STREAM || localStorage.getItem('vs_cam1_stream') || 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8') },
+    { id:'cam2', name:'Cámara 02 · Perímetro (zona común)', type:'hls', badge:'EN VIVO', badgeCls:'live',
+      src: (window.VS_CAMERA2_STREAM || localStorage.getItem('vs_cam2_stream') || 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8') },
+    { id:'cam3', name:'Mapa de calor · Salida 1 (Principal)', type:'heatmap', badge:'CALOR', badgeCls:'hls', exit:'Salida 1', seed:1 },
+    { id:'cam4', name:'Mapa de calor · Salida 2 (Secundaria)', type:'heatmap', badge:'CALOR', badgeCls:'hls', exit:'Salida 2', seed:2 },
+    { id:'cam5', name:'Mapa de calor · Flujo combinado de salidas', type:'heatmap', badge:'CALOR', badgeCls:'hls', exit:'Combinado', seed:3 },
+    { id:'cam6', name:'Mapa de calor · Afluencia por horario', type:'heatmap', badge:'CALOR', badgeCls:'hls', exit:'Horario', seed:4 }
   ];
 
   const maps = [];
@@ -1056,6 +1118,68 @@ document.addEventListener("DOMContentLoaded", function() {
           st.textContent = 'Mapa no disponible';
         }
       });
+    } else if (c.type === 'heatmap') {
+      box.style.background = '#0f172a';
+      box.style.position = 'relative';
+      box.innerHTML = '';
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;';
+      var canvas = document.createElement('canvas');
+      canvas.style.cssText = 'flex:1;width:100%;height:100%;display:block;';
+      var legend = document.createElement('div');
+      legend.style.cssText = 'font-size:10px;color:#cbd5e1;padding:4px 8px;background:rgba(15,23,42,.75);display:flex;justify-content:space-between;gap:8px;';
+      legend.innerHTML = '<span>'+(c.exit||'Salida')+' · datos agregados</span><span>Sin identificación de menores</span>';
+      wrap.appendChild(canvas); wrap.appendChild(legend);
+      box.appendChild(wrap);
+      st.innerHTML = '<b style="color:#16a34a">● Activo</b> (mapa de calor)';
+      function drawHeat(){
+        try {
+          var r = box.getBoundingClientRect();
+          var w = Math.max(160, Math.floor(r.width||320));
+          var h = Math.max(120, Math.floor((r.height||200) - 22));
+          canvas.width = w; canvas.height = h;
+          var ctx = canvas.getContext('2d');
+          if(!ctx) return;
+          var g = ctx.createLinearGradient(0,0,0,h);
+          g.addColorStop(0,'#0b1220'); g.addColorStop(1,'#111827');
+          ctx.fillStyle = g; ctx.fillRect(0,0,w,h);
+          // zones/exits
+          ctx.fillStyle = 'rgba(148,163,184,.12)';
+          ctx.fillRect(w*0.08,h*0.7,w*0.34,h*0.18);
+          ctx.fillRect(w*0.58,h*0.7,w*0.34,h*0.18);
+          ctx.fillStyle = '#94a3b8'; ctx.font = '11px sans-serif';
+          ctx.fillText('Salida 1', w*0.12, h*0.82);
+          ctx.fillText('Salida 2', w*0.62, h*0.82);
+          var t = Date.now()/900 + (c.seed||1)*10;
+          var points = [];
+          var n = (c.exit==='Combinado') ? 26 : (c.exit==='Horario') ? 18 : 20;
+          for(var i=0;i<n;i++){
+            var bias = (c.exit==='Salida 2') ? 0.75 : (c.exit==='Salida 1') ? 0.25 : (c.exit==='Horario' ? (0.2+0.6*((Math.sin(t*0.2)+1)/2)) : 0.5);
+            var px = (i%2===0 ? bias : 1-bias) * w + Math.sin(t+i)*(w*0.08) + (Math.random()-0.5)*w*0.06;
+            var py = h*0.15 + ((i/n)*h*0.55) + Math.cos(t*0.8+i)*(h*0.05);
+            if(c.exit==='Salida 1') px = Math.min(px, w*0.52);
+            if(c.exit==='Salida 2') px = Math.max(px, w*0.48);
+            var intensity = 0.35 + 0.65*((Math.sin(t*0.6+i*0.7)+1)/2);
+            if(c.exit==='Horario') intensity *= 0.5 + 0.5*((Math.sin(t*0.15)+1)/2);
+            points.push({x:px,y:py,v:intensity});
+          }
+          points.forEach(function(p){
+            var rad = 28 + p.v*26;
+            var rg = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,rad);
+            var col = p.v>0.66 ? '239,68,68' : (p.v>0.38 ? '245,158,11' : '34,197,94');
+            rg.addColorStop(0,'rgba('+col+','+(0.18+p.v*0.22)+')');
+            rg.addColorStop(1,'rgba('+col+',0)');
+            ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(p.x,p.y,rad,0,Math.PI*2); ctx.fill();
+          });
+          // flow arrows hint
+          ctx.strokeStyle='rgba(59,130,246,.35)'; ctx.lineWidth=1.5;
+          ctx.beginPath(); ctx.moveTo(w*0.25,h*0.18); ctx.lineTo(w*0.25,h*0.68); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(w*0.75,h*0.18); ctx.lineTo(w*0.75,h*0.68); ctx.stroke();
+          if(ts && !ts.dataset.ticking){ ts.dataset.ticking='1'; setInterval(function(){ ts.textContent=new Date().toLocaleTimeString('es-PE'); },1000); }
+        } catch(e){}
+      }
+      requestAnimationFrame(function(){ drawHeat(); setInterval(drawHeat, 1200); });
+      if(window.ResizeObserver){ try{ new ResizeObserver(function(){ drawHeat(); }).observe(box); }catch(e){} }
     } else {
       box.innerHTML = '<div class="cam-placeholder">📴 Sin señal<br><span class="body-sm">Última conexión hace 8 min</span></div>';
       st.textContent = 'Sin señal';
@@ -1105,7 +1229,7 @@ document.addEventListener("DOMContentLoaded", function() {
       buildCams();
       // Arranca también las cámaras de webcam local (permiso una sola vez).
       startAllUserCams();
-      btnStartCams.textContent = '✅ Cámaras activas';
+      btnStartCams.textContent = '✅ Vistas activas';
     });
   }
 
@@ -1363,5 +1487,240 @@ document.querySelectorAll('.web-frame').forEach(function(frame) {
 })();
 </script>
 
+
+<script>
+(function(){
+  const LS_STUD='vs_students', LS_TEACH='vs_teachers';
+  function getStud(){try{return JSON.parse(localStorage.getItem(LS_STUD))||[];}catch(e){return[];}}
+  function setStud(v){localStorage.setItem(LS_STUD,JSON.stringify(v));}
+  function getTeach(){try{return JSON.parse(localStorage.getItem(LS_TEACH))||[];}catch(e){return[];}}
+  function setTeach(v){localStorage.setItem(LS_TEACH,JSON.stringify(v));}
+  // theme
+  const tb=document.getElementById('theme-toggle');
+  function at(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('vs-theme',t);if(tb)tb.textContent=t==='dark'?'☀️':'🌙';}
+  at(localStorage.getItem('vs-theme')||'light');
+  if(tb) tb.addEventListener('click',function(){at((document.documentElement.getAttribute('data-theme')||'light')==='dark'?'light':'dark');});
+  // add student
+  document.querySelectorAll('#estudiantes .web-topbar-actions .btn').forEach(function(b){
+    if(b.textContent.includes('NUEVO ESTUDIANTE') && !b.id){
+      b.id='btn-add-student';
+      b.addEventListener('click',function(){
+        const name=prompt('Nombre del estudiante:'); if(!name)return;
+        const grado=prompt('Grado (ej: 3° Sec):')||'';
+        const apod=prompt('Apoderado:')||'';
+        const list=getStud();
+        list.push({matricula:'2026-'+String(100+list.length).slice(-3),nombre:name,grado:grado,estado:'Activa',apoderado:apod});
+        setStud(list);
+        alert('Estudiante agregado (local).');
+      });
+    }
+  });
+  // add teacher
+  document.querySelectorAll('#profesores .web-topbar-actions .btn').forEach(function(b){
+    if(b.textContent.includes('NUEVO PROFESOR') && !b.id){
+      b.id='btn-add-teacher';
+      b.addEventListener('click',function(){
+        const name=prompt('Nombre del profesor:'); if(!name)return;
+        const area=prompt('Área:')||'';
+        const list=getTeach();
+        list.push({nombre:name,area:area,estado:'En colegio',grados:'',alumnos:0});
+        setTeach(list);
+        alert('Profesor agregado (local).');
+      });
+    }
+  });
+  // export
+  function expCSV(tbl,fn){
+    const rows=Array.from(tbl.querySelectorAll('tr'));
+    let csv='';
+    rows.forEach(function(r){
+      const cells=Array.from(r.querySelectorAll('th,td'));
+      csv += cells.map(function(c){return '"'+c.textContent.replace(/"/g,'""')+'"';}).join(',')+'\n';
+    });
+    const blob=new Blob([csv],{type:'text/csv'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob); a.download=fn; a.click();
+  }
+  function addExp(sel,fn,id){
+    const t=document.querySelector(sel);
+    const bar=document.querySelector(sel.replace(' table.web-table','.web-topbar-actions'));
+    if(t && bar && !document.getElementById(id)){
+      const b=document.createElement('button');
+      b.id=id; b.className='btn btn-outline btn-sm'; b.style.width='auto'; b.textContent='📥 Exportar CSV';
+      b.onclick=function(){expCSV(t,fn);};
+      bar.appendChild(b);
+    }
+  }
+  addExp('#estudiantes table.web-table','estudiantes.csv','exp-est');
+  addExp('#profesores table.web-table','profesores.csv','exp-prof');
+  addExp('#incidencias table.web-table','incidencias.csv','exp-inc');
+  // realtime
+  if(window.BroadcastChannel){
+    const bc=new BroadcastChannel('viasegura-realtime');
+    bc.onmessage=function(ev){ if(ev.data&&ev.data.type==='incidencia'){ alert('Nueva incidencia: '+(ev.data.mensaje||ev.data.categoria)); }};
+  }
+  window.addEventListener('storage',function(ev){ if(ev.key==='vs_incident'&&ev.newValue){ try{const d=JSON.parse(ev.newValue); alert('Nueva incidencia: '+(d.mensaje||d.categoria));}catch(e){} }});
+})();
+</script>
+
+<script>
+(function(){
+  // Monitoreo mejorado: GPS + riesgo por alejamiento (Bajo/Medio/Alto) + rutas de referencia.
+  // Solo se activa el seguimiento/alertas cuando el alumno está FUERA del perímetro (geocerca).
+  var SCHOOL = { lat: -16.4090, lng: -71.5434, name: 'Colegio Principal' };
+  var GEOFENCE_RADIUS = 150; // m - dentro = en colegio
+  var RISK = { bajo: 150, medio: 500 }; // <=150 Bajo (cercano), 150-500 Medio, >500 Alto
+  var map = null, studentMarker = null, riskCircle = null, pathLine = null, routeLines = [];
+  var pathCoords = [], watchId = null, lastPos = null, lastTime = null, lastRisk = null, alertCount = 0;
+
+  function haversine(a, b){
+    var R=6371000, toRad=Math.PI/180;
+    var dLat=(b.lat-a.lat)*toRad, dLon=(b.lng-a.lng)*toRad;
+    var x=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(a.lat*toRad)*Math.cos(b.lat*toRad)*Math.sin(dLon/2)*Math.sin(dLon/2);
+    return 2*R*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+  }
+  function riskLevel(distM){
+    if (distM <= RISK.bajo) return { level:'Bajo', color:'#22c55e' };
+    if (distM <= RISK.medio) return { level:'Medio', color:'#f59e0b' };
+    return { level:'Alto', color:'#ef4444' };
+  }
+  function fmtDist(m){ if(m==null||isNaN(m)) return '—'; return m<1000 ? Math.round(m)+' m' : (m/1000).toFixed(2)+' km'; }
+  function setText(id, txt){ var el=document.getElementById(id); if(el) el.textContent=txt; }
+
+  function addAlert(msg, color){
+    alertCount++; setText('mon-alertas', String(alertCount));
+    var list=document.getElementById('mon-alert-list'); if(!list) return;
+    if(list.textContent.indexOf('Sin alertas')>=0) list.innerHTML='';
+    var d=document.createElement('div');
+    d.style.padding='8px 0'; d.style.borderBottom='1px solid rgba(148,163,184,.25)';
+    d.innerHTML='<span style="color:'+(color||'#ef4444')+';font-weight:700;">●</span> '+msg+
+      '<br><span style="font-size:11px;color:#64748b;">'+new Date().toLocaleTimeString('es-PE')+'</span>';
+    list.prepend(d);
+  }
+
+  function getSafePoints(){
+    var sp = window.VIA_SEGURA_SAFE_POINTS;
+    if(!sp) return [];
+    // Try main inst id or first available
+    var keys = Object.keys(sp);
+    var id = window.VS_MAIN_INST_ID || keys[0];
+    return (sp[id] || (keys[0] ? sp[keys[0]] : []) || []);
+  }
+
+  function drawRoutes(){
+    if(!map||!window.L) return;
+    routeLines.forEach(function(l){ try{ map.removeLayer(l);}catch(e){} }); routeLines=[];
+    var pts=getSafePoints().filter(function(p){ return haversine(SCHOOL,p) <= 1500; }).slice(0,14);
+    // If no safe points, draw a few reference directions
+    if(!pts.length){
+      var offs=[[0.006,0.004],[ -0.005,0.006],[0.004,-0.006],[ -0.006,-0.003]];
+      offs.forEach(function(o){ pts.push({lat:SCHOOL.lat+o[0], lng:SCHOOL.lng+o[1]}); });
+    }
+    pts.forEach(function(p){
+      var line=L.polyline([[SCHOOL.lat,SCHOOL.lng],[p.lat,p.lng]],{color:'#3b82f6',weight:2,opacity:0.35,dashArray:'6,6'}).addTo(map);
+      routeLines.push(line);
+    });
+  }
+
+  function initMap(){
+    var el=document.getElementById('map-mon');
+    if(!el||!window.L) return;
+    if(el._leaflet_id){ try{ map.invalidateSize(); }catch(e){} return; }
+    map=L.map('map-mon').setView([SCHOOL.lat,SCHOOL.lng],15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:''}).addTo(map);
+    L.marker([SCHOOL.lat,SCHOOL.lng]).addTo(map).bindPopup('🏫 '+SCHOOL.name);
+    L.circle([SCHOOL.lat,SCHOOL.lng],{radius:GEOFENCE_RADIUS,color:'#2563eb',fillColor:'#2563eb',fillOpacity:0.08,weight:2}).addTo(map).bindPopup('Geocerca (150m)');
+    L.circle([SCHOOL.lat,SCHOOL.lng],{radius:RISK.medio,color:'#f59e0b',fill:false,weight:1,dashArray:'4,4',opacity:0.5}).addTo(map);
+    L.circle([SCHOOL.lat,SCHOOL.lng],{radius:RISK.bajo,color:'#22c55e',fill:false,weight:1,opacity:0.4}).addTo(map);
+    pathLine=L.polyline([],{color:'#ef4444',weight:3,opacity:0.7}).addTo(map);
+    drawRoutes();
+    setTimeout(function(){ try{ map.invalidateSize(); }catch(e){} }, 400);
+  }
+
+  function updatePosition(pos){
+    var p={lat:pos.coords.latitude,lng:pos.coords.longitude};
+    var acc=pos.coords.accuracy||0;
+    var speed=pos.coords.speed;
+    var now=Date.now();
+    var dist=haversine(p,SCHOOL);
+    var outside = dist > GEOFENCE_RADIUS;
+    var risk=riskLevel(dist);
+
+    var speedKmh=null;
+    if(speed!=null && !isNaN(speed) && speed>=0) speedKmh=speed*3.6;
+    else if(lastPos && lastTime){ var dt=(now-lastTime)/1000; if(dt>0) speedKmh=(haversine(p,lastPos)/dt)*3.6; }
+    lastPos=p; lastTime=now;
+
+    setText('mon-fuera', outside ? 'Sí' : 'No');
+    setText('mon-dist', fmtDist(dist));
+    setText('mon-riesgo', risk.level);
+    var rEl=document.getElementById('mon-riesgo'); if(rEl) rEl.style.color=risk.color;
+    setText('mon-gps-state','Activo (±'+Math.round(acc)+'m)');
+    setText('mon-speed', speedKmh!=null ? speedKmh.toFixed(1)+' km/h' : '—');
+    setText('mon-last', new Date().toLocaleTimeString('es-PE'));
+    setText('mon-mode', outside ? 'Monitoreo activo: FUERA del perímetro' : 'En colegio / dentro de geocerca (sin rastreo de alertas)');
+
+    if(!map) initMap();
+    if(map && window.L){
+      if(!studentMarker){
+        studentMarker=L.circleMarker([p.lat,p.lng],{radius:9,color:risk.color,fillColor:risk.color,fillOpacity:0.9,weight:2}).addTo(map);
+      } else {
+        studentMarker.setLatLng([p.lat,p.lng]);
+        studentMarker.setStyle({color:risk.color,fillColor:risk.color});
+      }
+      studentMarker.bindPopup('<b>Alumno (GPS)</b><br>Distancia: '+fmtDist(dist)+'<br>Riesgo: <b style="color:'+risk.color+'">'+risk.level+'</b><br>'+(outside?'Fuera del colegio':'Dentro de geocerca'));
+      if(!riskCircle){
+        riskCircle=L.circle([p.lat,p.lng],{radius:Math.max(30,Math.min(150,acc||50)),color:risk.color,fillColor:risk.color,fillOpacity:0.12,weight:1}).addTo(map);
+      } else {
+        riskCircle.setLatLng([p.lat,p.lng]); riskCircle.setRadius(Math.max(30,Math.min(150,acc||50)));
+        riskCircle.setStyle({color:risk.color,fillColor:risk.color});
+      }
+      // Track path only when outside (alejamiento)
+      if(outside){
+        pathCoords.push([p.lat,p.lng]);
+        if(pathCoords.length>250) pathCoords.shift();
+        if(pathLine) pathLine.setLatLngs(pathCoords);
+        try{ map.panTo([p.lat,p.lng],{animate:true}); }catch(e){}
+      }
+    }
+
+    // Alertas solo fuera del perímetro (o al cambiar estado)
+    if(outside && lastRisk !== risk.level){
+      if(risk.level==='Alto') addAlert('⚠️ Riesgo ALTO: alumno a '+fmtDist(dist)+' del colegio (alejamiento significativo).', '#ef4444');
+      else if(risk.level==='Medio') addAlert('Riesgo MEDIO: alumno a '+fmtDist(dist)+' del colegio.', '#f59e0b');
+      else addAlert('Riesgo BAJO: alumno cerca del perímetro ('+fmtDist(dist)+').', '#22c55e');
+    }
+    if(!outside && lastRisk && lastRisk!=='Bajo' && lastRisk!==null){
+      addAlert('✅ Alumno dentro de la geocerca del colegio.', '#22c55e');
+    }
+    if(outside && speedKmh!=null && speedKmh>15){
+      if(!window._vsLastSpeedAlert || (now-window._vsLastSpeedAlert)>60000){
+        window._vsLastSpeedAlert=now;
+        addAlert('Movimiento rápido: '+speedKmh.toFixed(1)+' km/h fuera del colegio.', '#f59e0b');
+      }
+    }
+    lastRisk=risk.level;
+  }
+
+  function onError(err){
+    setText('mon-gps-state','Error: '+(err&&err.message?err.message:'sin ubicación'));
+    setText('mon-mode','Activa permisos de ubicación (GPS)');
+  }
+
+  function start(){
+    initMap();
+    if(!navigator.geolocation){ setText('mon-gps-state','Geolocalización no soportada'); return; }
+    if(watchId!=null) return;
+    setText('mon-gps-state','Solicitando permiso de ubicación…');
+    watchId=navigator.geolocation.watchPosition(updatePosition,onError,{enableHighAccuracy:true,maximumAge:3000,timeout:12000});
+  }
+
+  function tryStart(){ if(document.getElementById('monitoreo')) start(); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',function(){ setTimeout(tryStart,700); });
+  else setTimeout(tryStart,700);
+  document.addEventListener('click',function(e){ var t=e.target; if(t && ((t.textContent||'').indexOf('Monitoreo')>=0 || (t.getAttribute&&t.getAttribute('href')==='#monitoreo'))) setTimeout(start,350); });
+  window.addEventListener('hashchange',function(){ if(location.hash.indexOf('monitoreo')>=0) setTimeout(start,350); });
+})();
+</script>
 </body>
 </html>
