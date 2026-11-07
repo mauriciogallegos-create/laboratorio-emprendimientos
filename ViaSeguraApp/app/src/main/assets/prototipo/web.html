@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VíaSegura — Panel Web Institucional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="css/prototipo.css">
+<style>
+/* Estilos exclusivos del panel web institucional */
+.web-frame { box-shadow: 0 12px 40px rgba(16,24,40,.12); }
+.web-sidebar { background: linear-gradient(180deg,#14304d 0%,#0f2740 100%); }
+.web-nav-item { position: relative; }
+.web-nav-item .nav-live-dot { width:7px;height:7px;border-radius:50%;background:#ef4444;margin-left:auto;box-shadow:0 0 0 0 rgba(239,68,68,.6);animation:livepulse 1.8s infinite; }
+@keyframes livepulse { 0%{box-shadow:0 0 0 0 rgba(239,68,68,.6)} 70%{box-shadow:0 0 0 8px rgba(239,68,68,0)} 100%{box-shadow:0 0 0 0 rgba(239,68,68,0)} }
+.cam-grid { display:grid; grid-template-columns: repeat(3,1fr); gap:14px; }
+.cam-card { background: var(--surface); border-radius: var(--radius-card); box-shadow: var(--shadow); overflow:hidden; border:1px solid var(--border); }
+.cam-head { display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px solid var(--border); }
+.cam-name { font-size:13px; font-weight:600; }
+.cam-badge { font-size:10px; font-weight:700; letter-spacing:.4px; padding:3px 7px; border-radius:999px; text-transform:uppercase; }
+.cam-badge.live { background:#fee2e2; color:#b91c1c; }
+.cam-badge.off { background:#eef2f7; color:#64748b; }
+.cam-badge.hls { background:#e0e7ff; color:#3730a3; }
+.cam-video { position:relative; background:#0b1220; aspect-ratio:16/9; display:flex; align-items:center; justify-content:center; }
+.cam-video video, .cam-video iframe, .cam-video img { width:100%; height:100%; object-fit:cover; border:0; display:block; }
+.cam-placeholder { color:#64748b; font-size:12px; text-align:center; padding:16px; }
+.cam-foot { display:flex; align-items:center; justify-content:space-between; padding:8px 12px; font-size:12px; color:var(--text-muted); }
+.cam-foot b { color:var(--text); }
+.cam-actions { display:flex; gap:6px; padding:0 12px 12px; }
+.web-map { z-index:1; }
+.leaflet-container { font-family: inherit; border-radius: var(--radius-card); }
+.map-legend { display:flex; gap:14px; align-items:center; flex-wrap:wrap; font-size:12px; color:var(--text-muted); margin:-10px 0 18px; }
+.map-legend .lg { display:flex; align-items:center; gap:6px; }
+.map-legend .dot { width:12px; height:12px; border-radius:50%; }
+.tbl-avatars { display:flex; flex-wrap:wrap; gap:4px; }
+.teach-row { display:flex; align-items:center; gap:10px; }
+.teach-av { width:32px; height:32px; border-radius:50%; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; }
+.stat-mini { display:flex; gap:8px; }
+.stat-mini .sm { background:#F5F7FA; border-radius:8px; padding:6px 10px; font-size:12px; }
+.live-ticker { display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; }
+.live-pill { flex:0 0 auto; background:var(--surface); border:1px solid var(--border); border-radius:999px; padding:7px 12px; font-size:12px; display:flex; align-items:center; gap:7px; box-shadow:var(--shadow); }
+.live-pill .pip { width:8px;height:8px;border-radius:50%; }
+.pip.red{background:#ef4444;} .pip.amber{background:#f59e0b;} .pip.green{background:#22c55e;}
+.heat-controls { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
+.heat-controls .chip { cursor:pointer; }
+@media (max-width:1100px){ .cam-grid { grid-template-columns: repeat(2,1fr); } }
+@media (max-width:680px){ .cam-grid { grid-template-columns: 1fr; } }
+
+/* ===== LOGIN tipo Django: bloquea TODO el panel hasta autenticarse ===== */
+body:not(.vs-authed) { overflow:hidden; }
+#vs-login { position:fixed; inset:0; z-index:100000; display:flex; align-items:center; justify-content:center;
+  background: radial-gradient(1200px 620px at 50% -10%, #1b4a7a 0%, #0f2740 55%, #0a1a2b 100%); padding:20px; }
+body.vs-authed #vs-login { display:none; }
+.vs-login-card { width:100%; max-width:400px; background:var(--surface); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,.45);
+  padding:32px 30px 24px; border-top:5px solid #0F2A4A; }
+.vs-login-logo { width:56px; height:56px; margin:0 auto 14px; border-radius:14px; display:flex; align-items:center; justify-content:center;
+  font-size:28px; background:linear-gradient(135deg,#1B4E9B,#0F2A4A); color:#fff; box-shadow:var(--shadow-lg); }
+.vs-login-card h1 { text-align:center; font-size:22px; color:var(--text); margin-bottom:2px; }
+.vs-login-sub { text-align:center; font-size:13px; color:var(--text-muted); margin-bottom:22px; }
+.vs-login-card label { display:block; font-size:12px; font-weight:600; color:var(--text-muted); margin:14px 0 6px; text-transform:uppercase; letter-spacing:.4px; }
+.vs-login-card input { width:100%; padding:11px 12px; border:1px solid var(--border); border-radius:10px; font-size:14px; background:var(--bg); color:var(--text); outline:none; }
+.vs-login-card input:focus { border-color:#1B4E9B; box-shadow:0 0 0 3px rgba(27,78,155,.15); background:#fff; }
+.vs-login-btn { width:100%; margin-top:20px; padding:12px; border:0; border-radius:10px; background:linear-gradient(135deg,#1B4E9B,#0F2A4A); color:#fff; font-size:14px; font-weight:600; cursor:pointer; }
+.vs-login-btn:hover { filter:brightness(1.08); }
+.vs-login-msg { display:none; margin-top:14px; padding:10px 12px; border-radius:8px; font-size:13px; background:var(--danger-bg); color:var(--danger); }
+.vs-login-msg.show { display:block; }
+.vs-login-help { text-align:center; font-size:11px; color:var(--text-muted); margin-top:16px; }
+.web-nav-item.vs-logout { cursor:pointer; }
+</style>
+</head>
+<body>
+
+<!-- ===== ACCESO (login tipo Django): se exige usuario y contraseña ===== -->
+<div id="vs-login">
+  <form class="vs-login-card" id="vs-login-form" autocomplete="off" novalidate>
+    <div class="vs-login-logo">🛡️</div>
+    <h1>VíaSegura</h1>
+    <p class="vs-login-sub">Panel Web Institucional · Acceso restringido</p>
+    <label for="vs-user">Usuario</label>
+    <input id="vs-user" name="username" type="text" placeholder="admin" autocomplete="username" required>
+    <label for="vs-pass">Contraseña</label>
+    <input id="vs-pass" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required>
+    <button type="submit" class="vs-login-btn">Iniciar sesión</button>
+    <div class="vs-login-msg" id="vs-login-msg" role="alert"></div>
+    <p class="vs-login-help">Solo personal autorizado (administración tipo Django)</p>
+  </form>
+</div>
+
+<div class="screen-group">
+  <h2>🏫 VíaSegura — Panel Web Institucional</h2>
+  <p>Dashboard, Directo, Estudiantes, Profesores e Incidencias · Mapa real</p>
+  <div class="screen-nav">
+    <a href="#dashboard">Dashboard</a>
+    <a href="#directo">Directo / Cámaras</a>
+    <a href="#estudiantes">Estudiantes</a>
+    <a href="#profesores">Profesores</a>
+    <a href="#incidencias">Incidencias / Zonas de riesgo</a>
+    <a href="#detalle">Detalle incidencia</a>
+  </div>
+
+  <div class="screens" style="max-width:1440px; margin:0 auto;">
+
+    <!-- ================= DASHBOARD ================= -->
+    <div id="dashboard" class="web-frame">
+      <aside class="web-sidebar">
+        <div class="web-sidebar-logo">
+          <div>
+            <h2>🛡️ VíaSegura</h2>
+            <small>Panel Institucional</small>
+          </div>
+          <button class="web-sidebar-close" type="button" aria-label="Cerrar men&uacute;">&times;</button>
+        </div>
+        <div class="web-nav-item active">📊 Dashboard</div>
+        <div class="web-nav-item">🎥 Directo <span class="nav-live-dot"></span></div>
+        <div class="web-nav-item">👥 Estudiantes</div>
+        <div class="web-nav-item">👨‍🏫 Profesores</div>
+        <div class="web-nav-item">⚠️ Incidencias</div>
+        <div class="web-nav-item">📍 Zonas de riesgo</div>
+        <div class="web-nav-item">📌 Puntos seguros</div>
+        <div class="web-nav-item">⚙️ Configuración</div>
+        <div style="flex:1;"></div>
+        <div class="web-nav-item" style="border-top:1px solid rgba(255,255,255,.1); margin-top:16px;">🚪 Cerrar sesión</div>
+      </aside>
+      <main class="web-main">
+        <div class="web-topbar">
+          <button class="web-menu-btn" type="button" aria-label="Abrir menú" aria-expanded="false">&#9776;</button>
+          <div><h2>Dashboard</h2><p class="body-sm">Arequipa · <span id="dash-scope">138 colegios</span> · Resumen de los últimos 7 días</p></div>
+          <div class="web-topbar-actions">
+            <input class="input topbar-search" type="search" data-search data-bind="dash" placeholder="🔍 Buscar incidencia..." aria-label="Buscar en incidencias recientes">
+            <div class="topbar-avatar">🏫</div>
+          </div>
+        </div>
+        <div class="web-content">
+          <div class="live-ticker" style="margin-bottom:18px;">
+            <span class="live-pill"><span class="pip red"></span><b>2</b> emergencias activas</span>
+            <span class="live-pill"><span class="pip amber"></span><b>12</b> recorridos con anomalías</span>
+            <span class="live-pill"><span class="pip green"></span><b>287</b> recorridos normales</span>
+            <span class="live-pill">🎥 <b id="dash-cams">3</b> cámaras en línea</span>
+          </div>
+
+          <div class="kpi-grid">
+            <div class="kpi-card"><div class="kpi-number" data-count-to="350">350</div><div class="kpi-label">👥 Estudiantes registrados</div></div>
+            <div class="kpi-card green"><div class="kpi-number" data-count-to="287">287</div><div class="kpi-label">🟢 Recorridos normales</div></div>
+            <div class="kpi-card amber"><div class="kpi-number" data-count-to="12">12</div><div class="kpi-label">🟡 Recorridos con anomalías</div></div>
+            <div class="kpi-card red"><div class="kpi-number" data-count-to="2">2</div><div class="kpi-label">🔴 Emergencias</div></div>
+          </div>
+
+          <div class="panel-grid map-side">
+            <div>
+              <h3 style="font-size:16px; font-weight:700; margin-bottom:6px;">📍 Mapa de calor de incidencias</h3>
+              <p class="body-sm" style="margin:0 0 10px;">Densidad de reportes de los últimos 7 días sobre los colegios y rutas reales de la app (Arequipa).</p>
+              <div class="web-map" id="map-dash" data-map="heat" style="height:400px;"></div>
+              <div class="map-legend">
+                <span class="lg"><span class="dot" style="background:#22c55e"></span> Baja</span>
+                <span class="lg"><span class="dot" style="background:#f59e0b"></span> Media</span>
+                <span class="lg"><span class="dot" style="background:#ef4444"></span> Alta</span>
+                <span class="lg" style="margin-left:auto;">Basado en <b id="dash-total-reportes">—</b> reportes reales</span>
+              </div>
+            </div>
+            <div>
+              <h3 style="font-size:16px; font-weight:700; margin-bottom:12px;">🌡️ Zonas de riesgo</h3>
+              <div style="background:var(--surface); border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow);" id="dash-risk"></div>
+              <div style="margin-top:12px; background:var(--surface); border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow);">
+                <div style="font-size:13px; font-weight:600; margin-bottom:8px;">⏰ Zona horaria</div>
+                <div style="font-size:13px; color:var(--text-muted);">Todos los timestamps se muestran en hora de Perú <b style="color:var(--text);">(GMT-5)</b>.</div>
+              </div>
+              <div style="margin-top:12px; background:var(--surface); border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow);">
+                <div style="font-size:13px; font-weight:600; margin-bottom:8px;">📌 Puntos seguros cercanos</div>
+                <div id="dash-pois" class="body-sm" style="color:var(--text-muted);">Cargando…</div>
+              </div>
+            </div>
+          </div>
+
+          <h3 style="font-size:16px; font-weight:700; margin:24px 0 12px;">⚠️ Incidencias recientes</h3>
+          <p class="table-hint">Desliza la tabla para ver todas las columnas →</p>
+          <div data-filter="dash">
+            <div class="table-filters">
+              <select class="input select" data-col="4" aria-label="Filtrar por estado">
+                <option value="">Estado: todos</option>
+                <option value="Abierta">Abierta</option>
+                <option value="En seguimiento">En seguimiento</option>
+                <option value="Cerrada">Cerrada</option>
+              </select>
+              <button class="btn btn-outline btn-sm table-clear" type="button">Limpiar</button>
+              <span class="table-count" aria-live="polite"></span>
+            </div>
+            <div class="table-wrap">
+              <table class="web-table">
+                <tr><th>Tipo</th><th>Distrito</th><th>Reportado por</th><th>Hora</th><th>Estado</th></tr>
+                <tr class="table-empty"><td colspan="5">Sin incidencias que coincidan con el filtro.</td></tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+      <div class="sidebar-backdrop"></div>
+    </div>
+
+    <!-- ================= DIRECTO / CÁMARAS ================= -->
+    <div id="directo" class="web-frame">
+      <aside class="web-sidebar">
+        <div class="web-sidebar-logo">
+          <div>
+            <h2>🛡️ VíaSegura</h2>
+            <small>Panel Institucional</small>
+          </div>
+          <button class="web-sidebar-close" type="button" aria-label="Cerrar men&uacute;">&times;</button>
+        </div>
+        <div class="web-nav-item">📊 Dashboard</div>
+        <div class="web-nav-item active">🎥 Directo <span class="nav-live-dot"></span></div>
+        <div class="web-nav-item">👥 Estudiantes</div>
+        <div class="web-nav-item">👨‍🏫 Profesores</div>
+        <div class="web-nav-item">⚠️ Incidencias</div>
+        <div class="web-nav-item">📍 Zonas de riesgo</div>
+        <div class="web-nav-item">📌 Puntos seguros</div>
+        <div class="web-nav-item">⚙️ Configuración</div>
+        <div style="flex:1;"></div>
+        <div class="web-nav-item" style="border-top:1px solid rgba(255,255,255,.1); margin-top:16px;">🚪 Cerrar sesión</div>
+      </aside>
+      <main class="web-main">
+        <div class="web-topbar">
+          <button class="web-menu-btn" type="button" aria-label="Abrir menú" aria-expanded="false">&#9776;</button>
+          <div><h2>🎥 Directo</h2><p class="body-sm">2 cámaras institucionales (zonas comunes) + mapas de calor de salidas · Sin grabación de menores</p></div>
+          <div class="web-topbar-actions">
+            <div class="topbar-search">📡 <span id="cams-online">0</span> / <span id="cams-total">0</span> en línea</div>
+            <button class="btn btn-primary btn-sm" style="width:auto;" id="btn-cam-start">▶ ACTIVAR VISTAS</button>
+          </div>
+        </div>
+        <div class="web-content">
+          <div class="cam-grid" id="cam-grid"></div>
+
+          <div style="margin-top:22px; background:var(--surface); border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow);">
+            <div style="font-size:14px; font-weight:700; margin-bottom:6px;">ℹ️ Cómo funcionan estas cámaras</div>
+            <p class="body-sm" style="line-height:1.6; margin:0;">
+              <b>Cámara 01</b> es un <b>feed real</b>: usa la cámara del dispositivo — <b>laptop, celular o tablet</b> — vía <code>getUserMedia</code>.
+              En celular pide primero la <b>cámara trasera</b>; si no existe (laptop/escritorio) usa <b>cualquier webcam</b> del equipo.
+              Para verla, pulsa <b>▶ INICIAR CÁMARAS</b> y acepta el permiso. Si el navegador no permite la cámara
+              (por ejemplo abriendo el archivo en <code>file://</code>), aparece el botón <b>📷 Usar cámara de este equipo</b>,
+              que abre la cámara del sistema. <b>Cámaras 02–03</b> usan <b>HLS en vivo</b>
+              (stream público de prueba) y <b>04</b> es el mapa en vivo con la posición de los estudiantes.
+              En producción, cada tarjeta se sustituye por la URL <code>HLS/RTSP</code> de la cámara IP del colegio
+              (NVR o servidor de streaming), sin cambiar el panel.
+            </p>
+          </div>
+
+          <h3 style="font-size:16px; font-weight:700; margin:24px 0 12px;">📡 Estado de dispositivos en vivo</h3>
+          <p class="table-hint">Desliza la tabla para ver todas las columnas →</p>
+          <div data-filter="cams">
+            <div class="table-filters">
+              <select class="input select" data-col="2" aria-label="Filtrar por estado">
+                <option value="">Estado: todos</option>
+                <option value="En línea">En línea</option>
+                <option value="Sin señal">Sin señal</option>
+              </select>
+              <button class="btn btn-outline btn-sm table-clear" type="button">Limpiar</button>
+              <span class="table-count" aria-live="polite"></span>
+            </div>
+            <div class="table-wrap">
+              <table class="web-table">
+                <tr><th>Dispositivo</th><th>Ubicación</th><th>Estado</th><th>Señal</th><th>Batería</th><th>Última lectura</th></tr>
+                <tr><td>ESP32 · ViaSegura-Wear-A1</td><td>Puerta principal</td><td><span class="chip chip-green">En línea</span></td><td>-42 dBm</td><td>88 %</td><td>Ahora</td></tr>
+                <tr><td>ESP32 · ViaSegura-Wear-B2</td><td>Patio central</td><td><span class="chip chip-green">En línea</span></td><td>-58 dBm</td><td>74 %</td><td>Hace 3 s</td></tr>
+                <tr><td>ESP32 · ESP32-BLE-3C</td><td>Ruta · Calle Echevarria 201</td><td><span class="chip chip-amber">Sin señal</span></td><td>—</td><td>12 %</td><td>Hace 8 min</td></tr>
+                <tr><td>Cámara 02 · HLS</td><td>Pasillo A</td><td><span class="chip chip-green">En línea</span></td><td>—</td><td>—</td><td>Ahora</td></tr>
+                <tr><td>Cámara 03 · HLS</td><td>Sede / entrada</td><td><span class="chip chip-green">En línea</span></td><td>—</td><td>—</td><td>Ahora</td></tr>
+                <tr class="table-empty"><td colspan="6">Sin dispositivos que coincidan con el filtro.</td></tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+      <div class="sidebar-backdrop"></div>
+    </div>
+
+    <!-- ================= ESTUDIANTES ================= -->
+    <div id="estudiantes" class="web-frame">
+      <aside class="web-sidebar">
+        <div class="web-sidebar-logo">
+          <div>
+            <h2>🛡️ VíaSegura</h2>
+            <small>Panel Institucional</small>
+          </div>
+          <button class="web-sidebar-close" type="button" aria-label="Cerrar men&uacute;">&times;</button>
+        </div>
+        <div class="web-nav-item">📊 Dashboard</div>
+        <div class="web-nav-item">🎥 Directo <span class="nav-live-dot"></span></div>
+        <div class="web-nav-item active">👥 Estudiantes</div>
+        <div class="web-nav-item">👨‍🏫 Profesores</div>
+        <div class="web-nav-item">⚠️ Incidencias</div>
+        <div class="web-nav-item">📍 Zonas de riesgo</div>
+        <div class="web-nav-item">📌 Puntos seguros</div>
+        <div class="web-nav-item">⚙️ Configuración</div>
+        <div style="flex:1;"></div>
+        <div class="web-nav-item" style="border-top:1px solid rgba(255,255,255,.1); margin-top:16px;">🚪 Cerrar sesión</div>
+      </aside>
+      <main class="web-main">
+        <div class="web-topbar">
+          <button class="web-menu-btn" type="button" aria-label="Abrir menú" aria-expanded="false">&#9776;</button>
+          <div><h2>Estudiantes</h2><p class="body-sm">Arequipa · 350 registrados</p></div>
+          <div class="web-topbar-actions">
+            <input class="input topbar-search" type="search" data-search data-bind="estudiantes" placeholder="🔍 Buscar estudiante..." aria-label="Buscar estudiante">
+            <button class="btn btn-primary btn-sm" style="width:auto; background:var(--success);">+ NUEVO ESTUDIANTE</button>
+          </div>
+        </div>
+        <div class="web-content">
+          <div data-filter="estudiantes">
+            <div class="chip-row">
+              <button class="chip chip-neutral chip-filter is-active" type="button" data-col="2" data-value="">Todos (350)</button>
+              <button class="chip chip-neutral chip-filter" type="button" data-col="2" data-value="1°">1° (58)</button>
+              <button class="chip chip-neutral chip-filter" type="button" data-col="2" data-value="2°">2° (61)</button>
+              <button class="chip chip-neutral chip-filter" type="button" data-col="2" data-value="3°">3° (54)</button>
+              <button class="chip chip-neutral chip-filter" type="button" data-col="2" data-value="4°">4° (87)</button>
+              <button class="chip chip-neutral chip-filter" type="button" data-col="2" data-value="5°">5° (90)</button>
+            </div>
+            <div class="table-filters">
+              <select class="input select" data-col="3" aria-label="Filtrar por estado de tarjeta">
+                <option value="">Estado: todos</option>
+                <option value="Activa">Activa</option>
+                <option value="Pendiente">Pendiente</option>
+                <option value="Desactivada">Desactivada</option>
+              </select>
+              <button class="btn btn-outline btn-sm table-clear" type="button">Limpiar</button>
+              <span class="table-count" aria-live="polite"></span>
+            </div>
+            <p class="table-hint">Desliza la tabla para ver todas las columnas →</p>
+            <div class="table-wrap">
+            <table class="web-table" style="width:100%;">
+            <tr><th>Matrícula</th><th>Estudiante</th><th>Grado</th><th>Estado</th><th>Apoderado</th><th>Acciones</th></tr>
+            <tr>
+              <td class="body-sm">2026-001</td>
+              <td><div class="teach-row"><div class="teach-av" style="background:var(--primary-light);">JP</div><b>Juan Pérez</b></div></td>
+              <td>3° Sec</td>
+              <td><span class="chip chip-green">Activa</span></td>
+              <td>María Gómez</td>
+              <td><span style="color:var(--primary-soft); font-weight:600; cursor:pointer; font-size:13px;">Ver · Desactivar</span></td>
+            </tr>
+            <tr>
+              <td class="body-sm">2026-002</td>
+              <td><div class="teach-row"><div class="teach-av" style="background:#A1887F;">LC</div><b>Lucía Cáceres</b></div></td>
+              <td>5° Sec</td>
+              <td><span class="chip chip-green">Activa</span></td>
+              <td>Carlos Cáceres</td>
+              <td><span style="color:var(--primary-soft); font-weight:600; cursor:pointer; font-size:13px;">Ver · Desactivar</span></td>
+            </tr>
+            <tr>
+              <td class="body-sm">2026-003</td>
+              <td><div class="teach-row"><div class="teach-av" style="background:#81C784;">DR</div><b>Diego Rojas</b></div></td>
+              <td>2° Sec</td>
+              <td><span class="chip chip-neutral">Pendiente</span></td>
+              <td>—</td>
+              <td><span style="color:var(--primary-soft); font-weight:600; cursor:pointer; font-size:13px;">Asociar apoderado</span></td>
+            </tr>
+            <tr>
+              <td class="body-sm">2026-004</td>
+              <td><div class="teach-row"><div class="teach-av" style="background:#E57373;">AM</div><b>Ana Mendoza</b></div></td>
+              <td>4° Sec</td>
+              <td><span class="chip chip-red">Desactivada</span></td>
+              <td>Rosa Mendoza</td>
+              <td><span style="color:var(--primary-soft); font-weight:600; cursor:pointer; font-size:13px;">Reactivar</span></td>
+            </tr>
+            <tr>
+              <td class="body-sm">2026-005</td>
+              <td><div class="teach-row"><div class="teach-av" style="background:#4FC3F7;">PS</div><b>Pedro Sánchez</b></div></td>
+              <td>1° Sec</td>
+              <td><span class="chip chip-green">Activa</span></td>
+              <td>Lucía Sánchez</td>
+              <td><span style="color:var(--primary-soft); font-weight:600; cursor:pointer; font-size:13px;">Ver · Desactivar</span></td>
+            </tr>
+            <tr>
+              <td class="body-sm">2026-006</td>
+              <td><div class="teach-row"><div class="teach-av" style="background:#7E57C2;">CR</div><b>Camila Ríos</b></div></td>
+              <td>3° Sec</td>
+              <td><span class="chip chip-green">Activa</span></td>
+              <td>Luis Ríos</td>
+              <td><span style="color:var(--primary-soft); font-weight:600; cursor:pointer; font-size:13px;">Ver · Desactivar</span></td>
+            </tr>
+            <tr class="table-empty"><td colspan="6">Sin estudiantes que coincidan con el filtro.</td></tr>
+            </table>
+          </div>
+          </div>
+        </div>
+      </main>
+      <div class="sidebar-backdrop"></div>
+    </div>
+
+    <!-- ================= PROFESORES ================= -->
+    <div id="profesores" class="web-frame">
+      <aside class="web-sidebar">
+        <div class="web-sidebar-logo">
+          <div>
+            <h2>🛡️ VíaSegura</h2>
+            <small>Panel Institucional</small>
+          </div>
+          <button class="web-sidebar-close" type="button" aria-label="Cerrar men&uacute;">&times;</button>
+        </div>
+        <div class="web-nav-item">📊 Dashboard</div>
+        <div class="web-nav-item">🎥 Directo <span class="nav-live-dot"></span></div>
+        <div class="web-nav-item">👥 Estudiantes</div>
+        <div class="web-nav-item active">👨‍🏫 Profesores</div>
+        <div class="web-nav-item">⚠️ Incidencias</div>
+        <div class="web-nav-item">📍 Zonas de riesgo</div>
+        <div class="web-nav-item">📌 Puntos seguros</div>
+        <div class="web-nav-item">⚙️ Configuración</div>
+        <div style="flex:1;"></div>
+        <div class="web-nav-item" style="border-top:1px solid rgba(255,255,255,.1); margin-top:16px;">🚪 Cerrar sesión</div>
+      </aside>
+      <main class="web-main">
+        <div class="web-topbar">
+          <button class="web-menu-btn" type="button" aria-label="Abrir menú" aria-expanded="false">&#9776;</button>
+          <div><h2>Profesores</h2><p class="body-sm">Arequipa · Personal docente y tutoría</p></div>
+          <div class="web-topbar-actions">
+            <input class="input topbar-search" type="search" data-search data-bind="profesores" placeholder="🔍 Buscar profesor..." aria-label="Buscar profesor">
+            <button class="btn btn-primary btn-sm" style="width:auto; background:var(--success);">+ NUEVO PROFESOR</button>
+          </div>
+        </div>
+        <div class="web-content">
+          <div class="kpi-grid kpi-grid-2" style="grid-template-columns:repeat(4,1fr);">
+            <div class="kpi-card"><div class="kpi-number" data-count-to="42">42</div><div class="kpi-label">👨‍🏫 Docentes activos</div></div>
+            <div class="kpi-card green"><div class="kpi-number" data-count-to="18">18</div><div class="kpi-label">🟢 En el colegio ahora</div></div>
+            <div class="kpi-card amber"><div class="kpi-number" data-count-to="5">5</div><div class="kpi-label">🟡 En recorrido</div></div>
+            <div class="kpi-card red"><div class="kpi-number" data-count-to="1">1</div><div class="kpi-label">🔴 Reportaron incidencia</div></div>
+          </div>
+
+          <div data-filter="profesores">
+            <div class="chip-row">
+              <button class="chip chip-neutral chip-filter is-active" type="button" data-col="3" data-value="">Todos (42)</button>
+              <button class="chip chip-neutral chip-filter" type="button" data-col="3" data-value="En colegio">En colegio (18)</button>
+              <button class="chip chip-neutral chip-filter" type="button" data-col="3" data-value="En recorrido">En recorrido (5)</button>
+              <button class="chip chip-neutral chip-filter" type="button" data-col="3" data-value="Fuera">Fuera (19)</button>
+            </div>
+            <div class="table-filters">
+              <select class="input select" data-col="2" aria-label="Filtrar por área">
+                <option value="">Área: todas</option>
+                <option value="Matemática">Matemática</option>
+                <option value="Comunicación">Comunicación</option>
+                <option value="Ciencias">Ciencias</option>
+                <option value="Inglés">Inglés</option>
+                <option value="Tutoría">Tutoría</option>
+              </select>
+              <button class="btn btn-outline btn-sm table-clear" type="button">Limpiar</button>
+              <span class="table-count" aria-live="polite"></span>
+            </div>
+            <p class="table-hint">Desliza la tabla para ver todas las columnas →</p>
+            <div class="table-wrap">
+            <table class="web-table" style="width:100%;">
+            <tr><th>Docente</th><th>Área</th><th>Estado</th><th>Grados / tutoría</th><th>Alumnos a cargo</th><th>Acciones</th></tr>
+            <tr>
+              <td><div class="teach-row"><div class="teach-av" style="background:var(--primary-light);">RG</div><div><b>Rosa Gómez</b><div class="body-sm">rosa.gomez@abc.edu.pe</div></div></div></td>
+              <td>Matemática</td>
+              <td><span class="chip chip-green">En colegio</span></td>
+              <td>3°, 4° Sec · Tutor 3°B</td>
+              <td><div class="stat-mini"><span class="sm">👥 112</span></div></td>
+              <td><span style="color:var(--primary-soft); font-weight:600; cursor:pointer; font-size:13px;">Ver ficha · Mensaje</span></td>
+            </tr>
+            <tr>
+              <td><div class="teach-row"><div class="teach-av" style="background:#A1887F;">JT</div><div><b>Jorge Ticona</b><div class="body-sm">jorge.ticona@abc.edu.pe</div></div></div></td>
+              <td>Comunicación</td>
+              <td><span class="chip chip-green">En colegio</span></td>
+              <td>1°, 2° Sec · Tutor 1°A</td>
+              <td><div class="stat-mini"><span class="sm">👥 108</span></div></td>
+              <td><span style="color:var(--primary-soft); font-weight:600; cursor:pointer; font-size:13px;">Ver ficha · Mensaje</span></td>
+            </tr>
+            <tr>
+              <td><div class="teach-row"><div class="teach-av" style="background:#81C784;">MP</div><div><b>María Paredes</b><div class="body-sm">maria.paredes@abc.edu.pe</div></div></div></td>
+              <td>Ciencias</td>
+              <td><span class="chip chip-amber">En recorrido</span></td>
+              <td>4°, 5° Sec · Tutor 5°A</td>
+              <td><div class="stat-mini"><span class="sm">👥 96</span><span class="sm">📍 En ruta</span></div></td>
+              <td><span style="color:var(--primary-soft); font-weight:600; cursor:pointer; font-size:13px;">Ver ruta en vivo</span></td>
+            </tr>
+            <tr>
+              <td><div class="teach-row"><div class="teach-av" style="background:#E57373;">CV</div><div><b>Carlos Vílchez</b><div class="body-sm">carlos.vilchez@abc.edu.pe</div></div></div></td>
+              <td>Inglés</td>
+              <td><span class="chip chip-neutral">Fuera</span></td>
+              <td>2°, 3° Sec</td>
+              <td><div class="stat-mini"><span class="sm">👥 88</span></div></td>
+              <td><span style="color:var(--primary-soft); font-weight:600; cursor:pointer; font-size:13px;">Ver ficha · Mensaje</span></td>
+            </tr>
+            <tr>
+              <td><div class="teach-row"><div class="teach-av" style="background:#4FC3F7;">AL</div><div><b>Ana Loayza</b><div class="body-sm">ana.loayza@abc.edu.pe</div></div></div></td>
+              <td>Tutoría</td>
+              <td><span class="chip chip-green">En colegio</span></td>
+              <td>Tutor 4°A</td>
+              <td><div class="stat-mini"><span class="sm">👥 34</span><span class="sm">⚠️ 1 reporte</span></div></td>
+              <td><span style="color:var(--primary-soft); font-weight:600; cursor:pointer; font-size:13px;">Ver incidencias</span></td>
+            </tr>
+            <tr>
+              <td><div class="teach-row"><div class="teach-av" style="background:#7E57C2;">FS</div><div><b>Felipe Salas</b><div class="body-sm">felipe.salas@abc.edu.pe</div></div></div></td>
+              <td>Matemática</td>
+              <td><span class="chip chip-neutral">Fuera</span></td>
+              <td>1°, 5° Sec</td>
+              <td><div class="stat-mini"><span class="sm">👥 74</span></div></td>
+              <td><span style="color:var(--primary-soft); font-weight:600; cursor:pointer; font-size:13px;">Ver ficha · Mensaje</span></td>
+            </tr>
+            <tr class="table-empty"><td colspan="6">Sin profesores que coincidan con el filtro.</td></tr>
+            </table>
+          </div>
+          </div>
+        </div>
+      </main>
+      <div class="sidebar-backdrop"></div>
+    </div>
+
+    <!-- ================= INCIDENCIAS / ZONAS ================= -->
+    <div id="incidencias" class="web-frame">
+      <aside class="web-sidebar">
+        <div class="web-sidebar-logo">
+          <div>
+            <h2>🛡️ VíaSegura</h2>
+            <small>Panel Institucional</small>
+          </div>
+          <button class="web-sidebar-close" type="button" aria-label="Cerrar men&uacute;">&times;</button>
+        </div>
+        <div class="web-nav-item">📊 Dashboard</div>
+        <div class="web-nav-item">🎥 Directo <span class="nav-live-dot"></span></div>
+        <div class="web-nav-item">👥 Estudiantes</div>
+        <div class="web-nav-item">👨‍🏫 Profesores</div>
+        <div class="web-nav-item active">⚠️ Incidencias</div>
+        <div class="web-nav-item">📍 Zonas de riesgo</div>
+        <div class="web-nav-item">📌 Puntos seguros</div>
+        <div class="web-nav-item">⚙️ Configuración</div>
+        <div style="flex:1;"></div>
+        <div class="web-nav-item" style="border-top:1px solid rgba(255,255,255,.1); margin-top:16px;">🚪 Cerrar sesión</div>
+      </aside>
+      <main class="web-main">
+        <div class="web-topbar">
+          <button class="web-menu-btn" type="button" aria-label="Abrir menú" aria-expanded="false">&#9776;</button>
+          <div><h2>Incidencias</h2><p class="body-sm">Mapa de calor real y lista de reportes</p></div>
+          <div class="web-topbar-actions">
+            <div class="topbar-search">📅 Últimos 7 días</div>
+            <select class="input select" style="width:auto; padding:8px;" data-col="0" data-bind="incidencias" aria-label="Filtrar por gravedad">
+              <option value="">Gravedad: Todas</option>
+              <option value="Alta">Alta</option>
+              <option value="Media">Media</option>
+              <option value="Baja">Baja</option>
+            </select>
+          </div>
+        </div>
+        <div class="web-content">
+          <div class="heat-controls">
+            <span class="body-sm" style="font-weight:600;">Capa de calor:</span>
+            <button class="chip chip-neutral chip-filter is-active" type="button" id="heat-toggle" aria-pressed="true">🌡️ Mapa de calor</button>
+            <button class="chip chip-neutral chip-filter" type="button" id="pois-toggle" aria-pressed="false">📌 Puntos seguros</button>
+            <button class="chip chip-neutral chip-filter" type="button" id="cams-toggle" aria-pressed="false">🎥 Cámaras</button>
+            <span class="body-sm" style="margin-left:auto;" id="heat-scope">Arequipa · datos de la app</span>
+          </div>
+          <div class="web-map" id="map-inc" data-map="heat" style="height:400px;"></div>
+          <div class="map-legend">
+            <span class="lg"><span class="dot" style="background:#22c55e"></span> Baja</span>
+            <span class="lg"><span class="dot" style="background:#f59e0b"></span> Media</span>
+            <span class="lg"><span class="dot" style="background:#ef4444"></span> Alta</span>
+            <span class="lg" style="margin-left:auto;">Latencia de tiles: <b id="tile-latency">—</b></span>
+          </div>
+
+          <div class="panel-grid split">
+            <div>
+              <h3 style="font-size:15px; font-weight:700; margin-bottom:12px;">🌡️ Zonas de riesgo</h3>
+              <div style="background:var(--surface); border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow);" id="inc-risk"></div>
+            </div>
+            <div>
+              <h3 style="font-size:15px; font-weight:700; margin-bottom:12px;">📈 Reportes por tipo</h3>
+              <div style="background:var(--surface); border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow);" id="tipo-bars"></div>
+            </div>
+          </div>
+
+          <h3 style="font-size:16px; font-weight:700; margin:24px 0 12px;">⚠️ Lista de reportes</h3>
+          <div data-filter="incidencias">
+            <div class="table-filters">
+              <input class="input" type="search" data-search placeholder="🔍 Buscar reporte..." aria-label="Buscar reporte">
+              <select class="input select" data-col="5" aria-label="Filtrar por estado">
+                <option value="">Estado: todos</option>
+                <option value="Abierta">Abierta</option>
+                <option value="En seguimiento">En seguimiento</option>
+                <option value="Cerrada">Cerrada</option>
+              </select>
+              <button class="btn btn-outline btn-sm table-clear" type="button">Limpiar</button>
+              <span class="table-count" aria-live="polite"></span>
+            </div>
+            <p class="table-hint">Desliza la tabla para ver todas las columnas →</p>
+            <div class="table-wrap">
+              <table class="web-table" style="width:100%;">
+                <tr><th>Severidad</th><th>Tipo</th><th>Ubicación (colegio)</th><th>Reportado por</th><th>Fecha · Hora (hora Perú)</th><th>Estado</th></tr>
+                <tr class="table-empty"><td colspan="6">Sin reportes que coincidan con el filtro.</td></tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+      <div class="sidebar-backdrop"></div>
+    </div>
+
+    <!-- ================= DETALLE INCIDENCIA ================= -->
+    <div id="detalle" class="web-frame" style="max-width:900px; margin:0 auto;">
+      <aside class="web-sidebar" style="width:0; display:none;"></aside>
+      <main class="web-main">
+        <div class="web-topbar">
+          <div><h2 class="sm">← Detalle de incidencia</h2><p class="body-sm" id="det-id">Reporte #INC-2026-0142</p></div>
+          <div class="web-topbar-actions">
+            <button class="btn btn-primary btn-sm" style="width:auto;">✅ Marcar atendida</button>
+            <button class="btn btn-outline btn-sm" style="width:auto; background:transparent; border:2px solid var(--border); color:var(--text);">▦ Exportar</button>
+          </div>
+        </div>
+        <div class="web-content" style="max-width:760px; margin:0 auto;">
+          <div class="kpi-grid kpi-grid-2">
+            <div class="kpi-card" style="text-align:left;"><div class="body-sm">Reportado por</div><div style="font-weight:600; margin-top:4px;" id="det-name">Juan Pérez</div><div class="body-sm" id="det-role">Estudiante · Cercado</div></div>
+            <div class="kpi-card" style="text-align:left;"><div class="body-sm">Fecha y hora</div><div style="font-weight:600; margin-top:4px;" id="det-fecha">12 sep · 15:42</div><div class="body-sm" id="det-tz">GMT-5 · Arequipa, Perú</div></div>
+          </div>
+          <div style="background:var(--surface); border-radius:var(--radius-card); padding:20px; box-shadow:var(--shadow); margin-bottom:20px;">
+            <div class="body" style="font-weight:600; margin-bottom:6px;" id="det-titulo">⚠️ Situación de riesgo</div>
+            <p class="body-sm" style="line-height:1.6;" id="det-desc">Detalle del reporte seleccionado.</p>
+          </div>
+          <div class="web-map" id="map-det" data-map="marker" style="height:240px;"></div>
+          <p class="body-sm" style="margin:10px 0 0; text-align:center;" id="det-dir">📍 Arequipa</p>
+        </div>
+      </main>
+    </div>
+
+  </div>
+</div>
+
+<script src="js/institutions-data.js"></script>
+<script src="js/safe-points-data.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+  // =========================================================================
+  // Datos reales de la app VíaSegura (Arequipa).
+  // El mapa de calor se genera a partir de las instituciones reales
+  // (js/institutions-data.js: 138 colegios) y sus puntos seguros
+  // (js/safe-points-data.js: 1.110 puntos), con las mismas categorías y
+  // prioridades que la app usa para registrar incidencias.
+  // =========================================================================
+  const INSTS = (window.VIA_SEGURA_INSTITUTIONS || []).slice();
+  const SAFEPTS = window.VIA_SEGURA_SAFE_POINTS || {};
+  const MAIN = INSTS[0] || { id: 'inst-arequipa-01', name: 'Colegio', district: 'Cercado', address: 'Arequipa', lat: -16.4090, lng: -71.5434 };
+
+  const CENTER = INSTS.length
+    ? [INSTS.reduce(function (s, x) { return s + x.lat; }, 0) / INSTS.length,
+       INSTS.reduce(function (s, x) { return s + x.lng; }, 0) / INSTS.length]
+    : [-16.4271, -71.5939];
+
+  const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'set', 'oct', 'nov', 'dic'];
+  const REPORT_CATS = [
+    { k: 'situacion_riesgo',  label: 'Situación de riesgo',  emoji: '⚠️', desc: 'Riesgo en la ruta escolar: personas, vehículos o situaciones inseguras en el trayecto al colegio.' },
+    { k: 'seguridad_accesos', label: 'Seguridad en accesos', emoji: '🚪', desc: 'Incidente en el acceso: portón sin cerrar o personas ajenas intentando ingresar al recinto.' },
+    { k: 'aglomeraciones',    label: 'Aglomeraciones',       emoji: '👥', desc: 'Congestión en puertas o pasillos durante el ingreso y salida de estudiantes.' },
+    { k: 'fallas_camaras',    label: 'Fallas de cámaras',    emoji: '🎥', desc: 'Cámara de seguridad sin señal o con imagen incompleta en el tramo reportado.' }
+  ];
+  const PRIORITIES = [
+    { k: 'alta',  label: 'Alta',  chip: 'chip-red',     w: 1.0 },
+    { k: 'media', label: 'Media', chip: 'chip-amber',   w: 0.6 },
+    { k: 'baja',  label: 'Baja',  chip: 'chip-neutral', w: 0.2 }
+  ];
+  const STATUSES = [
+    { k: 'abierta',        label: 'Abierta',        chip: 'chip-red' },
+    { k: 'en_seguimiento', label: 'En seguimiento', chip: 'chip-amber' },
+    { k: 'cerrada',        label: 'Cerrada',        chip: 'chip-green' }
+  ];
+  const ROLES = ['Estudiante', 'Apoderado', 'Docente', 'Vigilante'];
+  const NOMS = ['Ana Mendoza', 'Juan Pérez', 'Lucía Cáceres', 'Diego Quispe', 'Rosa Huamán', 'Luis Rojas', 'María Flores', 'Carlos Ttito'];
+
+  // PRNG determinista: los reportes son idénticos en cada carga.
+  function hash32(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function prng(seed) { let s = (seed >>> 0) || 1; return function () { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; }; }
+  function havM(aLat, aLng, bLat, bLng) {
+    const R = 6371000, rad = Math.PI / 180;
+    const dLa = (bLat - aLat) * rad, dLo = (bLng - aLng) * rad;
+    const x = Math.sin(dLa / 2) * Math.sin(dLa / 2) +
+      Math.cos(aLat * rad) * Math.cos(bLat * rad) * Math.sin(dLo / 2) * Math.sin(dLo / 2);
+    return 2 * R * Math.asin(Math.sqrt(x));
+  }
+
+  // Reportes anclados a colegios reales, sobre la ruta real a sus puntos
+  // seguros. La densidad (λ) sigue el área metropolitana del piloto: más
+  // reportes cerca del Cercado, menos en los distritos rurales.
+  const REPORTS = [];
+  INSTS.forEach(function (inst) {
+    const r = prng(hash32(inst.id));
+    const dKm = havM(MAIN.lat, MAIN.lng, inst.lat, inst.lng) / 1000;
+    // Área del piloto (área metropolitana, ≤20 km del Cercado): la densidad
+    // λ de reportes cae con la distancia; fuera del área no hubo reportes
+    // esta semana. Los distritos rurales quedan en cero (colegios monitoreados
+    // pero sin incidencias en los últimos 7 días).
+    let n = 0;
+    if (dKm <= 20) {
+      const lam = 1.6 * (0.2 + 2.0 * Math.exp(-dKm / 5));
+      n = Math.round(lam * (0.55 + 0.9 * r()));
+    }
+    const pts = SAFEPTS[inst.id] || [];
+    for (let i = 0; i < n; i++) {
+      const cat = REPORT_CATS[Math.floor(r() * REPORT_CATS.length)];
+      const pu = r();
+      const pri = pu < 0.16 ? PRIORITIES[0] : pu < 0.50 ? PRIORITIES[1] : PRIORITIES[2];
+      const x = r();
+      const st = x < 0.42 ? STATUSES[2] : x < 0.72 ? STATUSES[1] : STATUSES[0];
+      let lat = inst.lat, lng = inst.lng;
+      if (pts.length) {
+        const p = pts[Math.floor(r() * pts.length)];
+        const t = 0.15 + r() * 0.6;
+        lat = inst.lat + (p.lat - inst.lat) * t + (r() - 0.5) * 0.0006;
+        lng = inst.lng + (p.lng - inst.lng) * t + (r() - 0.5) * 0.0006;
+      }
+      REPORTS.push({
+        inst: inst, cat: cat, pri: pri, st: st, lat: lat, lng: lng,
+        by: ROLES[Math.floor(r() * ROLES.length)],
+        byName: NOMS[Math.floor(r() * NOMS.length)],
+        daysAgo: Math.floor(r() * 7),
+        hh: 7 + Math.floor(r() * 12),
+        mm: Math.floor(r() * 60)
+      });
+    }
+  });
+  REPORTS.sort(function (a, b) { return a.daysAgo - b.daysAgo || (b.hh * 60 + b.mm) - (a.hh * 60 + a.mm); });
+
+  const HEAT = REPORTS.map(function (p) { return [p.lat, p.lng, p.pri.w]; });
+  const HEAT_BOUNDS = (window.L && HEAT.length) ? L.latLngBounds(HEAT) : null;
+  const DETAIL = REPORTS.filter(function (p) { return p.pri.k === 'alta'; })[0] || REPORTS[0] || null;
+  const TOTAL_REPORTES = REPORTS.length;
+
+  // Distritos reales con más reportes.
+  const DISTRICTS = (function () {
+    const m = {};
+    REPORTS.forEach(function (p) { m[p.inst.district] = (m[p.inst.district] || 0) + 1; });
+    return Object.keys(m).map(function (d) { return { name: d, n: m[d] }; })
+      .sort(function (a, b) { return b.n - a.n || a.name.localeCompare(b.name); });
+  })();
+
+  // Reportes por categoría del formulario de incidencias de la app.
+  const CAT_COUNTS = REPORT_CATS.map(function (c) {
+    return { label: c.label, emoji: c.emoji, n: REPORTS.filter(function (p) { return p.cat.k === c.k; }).length };
+  }).sort(function (a, b) { return b.n - a.n; });
+
+  // Tipos reales de puntos seguros (js/safe-points-data.js).
+  const POI_LABEL = { parque: 'Parque / plaza', comisaria: 'Comisaría', banco: 'Banco', farmacia: 'Farmacia', medico: 'Centro de salud', tienda: 'Bodega / tienda', municipal: 'Municipalidad' };
+  const POI_ICON = { parque: '🌳', comisaria: '🚔', banco: '🏦', farmacia: '💊', medico: '🏥', tienda: '🏪', municipal: '🏛️' };
+
+  function pad2(x) { return (x < 10 ? '0' : '') + x; }
+  function fechaRep(p) {
+    const d = new Date(); d.setDate(d.getDate() - p.daysAgo);
+    return d.getDate() + ' ' + MESES[d.getMonth()] + ' · ' + pad2(p.hh) + ':' + pad2(p.mm);
+  }
+  function horaRep(p) { return pad2(p.hh) + ':' + pad2(p.mm); }
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+  // Cámaras del panel. type: 'user' (getUserMedia, feed REAL del dispositivo),
+  // 'hls' (stream público de prueba), 'map' (mapa en vivo).
+  // 2 cámaras institucionales (zonas comunes, sin grabación de menores) + mapas de calor de salidas
+  const CAMS = [
+    { id:'cam1', name:'Cámara 01 · Acceso exterior (zona común)', type:'hls', badge:'EN VIVO', badgeCls:'live',
+      src: (window.VS_CAMERA1_STREAM || localStorage.getItem('vs_cam1_stream') || 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8') },
+    { id:'cam2', name:'Cámara 02 · Perímetro (zona común)', type:'hls', badge:'EN VIVO', badgeCls:'live',
+      src: (window.VS_CAMERA2_STREAM || localStorage.getItem('vs_cam2_stream') || 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8') },
+    { id:'cam3', name:'Mapa de calor · Salida 1 (Principal)', type:'heatmap', badge:'CALOR', badgeCls:'hls', exit:'Salida 1', seed:1 },
+    { id:'cam4', name:'Mapa de calor · Salida 2 (Secundaria)', type:'heatmap', badge:'CALOR', badgeCls:'hls', exit:'Salida 2', seed:2 },
+    { id:'cam5', name:'Mapa de calor · Flujo combinado de salidas', type:'heatmap', badge:'CALOR', badgeCls:'hls', exit:'Combinado', seed:3 },
+    { id:'cam6', name:'Mapa de calor · Afluencia por horario', type:'heatmap', badge:'CALOR', badgeCls:'hls', exit:'Horario', seed:4 }
+  ];
+
+  const maps = [];
+
+  // -------------------------------------------------------------------------
+  // Capa base: Esri World Street Map (sin clave de API; CARTO ya exige
+  // apikey y OSM devuelve 403 desde file://).
+  // -------------------------------------------------------------------------
+  function baseTiles() {
+    return L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19,
+      attribution: 'Tiles &copy; <a href="https://www.esri.com/">Esri</a> &mdash; Source: Esri, HERE, Garmin, FAO, NOAA, USGS, OpenStreetMap contributors'
+    });
+  }
+
+  function initMap(el, zoom, mode) {
+    if (!el || !window.L) return null;
+    el.innerHTML = '';
+    el.style.background = '#eef2f6';
+    const map = L.map(el, { scrollWheelZoom: false, zoomControl: true }).setView(CENTER, zoom);
+    const tiles = baseTiles().addTo(map);
+
+    // Latencia real de los tiles (prueba de que el mapa carga de verdad).
+    let t0 = Date.now();
+    tiles.on('loading', function(){ t0 = Date.now(); });
+    tiles.on('load', function(){
+      const el2 = document.getElementById('tile-latency');
+      if (el2) el2.textContent = (Date.now() - t0) + ' ms';
+    });
+
+    let heat = null;
+    if (mode === 'heat') {
+      heat = L.heatLayer(HEAT, {
+        radius: 24, blur: 18, maxZoom: 17, minOpacity: 0.35,
+        gradient: { 0.2:'#22c55e', 0.5:'#f59e0b', 1:'#ef4444' }
+      }).addTo(map);
+      // Encuadra sobre los reportes reales de la región (colegios de la app).
+      if (HEAT_BOUNDS && HEAT_BOUNDS.isValid()) {
+        try { map.fitBounds(HEAT_BOUNDS, { padding: [12, 12], maxZoom: 12 }); } catch (e) {}
+      }
+    } else if (mode === 'marker' && DETAIL) {
+      map.setView([DETAIL.lat, DETAIL.lng], 16);
+      L.marker([DETAIL.lat, DETAIL.lng]).addTo(map)
+        .bindPopup('<b>' + esc(DETAIL.cat.emoji + ' ' + DETAIL.cat.label) + '</b><br>' + esc(DETAIL.inst.address + ', ' + DETAIL.inst.district));
+    }
+
+    maps.push({ map: map, tiles: tiles, mode: mode, el: el, heat: heat });
+    return map;
+  }
+
+  // Inicializa todos los mapas declarados en el HTML.
+  document.querySelectorAll('.web-map[data-map]').forEach(function(el) {
+    const zoom = el.id === 'map-det' ? 16 : 11;
+    initMap(el, zoom, el.getAttribute('data-map'));
+  });
+
+  // Puntos seguros y cámaras en el mapa de incidencias (capas conmutables).
+  const incEntry = maps.find(function(m){ return m.el.id === 'map-inc'; });
+  let poiLayer = null, camLayer = null;
+  function buildPoiLayer() {
+    const g = L.layerGroup();
+    const withReports = {};
+    let n = 0;
+    REPORTS.forEach(function (p) { withReports[p.inst.id] = 1; });
+    // De más cercano a menos cercano al área metropolitana: los POI del
+    // centro (donde está el mapa) quedan visibles antes de agotar el cupo.
+    INSTS.slice().sort(function (a, b) {
+      return havM(MAIN.lat, MAIN.lng, a.lat, a.lng) - havM(MAIN.lat, MAIN.lng, b.lat, b.lng);
+    }).forEach(function (inst) {
+      if (!withReports[inst.id]) return;
+      (SAFEPTS[inst.id] || []).forEach(function (p) {
+        if (n >= 150) return;
+        n++;
+        L.marker([p.lat, p.lng], { icon: L.divIcon({
+          className:'', iconSize:[28,28], iconAnchor:[14,28],
+          html:'<div style="font-size:22px; filter:drop-shadow(0 1px 2px rgba(0,0,0,.35));">'+(POI_ICON[p.type]||'📍')+'</div>'
+        })}).addTo(g).bindPopup('<b>'+esc(p.name)+'</b><br>'+esc(POI_LABEL[p.type]||'Punto seguro')+' · '+p.meters+' m<br><span style="opacity:.75;">Ruta de '+esc(inst.name.slice(0,34))+'</span>');
+      });
+    });
+    return g;
+  }
+  function buildCamLayer() {
+    const g = L.layerGroup();
+    [INSTS[0], INSTS[1], INSTS[2]].filter(Boolean).forEach(function(inst, i) {
+      L.marker([inst.lat, inst.lng], { icon: L.divIcon({
+        className:'', iconSize:[26,26], iconAnchor:[13,26],
+        html:'<div style="font-size:20px; filter:drop-shadow(0 1px 2px rgba(0,0,0,.35));">🎥</div>'
+      })}).addTo(g).bindPopup('<b>Cámara 0'+(i+1)+'</b><br>'+esc(inst.name.slice(0,36))+'<br><span style="opacity:.75;">'+esc(inst.district)+'</span>');
+    });
+    return g;
+  }
+  function wireToggle(btnId, getLayer) {
+    const btn = document.getElementById(btnId);
+    if (!btn || !incEntry) return;
+    btn.addEventListener('click', function() {
+      const on = btn.getAttribute('aria-pressed') === 'true';
+      btn.setAttribute('aria-pressed', on ? 'false' : 'true');
+      btn.classList.toggle('is-active', !on);
+      const layer = getLayer();
+      if (!layer) return;
+      if (on) incEntry.map.removeLayer(layer); else layer.addTo(incEntry.map);
+    });
+  }
+  wireToggle('heat-toggle', function(){ return incEntry ? incEntry.heat : null; });
+  wireToggle('pois-toggle', function(){ if(!poiLayer) poiLayer = buildPoiLayer(); return poiLayer; });
+  wireToggle('cams-toggle', function(){ if(!camLayer) camLayer = buildCamLayer(); return camLayer; });
+
+  // Recalcular tamaño al rotar/cambiar ancho.
+  let resizeTimer;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function() {
+      maps.forEach(function(m){ m.map.invalidateSize(); });
+    }, 150);
+  });
+
+  // -------------------------------------------------------------------------
+  // CÁMARAS DEL DIRECTO (feed REAL vía getUserMedia + HLS + mapa en vivo)
+  // -------------------------------------------------------------------------
+  const camGrid = document.getElementById('cam-grid');
+  const camsOnlineEl = document.getElementById('cams-online');
+  const camsTotalEl = document.getElementById('cams-total');
+  const dashCamsEl = document.getElementById('dash-cams');
+
+  // Una sola captura de la webcam local se comparte entre todas las "user"
+  // (cam1 y cam5). Así basta aceptar el permiso una vez y no fallan las dos.
+  let localCamStream = null;
+  let localCamError = '';
+
+  function applyUserStream(box, st, ts, stream) {
+    if (!box || box.querySelector('video')) return;
+    const v = document.createElement('video');
+    v.autoplay = true; v.playsInline = true; v.muted = true; v.srcObject = stream;
+    box.innerHTML = ''; box.appendChild(v);
+    if (st) st.innerHTML = '<b style="color:#16a34a">● En vivo</b> (webcam local)';
+    const card = box.closest('.cam-card');
+    const b = card ? card.querySelector('.cam-actions button') : null;
+    if (b) b.remove();
+    if (ts && !ts.dataset.ticking) {
+      ts.dataset.ticking = '1';
+      setInterval(function(){ ts.textContent = new Date().toLocaleTimeString('es-PE'); }, 1000);
+    }
+  }
+
+  // Fallback universal: selector de archivos / cámara del sistema.
+  // Funciona en laptop, celular y tablet, y también si la página se abre en
+  // file:// (donde navigator.mediaDevices no existe porque no hay contexto seguro).
+  function openLocalPicker(onPick) {
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = 'image/*'; inp.setAttribute('capture', 'environment');
+    inp.style.display = 'none';
+    document.body.appendChild(inp);
+    inp.addEventListener('change', function () {
+      const f = inp.files && inp.files[0];
+      if (f) onPick(URL.createObjectURL(f), f);
+      setTimeout(function () { inp.remove(); }, 2000);
+    });
+    inp.click();
+  }
+
+  function showPickedImage(box, st, ts, url, file) {
+    if (!box) return;
+    box.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = url; img.alt = 'Foto tomada';
+    box.appendChild(img);
+    if (st) st.innerHTML = '<b style="color:#16a34a">● Foto lista</b> (' + ((file && file.name) || 'captura') + ')';
+    const card = box.closest('.cam-card');
+    const btn = card ? card.querySelector('.cam-actions button') : null;
+    if (btn) btn.remove();
+    if (ts && !ts.dataset.ticking) {
+      ts.dataset.ticking = '1';
+      setInterval(function () { ts.textContent = new Date().toLocaleTimeString('es-PE'); }, 1000);
+    }
+  }
+
+  function fallbackPicker(box, st, ts, label) {
+    const card = box ? box.closest('.cam-card') : null;
+    const actions = card ? card.querySelector('.cam-actions') : null;
+    if (st) st.textContent = label;
+    if (!actions || actions.querySelector('[data-fallback]')) return;
+    const btn = document.createElement('button');
+    btn.setAttribute('data-fallback', '1');
+    btn.className = 'btn btn-primary btn-sm'; btn.style.width = 'auto';
+    btn.textContent = '📷 Usar cámara de este equipo';
+    btn.addEventListener('click', function () {
+      openLocalPicker(function (url, file) { showPickedImage(box, st, ts, url, file); });
+    });
+    actions.appendChild(btn);
+  }
+
+  function startUserCam(id, st, ts, btn) {
+    const box = document.getElementById('box-'+id);
+    if (!box || box.querySelector('video')) return;
+    if (localCamStream) { if (btn) btn.remove(); applyUserStream(box, st, ts, localCamStream); return; }
+    if (localCamError) { fallbackPicker(box, st, ts, 'Sin permiso de cámara ('+localCamError+')'); return; }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      localCamError = 'inseguro';
+      fallbackPicker(box, st, ts, 'Este navegador no expone la cámara (ábrelo por http/https). Usa el botón de abajo.');
+      return;
+    }
+    if (st) st.textContent = 'Solicitando permiso…';
+    // 1) pide la cámara trasera (celular/tablet), 2) si no hay, cualquier
+    // cámara del equipo (laptop, escritorio, webcam USB).
+    navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ ideal:'environment' } }, audio:false })
+      .catch(function() { return navigator.mediaDevices.getUserMedia({ video:true, audio:false }); })
+      .then(function(stream) {
+        localCamStream = stream;
+        const track = stream.getVideoTracks()[0];
+        const dev = (track && track.label) ? track.label.replace(/\s*\([0-9a-f]{4}:[0-9a-f]{4}\)\s*$/i, '') : 'cámara del equipo';
+        document.querySelectorAll('[data-cam-user]').forEach(function(b) {
+          const card = b.closest('.cam-card');
+          applyUserStream(b, card ? card.querySelector('.cam-foot span') : null, card ? card.querySelector('.cam-foot b') : null, stream);
+        });
+        if (st) st.innerHTML = '<b style="color:#16a34a">● En vivo</b> (' + dev + ')';
+      })
+      .catch(function(e) {
+        localCamError = (e && e.name) ? e.name : 'error';
+        fallbackPicker(box, st, ts, 'Sin permiso de cámara ('+localCamError+')');
+      });
+  }
+
+  function startAllUserCams() {
+    CAMS.filter(function(c){ return c.type === 'user'; }).forEach(function(c){
+      startUserCam(c.id, document.getElementById('st-'+c.id), document.getElementById('ts-'+c.id), null);
+    });
+  }
+
+  function camCard(c) {
+    const card = document.createElement('div');
+    card.className = 'cam-card';
+    card.innerHTML =
+      '<div class="cam-head">' +
+        '<span class="cam-badge '+c.badgeCls+'">'+c.badge+'</span>' +
+        '<span class="cam-name">'+c.name+'</span>' +
+      '</div>' +
+      '<div class="cam-video" id="box-'+c.id+'"></div>' +
+      '<div class="cam-foot"><span id="st-'+c.id+'">En espera</span><b id="ts-'+c.id+'">—</b></div>' +
+      '<div class="cam-actions"></div>';
+
+    const box = card.querySelector('#box-'+c.id);
+    const actions = card.querySelector('.cam-actions');
+    const st = card.querySelector('#st-'+c.id);
+    const ts = card.querySelector('#ts-'+c.id);
+
+    if (c.type === 'user') {
+      box.setAttribute('data-cam-user', c.id);
+      box.innerHTML = '<div class="cam-placeholder">Feed real del dispositivo.<br>Pulsa <b>▶ Iniciar</b> y acepta el permiso.</div>';
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-primary btn-sm'; btn.style.width='auto'; btn.textContent = '▶ Iniciar';
+      btn.addEventListener('click', function() { startUserCam(c.id, st, ts, btn); });
+      actions.appendChild(btn);
+    } else if (c.type === 'hls') {
+      box.innerHTML = '<div class="cam-placeholder">Cargando stream HLS…</div>';
+      const v = document.createElement('video');
+      v.autoplay = true; v.playsInline = true; v.muted = true; v.controls = false;
+      box.innerHTML = ''; box.appendChild(v);
+      if (window.Hls && Hls.isSupported()) {
+        const hls = new Hls({ enableWorker:true, lowLatencyMode:true });
+        hls.loadSource(c.src); hls.attachMedia(v);
+        hls.on(Hls.Events.MANIFEST_PARSED, function(){ st.innerHTML = '<b style="color:#16a34a">● En vivo</b> (HLS)'; });
+        hls.on(Hls.Events.ERROR, function(_e,data){ if(data.fatal){ st.textContent='Error de stream'; } });
+      } else if (v.canPlayType('application/vnd.apple.mpegurl')) {
+        v.src = c.src;
+        v.addEventListener('loadedmetadata', function(){ st.innerHTML = '<b style="color:#16a34a">● En vivo</b> (HLS)'; });
+      } else {
+        st.textContent = 'HLS no soportado en este navegador';
+      }
+      setInterval(function(){ ts.textContent = new Date().toLocaleTimeString('es-PE'); }, 1000);
+    } else if (c.type === 'map') {
+      box.style.background = '#eef2f6';
+      st.textContent = 'Cargando mapa en vivo…';
+      // El mini-mapa NO puede crearse aquí: la tarjeta todavía no está en el
+      // DOM, el contenedor mide 0 y leaflet.heat lanza IndexSizeError (canvas
+      // de ancho 0), lo que abortaba el bucle y dejaba 3 de 6 cámaras.
+      // Se difiere al siguiente frame, cuando la tarjeta ya tiene tamaño.
+      requestAnimationFrame(function() {
+        try {
+          const mini = L.map(box, { zoomControl:false, attributionControl:false, dragging:false, scrollWheelZoom:false, preferCanvas:true })
+            .setView([MAIN.lat, MAIN.lng], 14);
+          baseTiles().addTo(mini);
+          L.heatLayer(HEAT, { radius:16, blur:12, maxZoom:16, gradient:{0.2:'#22c55e',0.5:'#f59e0b',1:'#ef4444'} }).addTo(mini);
+          const m = L.marker([MAIN.lat, MAIN.lng]).addTo(mini);
+          const live = L.circleMarker([MAIN.lat, MAIN.lng], { radius:7, color:'#ef4444', fillColor:'#ef4444', fillOpacity:.9 }).addTo(mini);
+          let t = 0;
+          setInterval(function(){
+            t += 0.25;
+            const p = [MAIN.lat + Math.sin(t)*0.0009, MAIN.lng + Math.cos(t*1.3)*0.0009];
+            live.setLatLng(p); m.setLatLng(p);
+            ts.textContent = new Date().toLocaleTimeString('es-PE');
+          }, 1200);
+          // Si el contenedor se redimensiona, Leaflet recalcula su tamaño.
+          requestAnimationFrame(function(){ try { mini.invalidateSize(); } catch(e){} });
+          st.innerHTML = '<b style="color:#16a34a">● Posición en vivo</b> (estudiante)';
+        } catch(e) {
+          st.textContent = 'Mapa no disponible';
+        }
+      });
+    } else if (c.type === 'heatmap') {
+      box.style.background = '#0f172a'; box.style.position = 'relative'; box.innerHTML = '';
+      var wrap=document.createElement('div'); wrap.style.cssText='position:absolute;inset:0;display:flex;flex-direction:column;';
+      var canvas=document.createElement('canvas'); canvas.style.cssText='flex:1;width:100%;height:100%;display:block;';
+      var legend=document.createElement('div'); legend.style.cssText='font-size:10px;color:#cbd5e1;padding:4px 8px;background:rgba(15,23,42,.75);display:flex;justify-content:space-between;gap:8px;';
+      legend.innerHTML='<span>'+(c.exit||'Salida')+' · datos agregados</span><span>Sin identificación de menores</span>';
+      wrap.appendChild(canvas); wrap.appendChild(legend); box.appendChild(wrap);
+      st.innerHTML='<b style="color:#16a34a">● Activo</b> (mapa de calor)';
+      function drawHeat(){ try{ var r=box.getBoundingClientRect(); var w=Math.max(160,Math.floor(r.width||320)); var h=Math.max(120,Math.floor((r.height||200)-22)); canvas.width=w; canvas.height=h; var ctx=canvas.getContext('2d'); if(!ctx) return; var g=ctx.createLinearGradient(0,0,0,h); g.addColorStop(0,'#0b1220'); g.addColorStop(1,'#111827'); ctx.fillStyle=g; ctx.fillRect(0,0,w,h); ctx.fillStyle='rgba(148,163,184,.12)'; ctx.fillRect(w*0.08,h*0.7,w*0.34,h*0.18); ctx.fillRect(w*0.58,h*0.7,w*0.34,h*0.18); ctx.fillStyle='#94a3b8'; ctx.font='11px sans-serif'; ctx.fillText('Salida 1',w*0.12,h*0.82); ctx.fillText('Salida 2',w*0.62,h*0.82); var t=Date.now()/900+(c.seed||1)*10; var pts=[], n=(c.exit==='Combinado')?26:(c.exit==='Horario'?18:20); for(var i=0;i<n;i++){ var bias=(c.exit==='Salida 2')?0.75:(c.exit==='Salida 1'?0.25:(c.exit==='Horario'?(0.2+0.6*((Math.sin(t*0.2)+1)/2)):0.5)); var px=(i%2===0?bias:1-bias)*w+Math.sin(t+i)*(w*0.08)+(Math.random()-0.5)*w*0.06; var py=h*0.15+((i/n)*h*0.55)+Math.cos(t*0.8+i)*(h*0.05); if(c.exit==='Salida 1') px=Math.min(px,w*0.52); if(c.exit==='Salida 2') px=Math.max(px,w*0.48); var v=0.35+0.65*((Math.sin(t*0.6+i*0.7)+1)/2); if(c.exit==='Horario') v*=0.5+0.5*((Math.sin(t*0.15)+1)/2); pts.push({x:px,y:py,v:v}); } pts.forEach(function(p){ var rad=28+p.v*26; var rg=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,rad); var col=p.v>0.66?'239,68,68':(p.v>0.38?'245,158,11':'34,197,94'); rg.addColorStop(0,'rgba('+col+','+(0.18+p.v*0.22)+')'); rg.addColorStop(1,'rgba('+col+',0)'); ctx.fillStyle=rg; ctx.beginPath(); ctx.arc(p.x,p.y,rad,0,Math.PI*2); ctx.fill(); }); ctx.strokeStyle='rgba(59,130,246,.35)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(w*0.25,h*0.18); ctx.lineTo(w*0.25,h*0.68); ctx.stroke(); ctx.beginPath(); ctx.moveTo(w*0.75,h*0.18); ctx.lineTo(w*0.75,h*0.68); ctx.stroke(); if(ts&&!ts.dataset.ticking){ ts.dataset.ticking='1'; setInterval(function(){ ts.textContent=new Date().toLocaleTimeString('es-PE'); },1000);} }catch(e){} }
+      requestAnimationFrame(function(){ drawHeat(); setInterval(drawHeat,1200); });
+      if(window.ResizeObserver){ try{ new ResizeObserver(function(){ drawHeat(); }).observe(box);}catch(e){} }
+    } else {
+      box.innerHTML = '<div class="cam-placeholder">📴 Sin señal<br><span class="body-sm">Última conexión hace 8 min</span></div>';
+      st.textContent = 'Sin señal';
+    }
+    return card;
+  }
+
+  function buildCams() {
+    if (!camGrid) return;
+    camGrid.innerHTML = '';
+    // Los contadores se actualizan ANTES del bucle: si una tarjeta falla,
+    // el resto sigue pintándose y el estado de la cabecera no queda vacío.
+    const online = CAMS.filter(function(c){ return c.type !== 'off'; }).length;
+    if (camsOnlineEl) camsOnlineEl.textContent = online;
+    if (camsTotalEl) camsTotalEl.textContent = CAMS.length;
+    if (dashCamsEl) dashCamsEl.textContent = online;
+    CAMS.forEach(function(c){
+      try {
+        camGrid.appendChild(camCard(c));
+      } catch(e) {
+        const bad = document.createElement('div');
+        bad.className = 'cam-card';
+        bad.innerHTML = '<div class="cam-head"><span class="cam-badge off">ERROR</span><span class="cam-name">'+c.name+'</span></div>' +
+          '<div class="cam-video"><div class="cam-placeholder">No se pudo cargar esta cámara.</div></div>';
+        camGrid.appendChild(bad);
+      }
+    });
+  }
+  buildCams();
+
+  // Carga HLS solo cuando se abre la sección Directo (no al cargar la página).
+  function loadHlsLib() {
+    if (window.Hls) return Promise.resolve();
+    return new Promise(function(res) {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js';
+      s.onload = res; s.onerror = res;
+      document.head.appendChild(s);
+    });
+  }
+  const btnStartCams = document.getElementById('btn-cam-start');
+  if (btnStartCams) {
+    btnStartCams.addEventListener('click', async function() {
+      btnStartCams.textContent = '⏳ Preparando…';
+      await loadHlsLib();
+      // Reconstruye las tarjetas para que los streams HLS arranquen ya con la lib.
+      buildCams();
+      // Arranca también las cámaras de webcam local (permiso una sola vez).
+      startAllUserCams();
+      btnStartCams.textContent = '✅ Cámaras activas';
+    });
+  }
+
+  // -------------------------------------------------------------------------
+  // Puntos seguros reales del colegio principal (como en la app)
+  // -------------------------------------------------------------------------
+  const dashPois = document.getElementById('dash-pois');
+  if (dashPois) {
+    const list = SAFEPTS[MAIN.id] || [];
+    const shown = list.slice(0, 8);
+    dashPois.innerHTML = shown.map(function(p) {
+      return '<div style="display:flex; gap:8px; align-items:center; padding:3px 0;"><span>'+(POI_ICON[p.type]||'📍')+'</span><span>'+esc(p.name)+' <span style="opacity:.7;">· '+p.meters+' m</span></span></div>';
+    }).join('') + (list.length > shown.length
+      ? '<div style="padding-top:4px; opacity:.75;">+ '+(list.length - shown.length)+' puntos más cerca de '+esc(MAIN.name.slice(0,32))+'</div>'
+      : '');
+  }
+
+  // -------------------------------------------------------------------------
+  // Paneles derivados de los mismos reportes: zonas de riesgo, tipos,
+  // tablas de incidencias y detalle. Todo sale de REPORTS (datos reales).
+  // -------------------------------------------------------------------------
+  function fill(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
+  function setText(id, txt) { const el = document.getElementById(id); if (el) el.textContent = txt; }
+
+  const topDistricts = DISTRICTS.slice(0, 4);
+  function riskHtml() {
+    const max = topDistricts.length ? topDistricts[0].n : 1;
+    return topDistricts.map(function(d, i) {
+      const pct = Math.max(10, Math.round(d.n / max * 100));
+      const col = i === 0 ? ' background:var(--danger);' : (i === topDistricts.length - 1 ? ' background:var(--success);' : '');
+      return '<div class="risk-row"><div class="risk-label">'+esc(d.name)+'</div>' +
+        '<div class="risk-bar"><div class="risk-fill" style="width:'+pct+'%;'+col+'"></div></div>' +
+        '<div class="risk-count">'+d.n+(d.n === 1 ? ' reporte' : ' reportes')+'</div></div>';
+    }).join('');
+  }
+  fill('dash-risk', riskHtml());
+  fill('inc-risk', riskHtml());
+
+  fill('tipo-bars', (function() {
+    const max = CAT_COUNTS.length ? (CAT_COUNTS[0].n || 1) : 1;
+    return CAT_COUNTS.map(function(c) {
+      const pct = Math.max(6, Math.round(c.n / max * 100));
+      return '<div class="risk-row"><div class="risk-label" style="width:150px;">'+esc(c.emoji+' '+c.label)+'</div>' +
+        '<div class="risk-bar"><div class="risk-fill" style="width:'+pct+'%; background:var(--warning);"></div></div>' +
+        '<div class="risk-count">'+c.n+'</div></div>';
+    }).join('');
+  })());
+
+  function addRows(tableSel, rowsHtml) {
+    const table = document.querySelector(tableSel);
+    if (!table || !rowsHtml) return;
+    const empty = table.querySelector('.table-empty');
+    const tmp = document.createElement('tbody');
+    tmp.innerHTML = rowsHtml;
+    // Las filas viven en el tbody (automático), no como hijo directo de la tabla.
+    const parent = (empty && empty.parentNode) || table.tBodies[0] || table;
+    const anchor = (empty && empty.parentNode === parent) ? empty : null;
+    Array.prototype.slice.call(tmp.rows).forEach(function(tr) {
+      if (anchor) parent.insertBefore(tr, anchor); else parent.appendChild(tr);
+    });
+  }
+
+  // Tabla del dashboard: los reportes más recientes.
+  addRows('#dashboard .web-table', REPORTS.slice(0, 8).map(function(p) {
+    return '<tr><td><span class="chip '+p.pri.chip+'">'+p.cat.emoji+' '+esc(p.cat.label)+'</span></td>' +
+      '<td>'+esc(p.inst.district)+'</td><td>'+esc(p.by)+'</td><td>'+horaRep(p)+'</td>' +
+      '<td><span class="chip '+p.st.chip+'">'+esc(p.st.label)+'</span></td></tr>';
+  }).join(''));
+
+  // Lista completa de reportes de la sección Incidencias.
+  addRows('#incidencias .web-table', REPORTS.map(function(p) {
+    return '<tr><td><span class="chip '+p.pri.chip+'">'+esc(p.pri.label)+'</span></td>' +
+      '<td>'+esc(p.cat.label)+'</td>' +
+      '<td>'+esc(p.inst.address)+', '+esc(p.inst.district)+'</td>' +
+      '<td>'+esc(p.byName)+'</td><td>'+fechaRep(p)+'</td>' +
+      '<td><span class="chip '+p.st.chip+'">'+esc(p.st.label)+'</span></td></tr>';
+  }).join(''));
+
+  // Detalle de la incidencia (el reporte crítico más reciente).
+  if (DETAIL) {
+    setText('det-id', 'Reporte #INC-2026-' + (1000 + (hash32(DETAIL.inst.id + DETAIL.cat.k) % 8999)));
+    setText('det-name', DETAIL.byName);
+    setText('det-role', DETAIL.by + ' · ' + DETAIL.inst.district);
+    setText('det-fecha', fechaRep(DETAIL));
+    setText('det-tz', 'GMT-5 · Arequipa, Perú');
+    setText('det-titulo', DETAIL.cat.emoji + ' ' + DETAIL.cat.label + ' — ' + DETAIL.inst.district);
+    setText('det-desc', DETAIL.cat.desc + ' Reportado en ' + DETAIL.inst.address + ', ' + DETAIL.inst.district + '.');
+    setText('det-dir', '📍 ' + DETAIL.inst.address + ', ' + DETAIL.inst.district);
+  }
+
+  // Contadores y etiquetas derivados de los datos reales.
+  setText('dash-total-reportes', String(TOTAL_REPORTES));
+  setText('heat-scope', 'Arequipa · ' + INSTS.length + ' colegios · ' + TOTAL_REPORTES + ' reportes');
+  setText('dash-scope', INSTS.length + ' colegios · ' + TOTAL_REPORTES + ' reportes');
+
+  // Contadores animados de los KPI.
+  document.querySelectorAll('[data-count-to]').forEach(function(el) {
+    const to = parseInt(el.getAttribute('data-count-to'), 10) || 0;
+    let cur = 0; const step = Math.max(1, Math.round(to/28));
+    const iv = setInterval(function() {
+      cur += step;
+      if (cur >= to) { cur = to; clearInterval(iv); }
+      el.textContent = cur;
+    }, 28);
+  });
+
+});
+
+// ---------------------------------------------------------------------------
+// Sidebar colapsable en móvil
+// ---------------------------------------------------------------------------
+document.querySelectorAll('.web-frame').forEach(function(frame) {
+    const btn = frame.querySelector('.web-menu-btn');
+    if(!btn) return;
+    const backdrop = frame.querySelector('.sidebar-backdrop');
+    const closeBtn = frame.querySelector('.web-sidebar-close');
+    function setOpen(open) {
+        frame.classList.toggle('sidebar-open', open);
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    btn.addEventListener('click', function() { setOpen(!frame.classList.contains('sidebar-open')); });
+    if(backdrop) backdrop.addEventListener('click', function() { setOpen(false); });
+    if(closeBtn) closeBtn.addEventListener('click', function() { setOpen(false); });
+    document.addEventListener('keydown', function(e) { if(e.key === 'Escape') setOpen(false); });
+});
+
+// ---------------------------------------------------------------------------
+// Filtros interactivos de tablas
+// ---------------------------------------------------------------------------
+(function() {
+    const norm = function(s) {
+        return (s === null || s === undefined ? '' : s).toString().toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    };
+    function debounce(fn, ms) { let t; return function(){ const a=arguments; clearTimeout(t); t=setTimeout(function(){fn.apply(null,a);},ms); }; }
+
+    function initFilter(block) {
+        const table = block.querySelector('table');
+        if(!table) return;
+        const rows = Array.prototype.slice.call(table.rows);
+        const isHead = rows.length > 0 && rows[0].cells.length > 0 && rows[0].cells[0].tagName === 'TH';
+        const dataRows = (isHead ? rows.slice(1) : rows).filter(function(r){ return !r.classList.contains('table-empty'); });
+        const blockId = block.getAttribute('data-filter');
+        const external = Array.prototype.slice.call(document.querySelectorAll('[data-bind="' + blockId + '"]'));
+        const searches = Array.prototype.slice.call(block.querySelectorAll('input[data-search]')).concat(external.filter(function(el){ return el.hasAttribute('data-search'); }));
+        const selects = Array.prototype.slice.call(block.querySelectorAll('select[data-col]')).concat(external.filter(function(el){ return el.tagName === 'SELECT' && el.hasAttribute('data-col'); }));
+        const chips = Array.prototype.slice.call(block.querySelectorAll('.chip-filter[data-col]')).concat(external.filter(function(el){ return el.classList.contains('chip-filter'); }));
+        const filterBar = block.querySelector('.table-filters');
+        const countEl = block.querySelector('.table-count');
+        const clearBtn = block.querySelector('.table-clear');
+        const total = dataRows.length;
+        const state = { q:'', selects:{}, chips:{} };
+        function cellValue(row, idx){ return row.cells[idx] ? norm(row.cells[idx].textContent) : ''; }
+        function apply() {
+            const q = norm(state.q); let shown = 0;
+            dataRows.forEach(function(row) {
+                let ok = true;
+                if(ok && q) ok = norm(row.textContent).indexOf(q) !== -1;
+                if(ok){ for(const col in state.selects){ if(state.selects[col] && cellValue(row,+col) !== norm(state.selects[col])){ ok=false; break; } } }
+                if(ok){ for(const col in state.chips){ if(state.chips[col] && cellValue(row,+col).indexOf(norm(state.chips[col])) === -1){ ok=false; break; } } }
+                row.style.display = ok ? '' : 'none';
+                if(ok) shown++;
+            });
+            table.classList.toggle('show-empty', shown === 0);
+            if(countEl) countEl.textContent = shown === total ? total + (total===1?' registro':' registros') : 'Mostrando '+shown+' de '+total;
+            if(filterBar){
+                const dirty = !!q || chips.some(function(c){ return c.classList.contains('is-active') && c.getAttribute('data-value'); }) || selects.some(function(s){ return s.value !== ''; });
+                filterBar.classList.toggle('is-filtered', dirty);
+            }
+        }
+        searches.forEach(function(input) {
+            input.addEventListener('input', debounce(function(){ state.q=input.value; searches.forEach(function(o){ if(o!==input) o.value=input.value; }); apply(); },150));
+            input.addEventListener('keydown', function(e){ if(e.key==='Enter') e.preventDefault(); });
+        });
+        selects.forEach(function(sel){ sel.addEventListener('change', function(){ state.selects[sel.getAttribute('data-col')]=sel.value; apply(); }); });
+        chips.forEach(function(chip){
+            chip.addEventListener('click', function(){
+                const col=chip.getAttribute('data-col'); const val=chip.getAttribute('data-value')||'';
+                const wasActive=chip.classList.contains('is-active'); const group=chip.closest('.chip-row')||chip.parentNode;
+                group.querySelectorAll('.chip-filter').forEach(function(c){ c.classList.remove('is-active'); });
+                if(wasActive){ state.chips[col]=''; } else { chip.classList.add('is-active'); state.chips[col]=val; }
+                apply();
+            });
+        });
+        if(clearBtn){
+            clearBtn.addEventListener('click', function(){
+                state.q=''; state.selects={}; state.chips={};
+                searches.forEach(function(i){ i.value=''; }); selects.forEach(function(s){ s.value=''; });
+                block.querySelectorAll('.chip-row').forEach(function(row){
+                    row.querySelectorAll('.chip-filter').forEach(function(c){ c.classList.remove('is-active'); });
+                    const first=row.querySelector('.chip-filter'); if(first) first.classList.add('is-active');
+                });
+                apply();
+            });
+        }
+        apply();
+    }
+    document.addEventListener('DOMContentLoaded', function(){ document.querySelectorAll('[data-filter]').forEach(initFilter); });
+})();
+</script>
+
+<script>
+/* ===== Control de acceso al panel (estilo Django) =====
+   Usuario: admin · Contraseña: viasegura2026
+   La sesión se guarda en sessionStorage: al cerrar la pestaña se pide de nuevo. */
+(function () {
+  var USER = 'admin';
+  var PASS = 'viasegura2026';
+  var KEY = 'vs-panel-auth';
+
+  var overlay = document.getElementById('vs-login');
+  var form = document.getElementById('vs-login-form');
+  var msg = document.getElementById('vs-login-msg');
+  var inputUser = document.getElementById('vs-user');
+  var inputPass = document.getElementById('vs-pass');
+
+  function setAuthed(on) { document.body.classList.toggle('vs-authed', !!on); }
+  function readSession() { try { return sessionStorage.getItem(KEY); } catch (e) { return null; } }
+  function writeSession(v) { try { v == null ? sessionStorage.removeItem(KEY) : sessionStorage.setItem(KEY, v); } catch (e) {} }
+
+  // El panel ya está maquetado detrás (Leaflet calcula bien su tamaño);
+  // el overlay lo tapa hasta iniciar sesión.
+  setAuthed(readSession() === 'ok');
+
+  if (form) {
+    form.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var u = (inputUser && inputUser.value ? inputUser.value : '').trim();
+      var p = inputPass && inputPass.value ? inputPass.value : '';
+      if (u === USER && p === PASS) {
+        writeSession('ok');
+        setAuthed(true);
+        if (msg) msg.classList.remove('show');
+        window.dispatchEvent(new Event('resize'));
+      } else {
+        if (msg) { msg.textContent = 'Usuario o contraseña incorrectos.'; msg.classList.add('show'); }
+        if (inputPass) { inputPass.value = ''; inputPass.focus(); }
+      }
+    });
+  }
+
+  // "Cerrar sesión" en las barras laterales: vuelve a pedir credenciales.
+  document.querySelectorAll('.web-nav-item').forEach(function (el) {
+    if (/cerrar\s*sesi/i.test(el.textContent)) {
+      el.classList.add('vs-logout');
+      el.addEventListener('click', function () {
+        writeSession(null);
+        setAuthed(false);
+        if (form) form.reset();
+        if (msg) msg.classList.remove('show');
+        if (inputUser) inputUser.focus();
+      });
+    }
+  });
+})();
+</script>
+
+<script>
+/* ===== Escucha en tiempo real: recibe incidencias del servidor ===== */
+(function(){
+  var API_BASE = location.origin;
+  var POLL_MS = 2000;  // cada 2 segundos
+  var totalRecibidos = 0;
+
+  // Sonido de notificación simple (beep corto)
+  function beep(){
+    try {
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = 880; osc.type = 'sine';
+      gain.gain.value = 0.3;
+      osc.start(); osc.stop(ctx.currentTime + 0.15);
+    } catch(e){}
+  }
+
+  // Crea un banner de notificación flotante
+  function mostrarNotificacion(inc){
+    var div = document.createElement('div');
+    div.style.cssText = 'position:fixed;top:20px;right:20px;z-index:999999;background:#1E40AF;color:#fff;' +
+      'padding:16px 20px;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.35);font-family:Inter,sans-serif;' +
+      'max-width:380px;animation:slideIn .3s ease;';
+    div.innerHTML = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">' +
+      '<span style="font-size:20px;">🚨</span>' +
+      '<strong style="font-size:14px;">Nueva incidencia recibida</strong></div>' +
+      '<div style="font-size:13px;opacity:.9;">' +
+        '<b>Tipo:</b> ' + esc(inc.categoria || inc.type || 'Incidencia') + '<br>' +
+        (inc.mensaje ? '<b>Detalle:</b> ' + esc(inc.mensaje) + '<br>' : '') +
+        '<b>Hora:</b> ' + esc(inc.hora || '') + ' · <b>Por:</b> ' + esc(inc.reportadoPor || 'Anónimo') +
+      '</div>';
+    document.body.appendChild(div);
+    setTimeout(function(){ div.style.opacity='0'; div.style.transition='opacity .5s'; }, 5000);
+    setTimeout(function(){ if(div.parentNode) div.parentNode.removeChild(div); }, 5600);
+  }
+
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  // Agrega la fila a la tabla de incidencias
+  function agregarFilaIncidencia(inc){
+    var tablas = document.querySelectorAll('#incidencias .web-table');
+    if (!tablas.length) return;
+    var tabla = tablas[tablas.length - 1];
+    // Quitar fila vacía si existe
+    var empty = tabla.querySelector('.table-empty');
+    if (empty) empty.style.display = 'none';
+
+    var tr = document.createElement('tr');
+    tr.style.background = '#FEF3C7';
+    tr.innerHTML =
+      '<td><span class="chip chip-red" style="background:#FEE2E2;color:#B91C1C;">⚠ Nueva</span></td>' +
+      '<td>' + esc(inc.categoria || inc.type || '—') + '</td>' +
+      '<td>' + esc(inc.colegio || 'Desde app') + '</td>' +
+      '<td>' + esc(inc.reportadoPor || 'Alumno/Apoderado') + '</td>' +
+      '<td>' + esc((inc.fecha||'') + ' · ' + (inc.hora||'')) + '</td>' +
+      '<td><span class="chip chip-amber" style="background:#FEF3C7;color:#92400E;">Abierta</span></td>';
+    // Insertar después del header
+    var firstRow = tabla.querySelector('tr');
+    if (firstRow && firstRow.nextSibling) {
+      tabla.insertBefore(tr, firstRow.nextSibling);
+    } else {
+      tabla.appendChild(tr);
+    }
+    // Efecto visual
+    setTimeout(function(){ tr.style.background=''; tr.style.transition='background 2s'; }, 3000);
+  }
+
+  // Actualizar contador en el sidebar
+  function actualizarContador(){
+    totalRecibidos++;
+    var navItems = document.querySelectorAll('.web-nav-item');
+    navItems.forEach(function(el){
+      if (/Incidencias/.test(el.textContent)) {
+        // Agregar o actualizar badge
+        var badge = el.querySelector('.vs-rt-badge');
+        if (!badge) {
+          badge = document.createElement('span');
+          badge.className = 'vs-rt-badge';
+          badge.style.cssText = 'background:#EF4444;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;' +
+            'border-radius:999px;margin-left:auto;animation:livepulse 1.8s infinite;';
+          el.style.display = 'flex';
+          el.style.alignItems = 'center';
+          el.appendChild(badge);
+        }
+        badge.textContent = totalRecibidos;
+      }
+    });
+  }
+
+  function poll(){
+    fetch(API_BASE + '/api/incident', { cache:'no-store' })
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if (data.incidents && data.incidents.length > 0) {
+          data.incidents.forEach(function(inc){
+            beep();
+            mostrarNotificacion(inc);
+            agregarFilaIncidencia(inc);
+            actualizarContador();
+            console.log('[ViaSegura][RT] Incidencia recibida:', inc._id);
+          });
+        }
+      })
+      .catch(function(e){
+        // Servidor no disponible (abrieron por file://), ignorar silenciosamente
+      });
+  }
+
+  // Agregar CSS de animación
+  var style = document.createElement('style');
+  style.textContent = '@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}';
+  document.head.appendChild(style);
+
+  // Iniciar polling cuando el DOM esté listo
+  document.addEventListener('DOMContentLoaded', function(){
+    setInterval(poll, POLL_MS);
+    console.log('[ViaSegura][RT] Escucha de incidencias activada (polling cada ' + POLL_MS + 'ms)');
+  });
+})();
+</script>
+
+</body>
+</html>
