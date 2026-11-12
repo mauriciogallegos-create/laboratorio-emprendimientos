@@ -1499,5 +1499,255 @@ document.querySelectorAll('.web-frame').forEach(function(frame) {
 })();
 </script>
 
+<!-- ═══════════════════════════════════════════════════════
+     PANEL FLOTANTE: CONEXIÓN MQTT / VPS (ESP32 ViaSegura)
+     Usa MQTT over WebSocket (puerto 9001) vía mqtt.js CDN
+     ═══════════════════════════════════════════════════════ -->
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+<style>
+  /* ── Botón flotante ── */
+  #mqtt-fab {
+    position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+    background: #1a73e8; color: #fff; border: none;
+    border-radius: 50px; padding: 12px 20px;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 4px 16px rgba(26,115,232,.4);
+    display: flex; align-items: center; gap: 8px;
+    transition: transform .2s;
+  }
+  #mqtt-fab:hover { transform: scale(1.05); }
+  #mqtt-fab .mqtt-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #fff; opacity: .5;
+    transition: background .3s, opacity .3s;
+  }
+  #mqtt-fab.connected .mqtt-dot { background: #00e676; opacity: 1; }
+
+  /* ── Panel lateral MQTT ── */
+  #mqtt-panel {
+    position: fixed; bottom: 80px; right: 24px; z-index: 9998;
+    width: 320px; background: #1e1e2e; color: #cdd6f4;
+    border-radius: 16px; padding: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.5);
+    font-family: 'Segoe UI', sans-serif; font-size: 13px;
+    display: none; flex-direction: column; gap: 12px;
+  }
+  #mqtt-panel.show { display: flex; }
+  #mqtt-panel h4 { margin: 0; font-size: 15px; color: #cba6f7; }
+  #mqtt-panel input {
+    background: #313244; border: 1px solid #45475a; color: #cdd6f4;
+    border-radius: 8px; padding: 8px 10px; font-size: 12px; width: 100%;
+    box-sizing: border-box;
+  }
+  #mqtt-panel .row { display: flex; gap: 8px; }
+  #mqtt-panel .row input { flex: 1; }
+  #mqtt-panel button {
+    padding: 9px; border: none; border-radius: 8px;
+    font-weight: 700; cursor: pointer; font-size: 13px;
+  }
+  #mqtt-btn-connect { background: #1a73e8; color: #fff; flex: 1; }
+  #mqtt-btn-disconnect { background: #f38ba8; color: #1e1e2e; flex: 1; display: none; }
+  #mqtt-status {
+    background: #313244; border-radius: 8px; padding: 8px 10px;
+    font-size: 11px; color: #a6e3a1; min-height: 32px;
+  }
+  /* Tarjeta de datos en vivo */
+  #mqtt-live {
+    background: #313244; border-radius: 10px; padding: 12px;
+    display: none; gap: 8px; flex-direction: column;
+  }
+  #mqtt-live.show { display: flex; }
+  .mqtt-live-row { display: flex; justify-content: space-between; align-items: center; }
+  .mqtt-live-label { font-size: 11px; color: #a6adc8; }
+  .mqtt-live-val { font-size: 14px; font-weight: 700; }
+  .mqtt-live-val.verde { color: #a6e3a1; }
+  .mqtt-live-val.rojo  { color: #f38ba8; }
+  .mqtt-live-val.gris  { color: #585b70; }
+  /* Botón de comando */
+  #mqtt-cmd-buzzer { background: #fab387; color: #1e1e2e; width: 100%; margin-top: 4px; display: none; }
+  #mqtt-cmd-buzzer.show { display: block; }
+</style>
+
+<!-- Botón flotante -->
+<button id="mqtt-fab" title="Conectar con ESP32 ViaSegura">
+  <span class="mqtt-dot"></span>
+  📡 ESP32 ViaSegura
+</button>
+
+<!-- Panel MQTT -->
+<div id="mqtt-panel">
+  <h4>🔗 Conectar con VPS / ESP32</h4>
+
+  <div>
+    <label style="font-size:11px;color:#a6adc8">Host VPS (WebSocket)</label>
+    <input id="mqtt-host" value="157.245.88.132" placeholder="IP o dominio del VPS">
+  </div>
+  <div class="row">
+    <div style="flex:1">
+      <label style="font-size:11px;color:#a6adc8">Puerto WS</label>
+      <input id="mqtt-wsport" value="9001" type="number" placeholder="9001">
+    </div>
+    <div style="flex:1">
+      <label style="font-size:11px;color:#a6adc8">Usuario (opcional)</label>
+      <input id="mqtt-user" placeholder="usuario">
+    </div>
+  </div>
+  <input id="mqtt-pass" type="password" value="LosSigmas1A" placeholder="Contraseña MQTT">
+
+  <div class="row">
+    <button id="mqtt-btn-connect">⚡ Conectar</button>
+    <button id="mqtt-btn-disconnect">✕ Desconectar</button>
+  </div>
+
+  <div id="mqtt-status">Sin conexión</div>
+
+  <!-- Datos en vivo del ESP32 -->
+  <div id="mqtt-live">
+    <strong style="font-size:12px;color:#cba6f7">📊 Datos en vivo del ESP32</strong>
+    <div class="mqtt-live-row">
+      <span class="mqtt-live-label">Distancia sensor</span>
+      <span class="mqtt-live-val gris" id="ml-dist">— cm</span>
+    </div>
+    <div class="mqtt-live-row">
+      <span class="mqtt-live-label">Estado LED</span>
+      <span class="mqtt-live-val gris" id="ml-led">—</span>
+    </div>
+    <div class="mqtt-live-row">
+      <span class="mqtt-live-label">Estado ESP32</span>
+      <span class="mqtt-live-val gris" id="ml-estado">—</span>
+    </div>
+    <div class="mqtt-live-row">
+      <span class="mqtt-live-label">Última emergencia</span>
+      <span class="mqtt-live-val rojo" id="ml-emerg">—</span>
+    </div>
+    <button id="mqtt-cmd-buzzer">🔔 Activar Buzzer remoto</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  /* ── Referencias DOM ── */
+  var fab       = document.getElementById('mqtt-fab');
+  var panel     = document.getElementById('mqtt-panel');
+  var btnConn   = document.getElementById('mqtt-btn-connect');
+  var btnDisc   = document.getElementById('mqtt-btn-disconnect');
+  var statusEl  = document.getElementById('mqtt-status');
+  var livePanel = document.getElementById('mqtt-live');
+  var cmdBuzzer = document.getElementById('mqtt-cmd-buzzer');
+
+  var client = null;
+
+  /* ── Toggle panel ── */
+  fab.addEventListener('click', function(){
+    panel.classList.toggle('show');
+  });
+
+  /* ── Conectar ── */
+  btnConn.addEventListener('click', function(){
+    var host   = document.getElementById('mqtt-host').value.trim()   || '157.245.88.132';
+    var wsport = parseInt(document.getElementById('mqtt-wsport').value) || 9001;
+    var user   = document.getElementById('mqtt-user').value.trim();
+    var pass   = document.getElementById('mqtt-pass').value.trim();
+    var url    = 'ws://' + host + ':' + wsport + '/mqtt';
+
+    statusEl.textContent = 'Conectando a ' + url + '...';
+    statusEl.style.color = '#f9e2af';
+
+    var opts = {
+      clientId: 'ViaSegura_Web_' + Math.random().toString(16).substr(2,6),
+      username: user || 'IotUser',
+      password: pass || 'LosSigmas1A',
+      keepalive: 30,
+      reconnectPeriod: 0
+    };
+
+    try { client = mqtt.connect(url, opts); } catch(e) {
+      statusEl.textContent = '❌ Error: ' + e.message;
+      statusEl.style.color = '#f38ba8';
+      return;
+    }
+
+    client.on('connect', function(){
+      statusEl.textContent = '✅ Conectado a ' + host;
+      statusEl.style.color = '#a6e3a1';
+      fab.classList.add('connected');
+      btnConn.style.display   = 'none';
+      btnDisc.style.display   = 'block';
+      livePanel.classList.add('show');
+      cmdBuzzer.classList.add('show');
+
+      /* Suscribirse a todos los topics del ESP32 */
+      client.subscribe('viasegura/#');
+    });
+
+    client.on('message', function(topic, payload){
+      var msg = payload.toString();
+      if (topic === 'viasegura/distancia') {
+        var el = document.getElementById('ml-dist');
+        var dist = parseInt(msg);
+        el.textContent = msg + ' cm';
+        el.className = 'mqtt-live-val ' + (dist <= 100 ? 'verde' : dist > 200 ? 'rojo' : 'gris');
+      }
+      if (topic === 'viasegura/led') {
+        var el = document.getElementById('ml-led');
+        el.textContent = msg;
+        el.className   = 'mqtt-live-val ' + (msg.includes('VERDE') ? 'verde' : msg.includes('ROJO') ? 'rojo' : 'gris');
+      }
+      if (topic === 'viasegura/estado') {
+        var el = document.getElementById('ml-estado');
+        el.textContent = msg;
+        el.className   = 'mqtt-live-val ' + (msg === 'EMERGENCIA' ? 'rojo' : msg === 'ONLINE' ? 'verde' : 'gris');
+        /* Si hay emergencia → mostrar notificación en el panel */
+        if (msg === 'EMERGENCIA') {
+          document.getElementById('ml-emerg').textContent = '⚠️ ' + new Date().toLocaleTimeString('es-PE');
+        }
+      }
+      if (topic === 'viasegura/emergencia') {
+        document.getElementById('ml-emerg').textContent = '🚨 ' + msg + ' — ' + new Date().toLocaleTimeString('es-PE');
+        /* Intentar mostrar notificación del navegador */
+        if (window.Notification && Notification.permission === 'granted') {
+          new Notification('⚠️ ViaSegura — EMERGENCIA', { body: msg, icon: '' });
+        }
+      }
+    });
+
+    client.on('error', function(err){
+      statusEl.textContent = '❌ ' + (err.message || err);
+      statusEl.style.color = '#f38ba8';
+      fab.classList.remove('connected');
+    });
+
+    client.on('close', function(){
+      statusEl.textContent = 'Desconectado';
+      statusEl.style.color = '#a6adc8';
+      fab.classList.remove('connected');
+      btnConn.style.display = 'block';
+      btnDisc.style.display = 'none';
+      livePanel.classList.remove('show');
+      cmdBuzzer.classList.remove('show');
+    });
+  });
+
+  /* ── Desconectar ── */
+  btnDisc.addEventListener('click', function(){
+    if (client) { client.end(); client = null; }
+  });
+
+  /* ── Enviar comando Buzzer al ESP32 ── */
+  cmdBuzzer.addEventListener('click', function(){
+    if (client && client.connected) {
+      client.publish('viasegura/comando', 'BUZZER_ON');
+      statusEl.textContent = '🔔 Comando BUZZER_ON enviado al ESP32';
+      setTimeout(function(){ statusEl.textContent = '✅ Conectado'; }, 2500);
+    }
+  });
+
+  /* Pedir permiso de notificación */
+  if (window.Notification && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+})();
+</script>
+
 </body>
 </html>

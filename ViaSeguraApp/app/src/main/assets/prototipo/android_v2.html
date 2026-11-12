@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VíaSegura — App Mejorada</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  :root {
+    --primary: #2563EB;
+    --primary-light: #EFF6FF;
+    --text: #1E293B;
+    --text-muted: #64748B;
+    --bg: #F8FAFC;
+    --surface: #FFFFFF;
+    --danger: #EF4444;
+    --warning: #F59E0B;
+    --success: #10B981;
+    --border: #E2E8F0;
+  }
+  
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+  body { background: #333; display: flex; justify-content: center; padding: 40px 20px; }
+  
+  .phone-container {
+    width: 390px;
+    height: 844px;
+    background: var(--bg);
+    border-radius: 40px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+    border: 12px solid #111;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 24px 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--bg);
+    z-index: 10;
+  }
+
+  .screen {
+    flex: 1;
+    overflow-y: auto;
+    display: none;
+    flex-direction: column;
+    padding-bottom: 80px; /* Space for bottom nav */
+  }
+  .screen.active { display: flex; }
+
+  /* HEADER */
+  .header {
+    display: flex;
+    align-items: center;
+    padding: 16px 24px;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .back-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; cursor: pointer;
+    margin-right: 16px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  }
+  .header-title h1 { font-size: 20px; font-weight: 700; color: var(--text); }
+  .header-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 8px; padding: 0 24px 16px; overflow-x: auto; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    padding: 8px 16px;
+    border-radius: 99px;
+    font-size: 13px; font-weight: 600;
+    white-space: nowrap; cursor: pointer;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+  .tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+  /* CARDS GENERAL */
+  .content { padding: 0 24px 24px; flex: 1; }
+  .card {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+
+  /* ALERT CARDS */
+  .alert-card {
+    border-left-width: 4px;
+    border-left-style: solid;
+  }
+  .alert-card.red { border-left-color: var(--danger); }
+  .alert-card.yellow { border-left-color: var(--warning); }
+  .alert-card.blue { border-left-color: var(--primary); }
+  .alert-card.green { border-left-color: var(--success); }
+  
+  .alert-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .alert-card.red .alert-icon { background: #FEE2E2; }
+  .alert-card.yellow .alert-icon { background: #FEF3C7; }
+  .alert-card.blue .alert-icon { background: var(--primary-light); }
+  
+  .alert-content { flex: 1; }
+  .alert-title { font-size: 14px; font-weight: 700; color: var(--text); display: flex; justify-content: space-between; margin-bottom: 4px; }
+  .alert-time { font-size: 11px; font-weight: 500; color: #94A3B8; }
+  .alert-desc { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
+
+  /* MAP VIEW */
+  .map-container { position: relative; width: 100%; height: 350px; background: #E2E8F0; }
+  #map { width: 100%; height: 100%; }
+  
+  .map-overlay-card {
+    margin: -30px 24px 24px;
+    position: relative;
+    z-index: 1000;
+  }
+  .info-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .info-row:last-child { border-bottom: none; }
+  .info-label { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+  .info-value { font-size: 14px; font-weight: 600; color: var(--text); }
+  
+  .btn {
+    width: 100%; padding: 14px;
+    border-radius: 12px; font-size: 14px; font-weight: 600;
+    border: none; cursor: pointer; text-align: center;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+  .btn-primary { background: var(--primary); color: #fff; }
+
+  /* USER CARDS */
+  .user-avatar { width: 44px; height: 44px; border-radius: 50%; background: #CBD5E1; display: flex; align-items: center; justify-content: center; font-size: 20px; overflow: hidden; }
+  .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .user-role { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; background: var(--primary-light); color: var(--primary); margin-left: 8px; }
+  .user-role.green { background: #D1FAE5; color: var(--success); }
+  .btn-delete { color: var(--danger); background: transparent; border: none; font-size: 18px; cursor: pointer; padding: 8px; }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 70px; background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-around; align-items: center;
+    padding-bottom: 12px; z-index: 20;
+  }
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    color: var(--text-muted); font-size: 11px; font-weight: 500;
+    cursor: pointer; text-decoration: none;
+  }
+  .nav-item.active { color: var(--primary); }
+  .nav-icon { font-size: 20px; }
+
+</style>
+</head>
+<body>
+
+<div class="phone-container">
+  <div class="status-bar">
+    <span>09:41</span>
+    <span>📶 🔋</span>
+  </div>
+
+  <!-- PANTALLA 1: GEOLOCALIZACIÓN -->
+  <div id="screen-geo" class="screen active">
+    <div class="header">
+      <div class="back-btn">‹</div>
+      <div class="header-title">
+        <h1>Geolocalización</h1>
+        <div class="header-subtitle">Ubicación GPS en tiempo real del estudiante.</div>
+      </div>
+    </div>
+    
+    <div class="map-container">
+      <div id="map"></div>
+    </div>
+    
+    <div class="card map-overlay-card">
+      <div class="info-row">
+        <div>
+          <div class="info-label">Coordenadas GPS</div>
+          <div class="info-value">-16.4080° S, -71.5350° W</div>
+        </div>
+        <div style="text-align: right;">
+          <div class="info-label">Última actualización</div>
+          <div class="info-value">Hace 2 min</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <div>
+          <div class="info-label">Geocerca de Seguridad</div>
+          <div class="info-value" style="color: var(--success);">Activa (Radio: 500m)</div>
+        </div>
+        <button class="btn btn-outline" style="width: auto; padding: 6px 12px; font-size: 12px; border-radius: 8px;">Ajustar</button>
+      </div>
+    </div>
+    
+    <div class="content" style="display:flex; gap:12px; padding-top:0;">
+      <button class="btn btn-danger" style="flex:1;">🚨 Modo Emergencia</button>
+      <button class="btn btn-outline" style="flex:1;">⚙️ Configurar Ruta</button>
+    </div>
+  </div>
+
+  <!-- PANTALLA 2: ALERTAS -->
+  <div id="screen-alertas" class="screen">
+    <div class="header">
+      <div class="back-btn">‹</div>
+      <div class="header-title">
+        <h1>Alertas de Seguridad</h1>
+        <div class="header-subtitle">Historial de eventos críticos y ruta.</div>
+      </div>
+    </div>
+    
+    <div class="tabs">
+      <div class="tab active">Todas</div>
+      <div class="tab">Ruta</div>
+      <div class="tab">Seguridad</div>
+      <div class="tab">Sistema</div>
+    </div>
+    
+    <div class="content">
+      <div class="card alert-card red">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-content">
+          <div class="alert-title"><span>Desvío de Ruta Peligroso</span> <span class="alert-time">Hace 5 min</span></div>
+          <div class="alert-desc">El estudiante salió de la geocerca establecida. Registrado fuera de la Av. Principal.</div>
+        </div>
+      </div>
+      
+      <div class="card alert-card yellow">
+        <div class="alert-icon">📍</div>
+        <div class="alert-content">
+          <div class="alert-title"><span>Geocerca de Seguridad Violada</span> <span class="alert-time">Hace 23 min</span></div>
+          <div class="alert-desc">El dispositivo ha salido de la zona segura del Colegio ABC.</div>
+        </div>
+      </div>
+
+      <div class="card alert-card red">
+        <div class="alert-icon">🚨</div>
+        <div class="alert-content">
+          <div class="alert-title"><span>Botón de Pánico Activado</span> <span class="alert-time">Hace 1 hora</span></div>
+          <div class="alert-desc">Se presionó el botón de emergencia físico en el dispositivo.</div>
+        </div>
+      </div>
+
+      <div class="card alert-card yellow">
+        <div class="alert-icon">🔋</div>
+        <div class="alert-content">
+          <div class="alert-title"><span>Nivel de Batería Bajo (15%)</span> <span class="alert-time">Hace 3 horas</span></div>
+          <div class="alert-desc">El dispositivo del estudiante necesita ser cargado pronto para no perder conexión.</div>
+        </div>
+      </div>
+      
+      <div class="card alert-card blue">
+        <div class="alert-icon">📶</div>
+        <div class="alert-content">
+          <div class="alert-title"><span>Pérdida de Señal GPS</span> <span class="alert-time">Hace 12 horas</span></div>
+          <div class="alert-desc">Pérdida de enlace directo en zona sin cobertura.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANTALLA 3: USUARIOS AUTORIZADOS -->
+  <div id="screen-usuarios" class="screen">
+    <div class="header">
+      <div class="back-btn">‹</div>
+      <div class="header-title">
+        <h1>Red de Cuidado</h1>
+        <div class="header-subtitle">Administra quién puede monitorear al estudiante.</div>
+      </div>
+    </div>
+    
+    <div class="content">
+      <div class="card" style="align-items: center;">
+        <div class="user-avatar">👨</div>
+        <div style="flex:1;">
+          <div style="font-weight:700; font-size:15px; color:var(--text); margin-bottom:2px;">
+            Carlos Mendoza <span class="user-role">Apoderado</span>
+          </div>
+          <div style="font-size:12px; color:var(--text-muted);">Último acceso: Hoy, 08:15 AM</div>
+        </div>
+        <button class="btn-delete">🗑️</button>
+      </div>
+
+      <div class="card" style="align-items: center;">
+        <div class="user-avatar">👩</div>
+        <div style="flex:1;">
+          <div style="font-weight:700; font-size:15px; color:var(--text); margin-bottom:2px;">
+            Sra. Laura Gómez <span class="user-role green">Familiar</span>
+          </div>
+          <div style="font-size:12px; color:var(--text-muted);">Último acceso: Ayer, 06:40 PM</div>
+        </div>
+        <button class="btn-delete">🗑️</button>
+      </div>
+
+      <div class="card" style="align-items: center;">
+        <div class="user-avatar">🧑‍🏫</div>
+        <div style="flex:1;">
+          <div style="font-weight:700; font-size:15px; color:var(--text); margin-bottom:2px;">
+            Prof. Mario Ruiz <span class="user-role green">Tutor Escolar</span>
+          </div>
+          <div style="font-size:12px; color:var(--text-muted);">Último acceso: 12 Oct, 11:20 AM</div>
+        </div>
+        <button class="btn-delete">🗑️</button>
+      </div>
+
+      <button class="btn btn-primary" style="margin-top:20px;">👤 Agregar Contacto</button>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAVIGATION -->
+  <div class="bottom-nav">
+    <a href="#" class="nav-item active" onclick="switchScreen('screen-geo', this)"><span class="nav-icon">🗺️</span>Ruta</a>
+    <a href="#" class="nav-item" onclick="switchScreen('screen-alertas', this)"><span class="nav-icon">⚠️</span>Alertas</a>
+    <a href="#" class="nav-item" onclick="switchScreen('screen-usuarios', this)"><span class="nav-icon">👥</span>Contactos</a>
+  </div>
+</div>
+
+<script>
+  let mapInitialized = false;
+
+  function switchScreen(id, navElement) {
+    document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    
+    document.getElementById(id).classList.add('active');
+    navElement.classList.add('active');
+
+    if (id === 'screen-geo' && !mapInitialized) {
+      setTimeout(initMap, 100);
+    }
+  }
+
+  function initMap() {
+    const center = [-16.4080, -71.5350]; 
+    const map = L.map('map', { zoomControl: false }).setView(center, 15);
+    
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OSM'
+    }).addTo(map);
+
+    const markerHtml = `<div style="width:40px;height:40px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 4px 6px rgba(0,0,0,0.3);font-size:20px;">👦</div>`;
+    const customIcon = L.divIcon({html: markerHtml, className: '', iconSize:[40,40], iconAnchor:[20,40]});
+
+    L.marker(center, {icon: customIcon}).addTo(map);
+
+    L.circle(center, {
+      color: 'var(--danger)',
+      fillColor: 'var(--danger)',
+      fillOpacity: 0.1,
+      radius: 500
+    }).addTo(map);
+
+    mapInitialized = true;
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    initMap();
+  });
+</script>
+
+</body>
+</html>

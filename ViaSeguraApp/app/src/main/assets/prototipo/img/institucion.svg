@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 160" role="img" aria-label="Foto referencial de la institución educativa">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7FB6E8"/>
+      <stop offset="1" stop-color="#CFE3F5"/>
+    </linearGradient>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F6F3EC"/>
+      <stop offset="1" stop-color="#DED7C8"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="160" fill="url(#sky)"/>
+  <circle cx="332" cy="38" r="20" fill="#FFE082"/>
+  <rect x="0" y="118" width="400" height="42" fill="#8BC34A"/>
+  <rect x="0" y="112" width="400" height="8" fill="#7CB342"/>
+  <rect x="168" y="30" width="4" height="34" fill="#9E9E9E"/>
+  <rect x="172" y="30" width="26" height="16" fill="#C62828"/>
+  <rect x="92" y="58" width="216" height="60" fill="url(#wall)"/>
+  <rect x="80" y="46" width="240" height="16" fill="#C62828"/>
+  <rect x="80" y="42" width="240" height="8" rx="3" fill="#B71C1C"/>
+  <rect x="104" y="70" width="28" height="24" fill="#90CAF9" stroke="#B0BEC5" stroke-width="2"/>
+  <rect x="146" y="70" width="28" height="24" fill="#90CAF9" stroke="#B0BEC5" stroke-width="2"/>
+  <rect x="226" y="70" width="28" height="24" fill="#90CAF9" stroke="#B0BEC5" stroke-width="2"/>
+  <rect x="268" y="70" width="28" height="24" fill="#90CAF9" stroke="#B0BEC5" stroke-width="2"/>
+  <rect x="183" y="86" width="34" height="32" fill="#6D4C41"/>
+  <rect x="183" y="86" width="34" height="6" fill="#5D4037"/>
+  <circle cx="191" y="103" r="2" fill="#FFD54F"/>
+  <rect x="70" y="116" width="260" height="6" fill="#A1887F"/>
+  <rect x="60" y="122" width="280" height="6" rx="2" fill="#8D6E63"/>
+</svg>

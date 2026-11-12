@@ -315,8 +315,26 @@
     <div id="recorrido" class="phone">
       <div class="phone-label">9 · Recorrido Activo</div>
       <div class="status-bar"><span class="status-bar-time"></span><span>📶 🔋</span></div>
-      <div style="background:var(--success); color:#fff; text-align:center; padding:12px; font-weight:700; font-size:14px; letter-spacing:1px;"> RECORRIDO ACTIVO</div>
+      <!-- Header dinámico con color del semáforo -->
+      <div id="recorrido-header" style="background:var(--success); color:#fff; text-align:center; padding:12px; font-weight:700; font-size:14px; letter-spacing:1px; transition:background .5s;"> RECORRIDO ACTIVO</div>
       <div class="content">
+        <!-- 🚦 SEMÁFORO DE RUTA -->
+        <div data-semaforo style="margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:10px;background:#22c55e;color:#fff;border-radius:12px;padding:10px 14px;font-weight:700;font-size:13px;">
+            <span style="font-size:22px">🟢</span>
+            <div><div>SEGURO</div><div style="font-weight:400;font-size:11px;opacity:.85">Esperando GPS…</div></div>
+          </div>
+        </div>
+        <!-- Semáforo visual 3 luces -->
+        <div style="display:flex;justify-content:center;gap:0;margin-bottom:12px;">
+          <div style="background:#1a1a2e;border-radius:16px;padding:12px 20px;display:flex;flex-direction:column;align-items:center;gap:10px;box-shadow:0 4px 16px rgba(0,0,0,.2);">
+            <div style="font-size:10px;color:#9e9e9e;font-weight:700;letter-spacing:1px;">RUTA</div>
+            <div class="vs-semaforo-light rojo-light"    id="vs-sl-rojo"    style="width:34px;height:34px;border-radius:50%;background:#ef4444;opacity:.2;transition:opacity .4s,box-shadow .4s;"></div>
+            <div class="vs-semaforo-light amarillo-light" id="vs-sl-amarillo" style="width:34px;height:34px;border-radius:50%;background:#f59e0b;opacity:.2;transition:opacity .4s,box-shadow .4s;"></div>
+            <div class="vs-semaforo-light verde-light"   id="vs-sl-verde"   style="width:34px;height:34px;border-radius:50%;background:#22c55e;opacity:.8;box-shadow:0 0 12px 3px #22c55e88;transition:opacity .4s,box-shadow .4s;"></div>
+          </div>
+        </div>
+
         <div class="vs-map"></div>
         <div style="background:var(--surface); border-radius:12px; padding:16px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.05); border:1px solid var(--border); margin-top:-40px; position:relative; z-index:1000;">
           <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
@@ -650,27 +668,35 @@
         <span class="topbar-icon" style="opacity:0;">.</span>
       </div>
       <div class="content" style="padding-top:16px;">
-        <div class="card" id="esp32-status-card">
+        <!-- Tarjeta de Estado Real con VPS -->
+        <div class="card" id="esp32-status-card" style="margin-bottom:12px;">
           <div class="card-row" style="margin-bottom:10px;">
-            <div class="card-icon blue">📶</div>
+            <div class="card-icon blue">📡</div>
             <div style="flex:1;">
-              <div class="body" style="font-weight:600;" id="esp32-device-name">Sin dispositivo</div>
-              <div class="body-sm" id="esp32-device-detail">Vincula el módulo que lleva el estudiante</div>
+              <div class="body" style="font-weight:600;" id="esp32-device-name">ESP32 · VíaSegura Tecsup</div>
+              <div class="body-sm" id="esp32-device-detail">VPS DigitalOcean (157.245.88.132)</div>
             </div>
             <span class="chip chip-neutral" id="esp32-status">Desconectado</span>
           </div>
-          <div class="body-sm">Señal: <b id="esp32-rssi">—</b> · Batería: <b id="esp32-battery">—</b></div>
+          <div class="body-sm" style="display:flex; justify-content:space-between; border-top:1px solid var(--border); padding-top:8px; margin-top:4px;">
+            <span>Sensor Distancia: <b id="esp32-live-dist" style="color:var(--primary);">— cm</b></span>
+            <span>LED Placa: <b id="esp32-live-led">—</b></span>
+          </div>
         </div>
 
-        <div class="section-title">Vía de conexión</div>
-        <div class="chip-row" data-list="esp32-methods">
-          <span class="chip chip-filter esp32-method" data-method="ble">Bluetooth</span>
-          <span class="chip chip-filter esp32-method" data-method="wifi">Wi-Fi</span>
-          <span class="chip chip-filter esp32-method" data-method="usb">USB</span>
+        <div class="card card-row" style="margin-bottom:14px; background:#f8fafc;">
+          <div style="flex:1;">
+            <div class="body" style="font-weight:600;">Conexión Cloud MQTT</div>
+            <div class="body-sm">Broker: 157.245.88.132:9001 (IotUser)</div>
+          </div>
+          <button class="btn btn-primary btn-sm" id="esp32-vps-toggle" style="width:auto; padding:6px 14px;">CONECTAR</button>
         </div>
 
-        <button class="btn btn-primary" id="esp32-scan">BUSCAR DISPOSITIVOS</button>
-        <div data-list="esp32-devices" style="margin-top:12px;"></div>
+        <div class="section-title">Acciones del Dispositivo</div>
+        <div style="display:flex; gap:10px; margin-bottom:16px;">
+          <button class="btn btn-outline btn-sm" id="esp32-cmd-buzzer" style="flex:1;">🔔 Probar Buzzer</button>
+          <button class="btn btn-outline btn-sm" id="esp32-cmd-reset" style="flex:1;">🔄 Reiniciar ESP32</button>
+        </div>
 
         <div class="section-title">Al conectar</div>
         <div class="card card-row" style="margin-bottom:10px;">
@@ -1115,5 +1141,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 })();
-</script></body>
+</script>
+
+<!-- ══════════════════════════════════════════
+     MQTT + SEMÁFORO DE RUTA — ViaSegura
+     Librería MQTT sobre WebSocket (CDN)
+══════════════════════════════════════════ -->
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</body>
 </html>
