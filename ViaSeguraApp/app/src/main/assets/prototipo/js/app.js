@@ -1335,10 +1335,10 @@
       if (statusChip) { statusChip.className = 'chip chip-amber'; statusChip.textContent = 'Conectando…'; }
       btnToggle.textContent = 'CONECTANDO...';
 
-      const brokerUrl = 'ws://157.245.88.132:9001/mqtt';
+      const brokerUrl = 'ws://viasegura-mauricio.xyz:9001/mqtt';
       mqttClientInstance = mqtt.connect(brokerUrl, {
         clientId: 'ViaSeguraApp_' + Math.random().toString(16).substr(2, 6),
-        username: 'IotUser',
+        username: 'iotuser',
         password: 'LosSigmas1A',
         keepalive: 30,
         reconnectPeriod: 4000

@@ -1580,7 +1580,7 @@ document.querySelectorAll('.web-frame').forEach(function(frame) {
 
   <div>
     <label style="font-size:11px;color:#a6adc8">Host VPS (WebSocket)</label>
-    <input id="mqtt-host" value="157.245.88.132" placeholder="IP o dominio del VPS">
+    <input id="mqtt-host" value="viasegura-mauricio.xyz" placeholder="IP o dominio del VPS">
   </div>
   <div class="row">
     <div style="flex:1">
@@ -1644,7 +1644,7 @@ document.querySelectorAll('.web-frame').forEach(function(frame) {
 
   /* ── Conectar ── */
   btnConn.addEventListener('click', function(){
-    var host   = document.getElementById('mqtt-host').value.trim()   || '157.245.88.132';
+    var host   = document.getElementById('mqtt-host').value.trim()   || 'viasegura-mauricio.xyz';
     var wsport = parseInt(document.getElementById('mqtt-wsport').value) || 9001;
     var user   = document.getElementById('mqtt-user').value.trim();
     var pass   = document.getElementById('mqtt-pass').value.trim();
@@ -1655,7 +1655,7 @@ document.querySelectorAll('.web-frame').forEach(function(frame) {
 
     var opts = {
       clientId: 'ViaSegura_Web_' + Math.random().toString(16).substr(2,6),
-      username: user || 'IotUser',
+      username: user || 'iotuser',
       password: pass || 'LosSigmas1A',
       keepalive: 30,
       reconnectPeriod: 0

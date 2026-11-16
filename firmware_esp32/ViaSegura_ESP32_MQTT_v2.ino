@@ -9,46 +9,55 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <WiFi.h>
+#include <WiFiMulti.h>
 #include <PubSubClient.h>
 
 // ─────────────────────────────────────────────
-//  ★ EDITA ESTOS VALORES ★
+//  ★ CONFIGURACIÓN DE REDES Y BROKER ★
 // ─────────────────────────────────────────────
-const char* ssid        = "Comunidad Innovadores";
-const char* password    = "INn0V4-2K23!*";
-const char* mqtt_server = "157.245.88.132";   // Tu VPS DigitalOcean
+// Red 1 (Zona portátil de tu celular)
+const char* ssid1     = "HONOR X7d 5G";
+const char* pass1     = "Mauricio10";
+
+// Red 2 (Universidad / Tecsup)
+const char* ssid2     = "Comunidad Innovadores";
+const char* pass2     = "INn0V4-2K23!*";
+
+const char* mqtt_server = "viasegura-mauricio.xyz"; // Tu dominio VPS
 const int   mqtt_port   = 1883;
-const char* mqtt_user   = "IotUser";           // Usuario Mosquitto VPS
-const char* mqtt_pass   = "LosSigmas1A";       // Contraseña Mosquitto VPS
-const char* mqtt_client = "ESP32_ViaSegura";
+const char* mqtt_user   = "iotuser";          // Usuario Mosquitto (minúsculas)
+const char* mqtt_pass   = "LosSigmas1A";      // Contraseña Mosquitto
+const char* mqtt_client = "ESP32_ViaSegura_Lab";
 
 // Topics MQTT
 const char* TOP_EMERGENCIA = "viasegura/emergencia";
 const char* TOP_DISTANCIA  = "viasegura/distancia";
 const char* TOP_ESTADO     = "viasegura/estado";
 const char* TOP_COMANDO    = "viasegura/comando";
-const char* TOP_LED        = "viasegura/led";   // Publica el estado del LED
+const char* TOP_LED        = "viasegura/led";
 
 // ─────────────────────────────────────────────
-//  PINES
+//  PINES FÍSICOS
 // ─────────────────────────────────────────────
-const int pinTrig     = 5;
-const int pinEcho     = 18;
-const int pinBoton    = 4;
-const int pinBuzzer   = 15;
-const int pinLedVerde = 12;
-const int pinLedRojo  = 13;
+const int pinTrig        = 5;
+const int pinEcho        = 18;
+const int pinBoton       = 4;
+const int pinBuzzer      = 15;
+const int pinLedVerde    = 12; // 🟢 Seguro / En ruta (< 100 cm)
+const int pinLedAmarillo = 14; // 🟡 Precaución / Desviado (100 - 200 cm)
+const int pinLedRojo     = 13; // 🔴 Peligro / Fuera de ruta (> 200 cm)
 
 // ─────────────────────────────────────────────
 //  UMBRALES DE DISTANCIA
 // ─────────────────────────────────────────────
-const int DIST_CERCA  = 100;   // cm → LED VERDE (alumno dentro de 1m)
-const int DIST_LEJOS  = 200;   // cm → LED ROJO  (alumno se alejó a +2m)
+const int DIST_CERCA  = 100;   // cm → 🟢 VERDE (en ruta)
+const int DIST_LEJOS  = 200;   // cm → 🟡 AMARILLO (desviándose) y >200cm → 🔴 ROJO
 
 // ─────────────────────────────────────────────
 //  OBJETOS
 // ─────────────────────────────────────────────
 LiquidCrystal_I2C lcd(0x27, 16, 2);
+WiFiMulti         wifiMulti;
 WiFiClient        espClient;
 PubSubClient      mqttClient(espClient);
 
@@ -58,8 +67,8 @@ PubSubClient      mqttClient(espClient);
 bool wifiOK  = false;
 bool mqttOK  = false;
 
-// Estado del objeto detectado
-enum EstadoObj { SIN_OBJETO, CERCA, LEJOS };
+// Estado del semáforo
+enum EstadoObj { SIN_OBJETO, EN_RUTA, DESVIADO, PELIGRO };
 EstadoObj estadoActual   = SIN_OBJETO;
 EstadoObj estadoAnterior = SIN_OBJETO;
 
@@ -85,12 +94,13 @@ void setup() {
   delay(1500);
 
   // Pines
-  pinMode(pinTrig,     OUTPUT);
-  pinMode(pinEcho,     INPUT);
-  pinMode(pinBoton,    INPUT_PULLUP);
-  pinMode(pinBuzzer,   OUTPUT);
-  pinMode(pinLedVerde, OUTPUT);
-  pinMode(pinLedRojo,  OUTPUT);
+  pinMode(pinTrig,        OUTPUT);
+  pinMode(pinEcho,        INPUT);
+  pinMode(pinBoton,       INPUT_PULLUP);
+  pinMode(pinBuzzer,      OUTPUT);
+  pinMode(pinLedVerde,    OUTPUT);
+  pinMode(pinLedAmarillo, OUTPUT);
+  pinMode(pinLedRojo,     OUTPUT);
 
   // Test visual de LEDs al iniciar
   testLEDs();
@@ -151,33 +161,38 @@ void loop() {
 }
 
 // ─────────────────────────────────────────────
-//  DETERMINAR ESTADO DEL ALUMNO
+//  DETERMINAR ESTADO DEL SEMÁFORO
 // ─────────────────────────────────────────────
 void determinarEstado(long dist) {
   estadoAnterior = estadoActual;
 
   if (dist <= 0 || dist > 400) {
-    // Sin lectura válida o muy lejos → sin objeto
     estadoActual = SIN_OBJETO;
   } else if (dist <= DIST_CERCA) {
-    // Dentro de 1 metro → CERCA (verde)
-    estadoActual = CERCA;
-  } else if (dist > DIST_LEJOS) {
-    // Más de 2 metros → LEJOS (rojo, se alejó)
-    estadoActual = LEJOS;
+    // Menos de 1 metro → 🟢 EN RUTA (Seguro)
+    estadoActual = EN_RUTA;
+  } else if (dist > DIST_CERCA && dist <= DIST_LEJOS) {
+    // Entre 1 y 2 metros → 🟡 DESVIADO (Precaución)
+    estadoActual = DESVIADO;
+  } else {
+    // Más de 2 metros → 🔴 PELIGRO (Fuera de ruta)
+    estadoActual = PELIGRO;
   }
-  // Entre 1-2 metros: mantiene estado anterior (zona de transición, evita parpadeo)
 
   // Si cambió de estado, avisar por MQTT
   if (estadoActual != estadoAnterior && mqttClient.connected()) {
-    if (estadoActual == CERCA) {
-      mqttClient.publish(TOP_LED, "VERDE_ON");
-      mqttClient.publish(TOP_ESTADO, "ALUMNO_CERCA");
-      Serial.println("[LED] VERDE → Alumno dentro de 1m");
-    } else if (estadoActual == LEJOS) {
-      mqttClient.publish(TOP_LED, "ROJO_PARPADEO");
-      mqttClient.publish(TOP_ESTADO, "ALUMNO_LEJOS");
-      Serial.println("[LED] ROJO → Alumno se alejó más de 2m");
+    if (estadoActual == EN_RUTA) {
+      mqttClient.publish(TOP_LED, "VERDE_SEGURO");
+      mqttClient.publish(TOP_ESTADO, "EN_RUTA");
+      Serial.println("[SEMÁFORO] 🟢 VERDE → En ruta segura (<1m)");
+    } else if (estadoActual == DESVIADO) {
+      mqttClient.publish(TOP_LED, "AMARILLO_ALERTA");
+      mqttClient.publish(TOP_ESTADO, "DESVIADO");
+      Serial.println("[SEMÁFORO] 🟡 AMARILLO → Desviándose (1m - 2m)");
+    } else if (estadoActual == PELIGRO) {
+      mqttClient.publish(TOP_LED, "ROJO_PELIGRO");
+      mqttClient.publish(TOP_ESTADO, "PELIGRO");
+      Serial.println("[SEMÁFORO] 🔴 ROJO → Fuera de ruta (>2m)");
     } else {
       mqttClient.publish(TOP_LED, "APAGADO");
       mqttClient.publish(TOP_ESTADO, "SIN_OBJETO");
@@ -186,29 +201,38 @@ void determinarEstado(long dist) {
 }
 
 // ─────────────────────────────────────────────
-//  ACTUALIZAR LEDs (con efecto parpadeo en rojo)
+//  ACTUALIZAR 3 LEDs FÍSICOS (Semáforo 🟢 🟡 🔴)
 // ─────────────────────────────────────────────
 void actualizarLEDs(unsigned long ahora) {
   switch (estadoActual) {
 
-    case CERCA:
-      // LED verde fijo, rojo apagado
-      digitalWrite(pinLedVerde, HIGH);
-      digitalWrite(pinLedRojo,  LOW);
+    case EN_RUTA:
+      // 🟢 Verde ON, otros OFF
+      digitalWrite(pinLedVerde,    HIGH);
+      digitalWrite(pinLedAmarillo, LOW);
+      digitalWrite(pinLedRojo,     LOW);
       break;
 
-    case LEJOS:
-      // LED verde apagado, rojo PARPADEA (cada 300ms)
-      digitalWrite(pinLedVerde, LOW);
-      ledRojoState = (ahora / 300) % 2 == 0;  // Alterna cada 300ms
+    case DESVIADO:
+      // 🟡 Amarillo ON, otros OFF
+      digitalWrite(pinLedVerde,    LOW);
+      digitalWrite(pinLedAmarillo, HIGH);
+      digitalWrite(pinLedRojo,     LOW);
+      break;
+
+    case PELIGRO:
+      // 🔴 Rojo PARPADEA (cada 250ms), otros OFF
+      digitalWrite(pinLedVerde,    LOW);
+      digitalWrite(pinLedAmarillo, LOW);
+      ledRojoState = (ahora / 250) % 2 == 0;
       digitalWrite(pinLedRojo, ledRojoState ? HIGH : LOW);
       break;
 
     case SIN_OBJETO:
     default:
-      // Ambos apagados
-      digitalWrite(pinLedVerde, LOW);
-      digitalWrite(pinLedRojo,  LOW);
+      digitalWrite(pinLedVerde,    LOW);
+      digitalWrite(pinLedAmarillo, LOW);
+      digitalWrite(pinLedRojo,     LOW);
       break;
   }
 }
@@ -217,28 +241,31 @@ void actualizarLEDs(unsigned long ahora) {
 //  LCD
 // ─────────────────────────────────────────────
 void actualizarLCD(long dist) {
-  // Línea 0: estado de conexión
   lcd.setCursor(0, 0);
   if (!wifiOK) {
-    lcd.print("SIN WiFi        ");
+    lcd.print("BUSCANDO WiFi...");
   } else if (!mqttOK) {
-    lcd.print("SIN VPS/MQTT    ");
+    lcd.print("SIN CONEXION VPS");
   } else {
-    lcd.print("ZONA ESCOLAR OK ");
+    lcd.print("VIA SEGURA TECSUP");
   }
 
-  // Línea 1: estado del alumno
   lcd.setCursor(0, 1);
   switch (estadoActual) {
-    case CERCA:
-      lcd.print("ALUMNO <1m  ");
+    case EN_RUTA:
+      lcd.print("SEGURO: ");
       lcd.print(dist);
-      lcd.print("cm  ");
+      lcd.print("cm   ");
       break;
-    case LEJOS:
-      lcd.print("!LEJOS >2m  ");
+    case DESVIADO:
+      lcd.print("ALERTA: ");
       lcd.print(dist);
-      lcd.print("cm  ");
+      lcd.print("cm   ");
+      break;
+    case PELIGRO:
+      lcd.print("!PELIGRO: ");
+      lcd.print(dist);
+      lcd.print("cm ");
       break;
     case SIN_OBJETO:
     default:
@@ -275,10 +302,12 @@ void activarEmergencia() {
     Serial.println("ALERTA_EMERGENCIA_ACTIVADA");
   }
 
-  // Buzzer 6 veces
+  // Alarma sonora potente con modulación de frecuencia (2500 Hz)
   for (int i = 0; i < 6; i++) {
-    digitalWrite(pinBuzzer, HIGH); delay(150);
-    digitalWrite(pinBuzzer, LOW);  delay(150);
+    tone(pinBuzzer, 2500, 180); // Frecuencia de máxima resonancia
+    delay(200);
+    noTone(pinBuzzer);
+    delay(100);
   }
 
   digitalWrite(pinLedRojo,  LOW);
@@ -312,8 +341,10 @@ void callbackMQTT(char* topic, byte* payload, unsigned int len) {
   if (String(topic) == TOP_COMANDO) {
     if (msg == "BUZZER_ON") {
       for (int i = 0; i < 3; i++) {
-        digitalWrite(pinBuzzer, HIGH); delay(200);
-        digitalWrite(pinBuzzer, LOW);  delay(200);
+        tone(pinBuzzer, 2500, 200);
+        delay(250);
+        noTone(pinBuzzer);
+        delay(100);
       }
     } else if (msg == "LED_ROJO") {
       digitalWrite(pinLedRojo, HIGH); delay(3000); digitalWrite(pinLedRojo, LOW);
@@ -324,23 +355,32 @@ void callbackMQTT(char* topic, byte* payload, unsigned int len) {
 }
 
 // ─────────────────────────────────────────────
-//  CONEXIÓN WiFi
+//  CONEXIÓN WiFi (Soporta 2 Redes: Celular y Tecsup)
 // ─────────────────────────────────────────────
 void conectarWiFi() {
-  mostrarMensaje("Conectando WiFi", ssid);
-  WiFi.begin(ssid, password);
+  mostrarMensaje("Buscando WiFi...", "Conectando");
+  Serial.println("[WiFi] Buscando redes configuradas...");
+
+  // Registrar ambas redes
+  wifiMulti.addAP(ssid1, pass1); // HONOR X7d 5G
+  wifiMulti.addAP(ssid2, pass2); // Comunidad Innovadores
+
   int intentos = 0;
-  while (WiFi.status() != WL_CONNECTED && intentos < 20) {
-    delay(500); Serial.print("."); intentos++;
+  while (wifiMulti.run() != WL_CONNECTED && intentos < 20) {
+    delay(500);
+    Serial.print(".");
+    intentos++;
   }
+
   if (WiFi.status() == WL_CONNECTED) {
     wifiOK = true;
-    Serial.printf("\n[WiFi] IP: %s\n", WiFi.localIP().toString().c_str());
-    mostrarMensaje("WiFi OK", WiFi.localIP().toString().c_str());
-    delay(800);
+    Serial.printf("\n[WiFi] ¡Conectado a %s!\n", WiFi.SSID().c_str());
+    Serial.printf("[WiFi] IP: %s\n", WiFi.localIP().toString().c_str());
+    mostrarMensaje("WiFi OK", WiFi.SSID().c_str());
+    delay(1000);
   } else {
-    Serial.println("\n[WiFi] Error");
-    mostrarMensaje("WiFi FALLO", "Sin internet");
+    Serial.println("\n[WiFi] No se pudo conectar a ninguna red");
+    mostrarMensaje("WiFi FALLO", "Sin señal");
     delay(1500);
   }
 }
@@ -380,11 +420,13 @@ void mostrarMensaje(const char* l1, const char* l2) {
 }
 
 void testLEDs() {
-  // Ambos ON por 500ms, luego apagados
-  digitalWrite(pinLedVerde, HIGH);
-  digitalWrite(pinLedRojo,  HIGH);
-  delay(500);
-  digitalWrite(pinLedVerde, LOW);
-  digitalWrite(pinLedRojo,  LOW);
+  // Encender los 3 LEDs (Verde, Amarillo, Rojo) por 600ms para probar el semáforo al arrancar
+  digitalWrite(pinLedVerde,    HIGH);
+  digitalWrite(pinLedAmarillo, HIGH);
+  digitalWrite(pinLedRojo,     HIGH);
+  delay(600);
+  digitalWrite(pinLedVerde,    LOW);
+  digitalWrite(pinLedAmarillo, LOW);
+  digitalWrite(pinLedRojo,     LOW);
   delay(300);
 }
