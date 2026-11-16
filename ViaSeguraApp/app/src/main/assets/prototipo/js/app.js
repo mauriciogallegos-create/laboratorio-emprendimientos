@@ -2666,6 +2666,13 @@
       lRojo.style.animation = riesgoNivel === 'rojo' ? 'vs-pulse-rojo 1s infinite' : '';
     }
 
+    // Enviar comando al ESP32 vía MQTT según el nivel de riesgo del GPS
+    if (mqttIsConnected && mqttClientInstance && riesgoNivel !== 'desconocido') {
+      if (riesgoNivel === 'verde') mqttClientInstance.publish('viasegura/comando', 'GPS_VERDE');
+      else if (riesgoNivel === 'amarillo') mqttClientInstance.publish('viasegura/comando', 'GPS_AMARILLO');
+      else if (riesgoNivel === 'rojo') mqttClientInstance.publish('viasegura/comando', 'GPS_ROJO');
+    }
+
     const alerta = riesgoNivel === 'amarillo' || riesgoNivel === 'rojo';
     document.querySelectorAll('[data-gps-status]').forEach(function (n) {
       n.textContent = riesgoNivel === 'rojo' ? 'Peligro' : riesgoNivel === 'amarillo' ? 'Alerta' : 'Normal';

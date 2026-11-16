@@ -365,6 +365,30 @@ void callbackMQTT(char* topic, byte* payload, unsigned int len) {
         noTone(pinBuzzer);
         delay(100);
       }
+    } else if (msg == "GPS_VERDE") {
+      // Móvil reporta: alumno en ruta segura
+      estadoActual = EN_RUTA;
+      digitalWrite(pinLedVerde, HIGH);
+      digitalWrite(pinLedAmarillo, LOW);
+      digitalWrite(pinLedRojo, LOW);
+      tone(pinBuzzer, 2800, 80);
+      Serial.println("[GPS MÓVIL] 🟢 Alumno en ruta segura");
+    } else if (msg == "GPS_AMARILLO") {
+      // Móvil reporta: alumno desviándose
+      estadoActual = DESVIADO;
+      digitalWrite(pinLedVerde, LOW);
+      digitalWrite(pinLedAmarillo, HIGH);
+      digitalWrite(pinLedRojo, LOW);
+      tone(pinBuzzer, 2200, 100);
+      Serial.println("[GPS MÓVIL] 🟡 Alumno desviándose");
+    } else if (msg == "GPS_ROJO") {
+      // Móvil reporta: alumno fuera de ruta / peligro
+      estadoActual = PELIGRO;
+      digitalWrite(pinLedVerde, LOW);
+      digitalWrite(pinLedAmarillo, LOW);
+      digitalWrite(pinLedRojo, HIGH);
+      for (int i = 0; i < 3; i++) { tone(pinBuzzer, 1800, 90); delay(110); }
+      Serial.println("[GPS MÓVIL] 🔴 Alumno fuera de ruta - PELIGRO");
     } else if (msg == "LED_ROJO") {
       digitalWrite(pinLedRojo, HIGH); delay(3000); digitalWrite(pinLedRojo, LOW);
     } else if (msg == "RESET") {
