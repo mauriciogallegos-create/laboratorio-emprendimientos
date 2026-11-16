@@ -692,6 +692,31 @@
           <button class="btn btn-primary btn-sm" id="esp32-vps-toggle" style="width:auto; padding:6px 14px;">CONECTAR</button>
         </div>
 
+        <div class="section-title">Vinculación con Estudiante</div>
+        <div class="card" style="margin-bottom:14px; border-left:4px solid var(--primary); background:#ffffff;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div>
+              <div class="body" style="font-weight:700;" id="esp32-student-name">Estudiante: Mauricio Gallegos</div>
+              <div class="body-sm" style="color:var(--text-muted);">Módulo de Cruce Escolar Activo</div>
+            </div>
+            <span class="chip chip-green" id="esp32-student-badge">🟢 En cruce</span>
+          </div>
+          <div style="background:#f1f5f9; border-radius:8px; padding:10px; margin-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+              <span>Distancia al cruce:</span>
+              <b id="esp32-student-dist" style="color:var(--primary); font-size:14px;">— cm</b>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:12px;">
+              <span>Estado del alumno:</span>
+              <b id="esp32-student-status" style="color:var(--success);">Esperando detección...</b>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-outline btn-sm" id="esp32-btn-vincular" style="flex:1;">🔗 Vincular Dispositivo</button>
+            <button class="btn btn-primary btn-sm" id="esp32-btn-simular" style="flex:1;">🚶 Probar Rastreo</button>
+          </div>
+        </div>
+
         <div class="section-title">Acciones del Dispositivo</div>
         <div style="display:flex; gap:10px; margin-bottom:16px;">
           <button class="btn btn-outline btn-sm" id="esp32-cmd-buzzer" style="flex:1;">🔔 Probar Buzzer</button>

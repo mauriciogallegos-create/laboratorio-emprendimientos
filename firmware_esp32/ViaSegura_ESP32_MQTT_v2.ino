@@ -161,7 +161,7 @@ void loop() {
 }
 
 // ─────────────────────────────────────────────
-//  DETERMINAR ESTADO DEL SEMÁFORO
+//  DETERMINAR ESTADO DEL SEMÁFORO Y SONIDOS
 // ─────────────────────────────────────────────
 void determinarEstado(long dist) {
   estadoAnterior = estadoActual;
@@ -179,23 +179,42 @@ void determinarEstado(long dist) {
     estadoActual = PELIGRO;
   }
 
-  // Si cambió de estado, avisar por MQTT
-  if (estadoActual != estadoAnterior && mqttClient.connected()) {
+  // Si cambió de estado, emitir sonido según la zona y avisar por MQTT
+  if (estadoActual != estadoAnterior) {
     if (estadoActual == EN_RUTA) {
-      mqttClient.publish(TOP_LED, "VERDE_SEGURO");
-      mqttClient.publish(TOP_ESTADO, "EN_RUTA");
-      Serial.println("[SEMÁFORO] 🟢 VERDE → En ruta segura (<1m)");
+      // 🟢 Bip corto y agudo (confirmación seguro)
+      tone(pinBuzzer, 2800, 80);
+      if (mqttClient.connected()) {
+        mqttClient.publish(TOP_LED, "VERDE_SEGURO");
+        mqttClient.publish(TOP_ESTADO, "EN_RUTA");
+      }
+      Serial.println("[SEMÁFORO] 🟢 VERDE → Bip seguro (<1m)");
     } else if (estadoActual == DESVIADO) {
-      mqttClient.publish(TOP_LED, "AMARILLO_ALERTA");
-      mqttClient.publish(TOP_ESTADO, "DESVIADO");
-      Serial.println("[SEMÁFORO] 🟡 AMARILLO → Desviándose (1m - 2m)");
+      // 🟡 Dos bips de advertencia (se está alejando)
+      tone(pinBuzzer, 2200, 100);
+      delay(120);
+      tone(pinBuzzer, 2200, 100);
+      if (mqttClient.connected()) {
+        mqttClient.publish(TOP_LED, "AMARILLO_ALERTA");
+        mqttClient.publish(TOP_ESTADO, "DESVIADO");
+      }
+      Serial.println("[SEMÁFORO] 🟡 AMARILLO → Dos bips advertencia (1m - 2m)");
     } else if (estadoActual == PELIGRO) {
-      mqttClient.publish(TOP_LED, "ROJO_PELIGRO");
-      mqttClient.publish(TOP_ESTADO, "PELIGRO");
-      Serial.println("[SEMÁFORO] 🔴 ROJO → Fuera de ruta (>2m)");
+      // 🔴 Tres bips rápidos de alarma (peligro, se fue lejos)
+      for (int i = 0; i < 3; i++) {
+        tone(pinBuzzer, 1800, 90);
+        delay(110);
+      }
+      if (mqttClient.connected()) {
+        mqttClient.publish(TOP_LED, "ROJO_PELIGRO");
+        mqttClient.publish(TOP_ESTADO, "PELIGRO");
+      }
+      Serial.println("[SEMÁFORO] 🔴 ROJO → Alarma de alejamiento (>2m)");
     } else {
-      mqttClient.publish(TOP_LED, "APAGADO");
-      mqttClient.publish(TOP_ESTADO, "SIN_OBJETO");
+      if (mqttClient.connected()) {
+        mqttClient.publish(TOP_LED, "APAGADO");
+        mqttClient.publish(TOP_ESTADO, "SIN_OBJETO");
+      }
     }
   }
 }

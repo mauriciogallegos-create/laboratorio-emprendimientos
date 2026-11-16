@@ -1357,15 +1357,35 @@
         const msg = payload.toString();
         if (topic === 'viasegura/distancia') {
           if (distEl) distEl.textContent = msg + ' cm';
+          const dVal = parseInt(msg);
+          // Actualizar tarjeta del estudiante
+          const sDist = el('esp32-student-dist');
+          const sStatus = el('esp32-student-status');
+          const sBadge = el('esp32-student-badge');
+          if (sDist) sDist.textContent = msg + ' cm';
+          if (!isNaN(dVal)) {
+            if (dVal <= 100) {
+              if (sStatus) { sStatus.textContent = '🟢 Seguro · En cruce seguro'; sStatus.style.color = 'var(--success)'; }
+              if (sBadge) { sBadge.className = 'chip chip-green'; sBadge.textContent = '🟢 En cruce'; }
+            } else if (dVal <= 200) {
+              if (sStatus) { sStatus.textContent = '🟡 Alerta · Desviándose del cruce'; sStatus.style.color = 'var(--warning)'; }
+              if (sBadge) { sBadge.className = 'chip chip-amber'; sBadge.textContent = '🟡 Desviado'; }
+            } else {
+              if (sStatus) { sStatus.textContent = '🔴 Peligro · Fuera de rango seguro'; sStatus.style.color = 'var(--danger)'; }
+              if (sBadge) { sBadge.className = 'chip chip-red'; sBadge.textContent = '🔴 Peligro'; }
+            }
+          }
         }
         if (topic === 'viasegura/led') {
           if (ledEl) {
             ledEl.textContent = msg;
-            ledEl.style.color = msg.includes('VERDE') ? 'var(--success)' : msg.includes('ROJO') ? 'var(--danger)' : 'inherit';
+            ledEl.style.color = msg.includes('VERDE') ? 'var(--success)' : msg.includes('AMARILLO') ? 'var(--warning)' : msg.includes('ROJO') ? 'var(--danger)' : 'inherit';
           }
         }
         if (topic === 'viasegura/emergencia') {
           toast('🚨 ¡ALERTA DE EMERGENCIA DESDE EL BOTÓN ESP32!', 'error');
+          const sBadge = el('esp32-student-badge');
+          if (sBadge) { sBadge.className = 'chip chip-red'; sBadge.textContent = '🚨 ¡EMERGENCIA!'; }
         }
       });
 
@@ -1401,6 +1421,45 @@
         }
         mqttClientInstance.publish('viasegura/comando', 'RESET');
         toast('Comando REINICIAR enviado 🔄', 'info');
+      });
+    }
+
+    // Botones de Vinculación y Simulación de Estudiante
+    const btnVincular = el('esp32-btn-vincular');
+    if (btnVincular) {
+      btnVincular.addEventListener('click', function () {
+        const nombre = window.prompt('Nombre del estudiante a vincular:', 'Mauricio Gallegos');
+        if (nombre && nombre.trim()) {
+          const sName = el('esp32-student-name');
+          if (sName) sName.textContent = 'Estudiante: ' + nombre.trim();
+          toast('Estudiante vinculado con éxito: ' + nombre.trim(), 'success');
+        }
+      });
+    }
+
+    const btnSimular = el('esp32-btn-simular');
+    if (btnSimular) {
+      let simPaso = 0;
+      btnSimular.addEventListener('click', function () {
+        const pasos = [
+          { dist: '45 cm', status: '🟢 Seguro · En cruce seguro', color: 'var(--success)', badge: '🟢 En cruce', chip: 'chip-green', msg: 'Alumno a 45cm del cruce (Zona Segura)' },
+          { dist: '140 cm', status: '🟡 Alerta · Desviándose del cruce', color: 'var(--warning)', badge: '🟡 Desviado', chip: 'chip-amber', msg: 'Alumno a 1.4m del cruce (Precaución)' },
+          { dist: '260 cm', status: '🔴 Peligro · Fuera de rango seguro', color: 'var(--danger)', badge: '🔴 Peligro', chip: 'chip-red', msg: 'Alumno a 2.6m (Peligro: Fuera de cruce)' }
+        ];
+        const p = pasos[simPaso % pasos.length];
+        simPaso++;
+
+        const sDist = el('esp32-student-dist');
+        const sStatus = el('esp32-student-status');
+        const sBadge = el('esp32-student-badge');
+        const lDist = el('esp32-live-dist');
+
+        if (sDist) sDist.textContent = p.dist;
+        if (lDist) lDist.textContent = p.dist;
+        if (sStatus) { sStatus.textContent = p.status; sStatus.style.color = p.color; }
+        if (sBadge) { sBadge.className = 'chip ' + p.chip; sBadge.textContent = p.badge; }
+
+        toast(p.msg, p.color === 'var(--danger)' ? 'error' : p.color === 'var(--warning)' ? 'warning' : 'success');
       });
     }
   }
