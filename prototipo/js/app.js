@@ -1303,35 +1303,173 @@
     });
   }
 
-  function bindEsp32() {
-    document.querySelectorAll('[data-list="esp32-methods"] .esp32-method').forEach(function (c) {
-      c.addEventListener('click', function () {
-        const st = esp32State();
-        st.method = c.getAttribute('data-method');
-        const list = document.querySelector('[data-list="esp32-devices"]');
-        if (list) clearChildren(list);
-        renderEsp32();
+  /* ===== Conexión Real ESP32 vía MQTT sobre WebSockets (VPS) ===== */
+  let mqttClientInstance = null;
+  let mqttIsConnected = false;
+
+  function setupEsp32Mqtt() {
+    const btnToggle = el('esp32-vps-toggle');
+    const statusChip = el('esp32-status');
+    const distEl = el('esp32-live-dist');
+    const ledEl = el('esp32-live-led');
+    const btnBuzzer = el('esp32-cmd-buzzer');
+    const btnReset = el('esp32-cmd-reset');
+
+    if (!btnToggle) return;
+
+    btnToggle.addEventListener('click', function () {
+      if (mqttIsConnected) {
+        if (mqttClientInstance) mqttClientInstance.end(true);
+        mqttIsConnected = false;
+        if (statusChip) { statusChip.className = 'chip chip-neutral'; statusChip.textContent = 'Desconectado'; }
+        btnToggle.textContent = 'CONECTAR';
+        btnToggle.className = 'btn btn-primary btn-sm';
+        return;
+      }
+
+      if (typeof mqtt === 'undefined') {
+        toast('Cargando librería MQTT, espera un segundo...', 'info');
+        return;
+      }
+
+      if (statusChip) { statusChip.className = 'chip chip-amber'; statusChip.textContent = 'Conectando…'; }
+      btnToggle.textContent = 'CONECTANDO...';
+      toast('Conectando a broker MQTT (157.245.88.132:9001)...', 'info');
+
+      const brokerUrl = 'ws://157.245.88.132:9001';
+      mqttClientInstance = mqtt.connect(brokerUrl, {
+        clientId: 'ViaSeguraApp_' + Math.random().toString(16).substr(2, 6),
+        username: 'iotuser',
+        password: 'LosSigmas1A',
+        keepalive: 30,
+        reconnectPeriod: 4000
+      });
+
+      mqttClientInstance.on('connect', function () {
+        mqttIsConnected = true;
+        if (statusChip) { statusChip.className = 'chip chip-green'; statusChip.textContent = 'En Línea'; }
+        btnToggle.textContent = 'DESCONECTAR';
+        btnToggle.className = 'btn btn-outline btn-sm';
+        toast('Conectado al VPS DigitalOcean (ESP32)', 'success');
+        mqttClientInstance.subscribe('viasegura/#');
+      });
+
+      mqttClientInstance.on('message', function (topic, payload) {
+        const msg = payload.toString();
+        if (topic === 'viasegura/distancia') {
+          if (distEl) distEl.textContent = msg + ' cm';
+          const dVal = parseInt(msg);
+          // Actualizar tarjeta del estudiante
+          const sDist = el('esp32-student-dist');
+          const sStatus = el('esp32-student-status');
+          const sBadge = el('esp32-student-badge');
+          if (sDist) sDist.textContent = msg + ' cm';
+          if (!isNaN(dVal)) {
+            if (dVal <= 100) {
+              if (sStatus) { sStatus.textContent = '🟢 Seguro · En cruce seguro'; sStatus.style.color = 'var(--success)'; }
+              if (sBadge) { sBadge.className = 'chip chip-green'; sBadge.textContent = '🟢 En cruce'; }
+            } else if (dVal <= 200) {
+              if (sStatus) { sStatus.textContent = '🟡 Alerta · Desviándose del cruce'; sStatus.style.color = 'var(--warning)'; }
+              if (sBadge) { sBadge.className = 'chip chip-amber'; sBadge.textContent = '🟡 Desviado'; }
+            } else {
+              if (sStatus) { sStatus.textContent = '🔴 Peligro · Fuera de rango seguro'; sStatus.style.color = 'var(--danger)'; }
+              if (sBadge) { sBadge.className = 'chip chip-red'; sBadge.textContent = '🔴 Peligro'; }
+            }
+          }
+        }
+        if (topic === 'viasegura/led') {
+          if (ledEl) {
+            ledEl.textContent = msg;
+            ledEl.style.color = msg.includes('VERDE') ? 'var(--success)' : msg.includes('AMARILLO') ? 'var(--warning)' : msg.includes('ROJO') ? 'var(--danger)' : 'inherit';
+          }
+        }
+        if (topic === 'viasegura/emergencia') {
+          toast('🚨 ¡ALERTA DE EMERGENCIA DESDE EL BOTÓN ESP32!', 'error');
+          const sBadge = el('esp32-student-badge');
+          if (sBadge) { sBadge.className = 'chip chip-red'; sBadge.textContent = '🚨 ¡EMERGENCIA!'; }
+        }
+      });
+
+      mqttClientInstance.on('error', function (err) {
+        console.error('[MQTT Error]', err);
+        if (statusChip) { statusChip.className = 'chip chip-red'; statusChip.textContent = 'Error'; }
+        btnToggle.textContent = 'REINTENTAR';
+        btnToggle.className = 'btn btn-primary btn-sm';
+        toast('Error MQTT: ' + (err && err.message ? err.message : 'No se pudo conectar'), 'error');
+      });
+
+      mqttClientInstance.on('close', function () {
+        mqttIsConnected = false;
+        if (statusChip) { statusChip.className = 'chip chip-neutral'; statusChip.textContent = 'Desconectado'; }
+        btnToggle.textContent = 'CONECTAR';
+        btnToggle.className = 'btn btn-primary btn-sm';
       });
     });
-    const scan = el('esp32-scan');
-    if (scan) {
-      scan.addEventListener('click', function () {
-        const st = esp32State();
-        const list = document.querySelector('[data-list="esp32-devices"]');
-        if (!list) return;
-        st.status = 'scanning';
-        renderEsp32();
-        clearChildren(list);
-        list.innerHTML = '<p class="body-sm" style="padding:8px 2px;">Buscando dispositivos ' + (ESP32_METHODS[st.method] || {}).label + '…</p>';
-        esp32Scan(function (devices) {
-          st.status = st.status === 'scanning' ? 'off' : st.status;
-          renderEsp32();
-          clearChildren(list);
-          if (!devices.length) { list.innerHTML = '<p class="body-sm" style="padding:8px 2px;">No se encontraron dispositivos. Enciende el módulo e inténtalo de nuevo.</p>'; return; }
-          devices.forEach(function (d) { list.appendChild(esp32DeviceCard(d)); });
-        });
+
+    if (btnBuzzer) {
+      btnBuzzer.addEventListener('click', function () {
+        if (!mqttIsConnected || !mqttClientInstance) {
+          toast('Conéctate primero al ESP32', 'warning');
+          return;
+        }
+        mqttClientInstance.publish('viasegura/comando', 'BUZZER_ON');
+        toast('Comando BUZZER enviado al ESP32 🔔', 'info');
       });
     }
+
+    if (btnReset) {
+      btnReset.addEventListener('click', function () {
+        if (!mqttIsConnected || !mqttClientInstance) {
+          toast('Conéctate primero al ESP32', 'warning');
+          return;
+        }
+        mqttClientInstance.publish('viasegura/comando', 'RESET');
+        toast('Comando REINICIAR enviado 🔄', 'info');
+      });
+    }
+
+    // Botones de Vinculación y Simulación de Estudiante
+    const btnVincular = el('esp32-btn-vincular');
+    if (btnVincular) {
+      btnVincular.addEventListener('click', function () {
+        const nombre = window.prompt('Nombre del estudiante a vincular:', 'Mauricio Gallegos');
+        if (nombre && nombre.trim()) {
+          const sName = el('esp32-student-name');
+          if (sName) sName.textContent = 'Estudiante: ' + nombre.trim();
+          toast('Estudiante vinculado con éxito: ' + nombre.trim(), 'success');
+        }
+      });
+    }
+
+    const btnSimular = el('esp32-btn-simular');
+    if (btnSimular) {
+      let simPaso = 0;
+      btnSimular.addEventListener('click', function () {
+        const pasos = [
+          { dist: '45 cm', status: '🟢 Seguro · En cruce seguro', color: 'var(--success)', badge: '🟢 En cruce', chip: 'chip-green', msg: 'Alumno a 45cm del cruce (Zona Segura)' },
+          { dist: '140 cm', status: '🟡 Alerta · Desviándose del cruce', color: 'var(--warning)', badge: '🟡 Desviado', chip: 'chip-amber', msg: 'Alumno a 1.4m del cruce (Precaución)' },
+          { dist: '260 cm', status: '🔴 Peligro · Fuera de rango seguro', color: 'var(--danger)', badge: '🔴 Peligro', chip: 'chip-red', msg: 'Alumno a 2.6m (Peligro: Fuera de cruce)' }
+        ];
+        const p = pasos[simPaso % pasos.length];
+        simPaso++;
+
+        const sDist = el('esp32-student-dist');
+        const sStatus = el('esp32-student-status');
+        const sBadge = el('esp32-student-badge');
+        const lDist = el('esp32-live-dist');
+
+        if (sDist) sDist.textContent = p.dist;
+        if (lDist) lDist.textContent = p.dist;
+        if (sStatus) { sStatus.textContent = p.status; sStatus.style.color = p.color; }
+        if (sBadge) { sBadge.className = 'chip ' + p.chip; sBadge.textContent = p.badge; }
+
+        toast(p.msg, p.color === 'var(--danger)' ? 'error' : p.color === 'var(--warning)' ? 'warning' : 'success');
+      });
+    }
+  }
+
+  function bindEsp32() {
+    setupEsp32Mqtt();
     ['esp32-auto', 'esp32-share', 'esp32-sync'].forEach(function (id) {
       const node = el(id);
       if (!node) return;
@@ -2464,29 +2602,85 @@
     let dist = null;
     if (g && inst) dist = haversineMeters(g.lat, g.lng, inst.lat, inst.lng);
 
+    /* ===== Semáforo de Calor / Geolocalización por Ruta y Desvío ===== */
     const radius = geoRadius();
-    const inside = dist === null ? null : dist <= radius;
+    let riesgoNivel = 'desconocido'; // 'verde' | 'amarillo' | 'rojo'
     let geoText;
     let geoColor;
+
     if (dist === null) {
-      geoText = 'Buscando…';
+      geoText = 'Buscando GPS…';
       geoColor = 'var(--text-muted)';
-    } else if (inside) {
-      geoText = 'Activa (Radio: ' + radius + 'm · ' + dist + 'm al colegio)';
+    } else if (dist <= radius) {
+      // En ruta / Seguro
+      riesgoNivel = 'verde';
+      geoText = '🟢 Seguro · En ruta (' + dist + 'm del colegio)';
       geoColor = 'var(--success)';
-    } else {
-      geoText = 'Fuera de zona (' + dist + 'm al colegio)';
+    } else if (dist <= (radius + 150)) {
+      // Desviándose de la ruta
+      riesgoNivel = 'amarillo';
+      geoText = '🟡 Alerta · Desviado de ruta (' + dist + 'm)';
       geoColor = 'var(--warning)';
+    } else {
+      // Fuera de ruta / Peligro
+      riesgoNivel = 'rojo';
+      geoText = '🔴 Peligro · Fuera de ruta (' + dist + 'm)';
+      geoColor = 'var(--danger)';
     }
+
+    // Actualizar indicador de geocerca
     document.querySelectorAll('[data-gps-geofence]').forEach(function (n) {
       n.textContent = geoText;
       n.style.color = geoColor;
     });
 
-    const alerta = dist !== null && !inside;
+    // Actualizar tarjeta del semáforo en pantalla recorrido
+    const semaforoBox = document.querySelector('#recorrido [data-semaforo]');
+    if (semaforoBox) {
+      const semConfigs = {
+        verde: { emoji: '🟢', titulo: 'SEGURO · EN RUTA', desc: 'Dentro del perímetro seguro de la institución (' + (dist || 0) + 'm)', bg: 'var(--success)' },
+        amarillo: { emoji: '🟡', titulo: 'PRECAUCIÓN · DESVIADO', desc: 'El estudiante se está alejando de la ruta prevista (' + (dist || 0) + 'm)', bg: 'var(--warning)' },
+        rojo: { emoji: '🔴', titulo: 'PELIGRO · FUERA DE RUTA', desc: 'Estudiante fuera del rango de seguridad (' + (dist || 0) + 'm)', bg: 'var(--danger)' },
+        desconocido: { emoji: '⚪', titulo: 'BUSCANDO GPS', desc: 'Esperando señal de geolocalización...', bg: '#64748b' }
+      };
+      const cur = semConfigs[riesgoNivel] || semConfigs.desconocido;
+      semaforoBox.innerHTML =
+        '<div style="display:flex;align-items:center;gap:12px;background:' + cur.bg + ';color:#fff;border-radius:12px;padding:12px 14px;font-weight:700;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,0.12);">' +
+        '<span style="font-size:24px;">' + cur.emoji + '</span>' +
+        '<div style="flex:1;">' +
+        '<div>' + cur.titulo + '</div>' +
+        '<div style="font-weight:400;font-size:11px;opacity:0.9;margin-top:2px;">' + cur.desc + '</div>' +
+        '</div>' +
+        '</div>';
+    }
+
+    // Actualizar las luces físicas del semáforo de 3 colores
+    const lVerde = el('vs-sl-verde');
+    const lAmarillo = el('vs-sl-amarillo');
+    const lRojo = el('vs-sl-rojo');
+    if (lVerde && lAmarillo && lRojo) {
+      lVerde.style.opacity = riesgoNivel === 'verde' ? '1' : '0.2';
+      lVerde.style.boxShadow = riesgoNivel === 'verde' ? '0 0 14px 4px #22c55e88' : 'none';
+
+      lAmarillo.style.opacity = riesgoNivel === 'amarillo' ? '1' : '0.2';
+      lAmarillo.style.boxShadow = riesgoNivel === 'amarillo' ? '0 0 14px 4px #f59e0b88' : 'none';
+
+      lRojo.style.opacity = riesgoNivel === 'rojo' ? '1' : '0.2';
+      lRojo.style.boxShadow = riesgoNivel === 'rojo' ? '0 0 18px 6px #ef4444aa' : 'none';
+      lRojo.style.animation = riesgoNivel === 'rojo' ? 'vs-pulse-rojo 1s infinite' : '';
+    }
+
+    // Enviar comando al ESP32 vía MQTT según el nivel de riesgo del GPS
+    if (mqttIsConnected && mqttClientInstance && riesgoNivel !== 'desconocido') {
+      if (riesgoNivel === 'verde') mqttClientInstance.publish('viasegura/comando', 'GPS_VERDE');
+      else if (riesgoNivel === 'amarillo') mqttClientInstance.publish('viasegura/comando', 'GPS_AMARILLO');
+      else if (riesgoNivel === 'rojo') mqttClientInstance.publish('viasegura/comando', 'GPS_ROJO');
+    }
+
+    const alerta = riesgoNivel === 'amarillo' || riesgoNivel === 'rojo';
     document.querySelectorAll('[data-gps-status]').forEach(function (n) {
-      n.textContent = alerta ? 'Alerta' : 'Normal';
-      n.style.color = alerta ? 'var(--warning)' : 'var(--success)';
+      n.textContent = riesgoNivel === 'rojo' ? 'Peligro' : riesgoNivel === 'amarillo' ? 'Alerta' : 'Normal';
+      n.style.color = geoColor;
     });
 
     setText('[data-gps-lastupdate]', g

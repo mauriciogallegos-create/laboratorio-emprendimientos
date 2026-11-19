@@ -687,7 +687,7 @@
         <div class="card card-row" style="margin-bottom:14px; background:#f8fafc;">
           <div style="flex:1;">
             <div class="body" style="font-weight:600;">Conexión Cloud MQTT</div>
-            <div class="body-sm">Broker: viasegura-mauricio.xyz:9001 (iotuser)</div>
+            <div class="body-sm">Broker: 157.245.88.132:9001 (iotuser)</div>
           </div>
           <button class="btn btn-primary btn-sm" id="esp32-vps-toggle" style="width:auto; padding:6px 14px;">CONECTAR</button>
         </div>
@@ -1080,6 +1080,7 @@ document.addEventListener('DOMContentLoaded', function () {
     <script src="js/school-photo-map.js"></script>
 <script src="js/safe-points-data.js"></script>
 <script src="js/poi-photos-data.js"></script>
+<script src="js/mqtt.min.js"></script>
 <script src="js/app.js"></script>
 <script>function updateStatusBarTime(){var els=document.querySelectorAll(".status-bar-time");var now=new Date();var str=now.toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit",hour12:true});for(var i=0;i<els.length;i++){els[i].textContent=str;}}document.addEventListener("DOMContentLoaded",function(){updateStatusBarTime();setInterval(updateStatusBarTime,1000);});</script><script>
 /* ===== Envío de incidencias: celular → servidor → panel web ===== */
@@ -1168,10 +1169,5 @@ document.addEventListener('DOMContentLoaded', function () {
 })();
 </script>
 
-<!-- ══════════════════════════════════════════
-     MQTT + SEMÁFORO DE RUTA — ViaSegura
-     Librería MQTT sobre WebSocket (CDN)
-══════════════════════════════════════════ -->
-<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 </body>
 </html>

@@ -59,7 +59,7 @@
     <!-- SELECCIÓN DE ROL -->
     <div id="rol" class="phone">
       <div class="phone-label">2 · Selección de rol</div>
-      <div class="status-bar light"><span>4:20 PM</span><span>📶 🔋</span></div>
+      <div class="status-bar light"><span class="status-bar-time"></span><span>📶 🔋</span></div>
       <div style="text-align:center; padding:48px 24px 24px;">
         <div style="font-size:44px;">🛡</div>
         <h1 style="font-size:24px; font-weight:700; margin-top:8px;">VíaSegura</h1>
@@ -83,7 +83,7 @@
     <!-- LOGIN -->
     <div id="login" class="phone">
       <div class="phone-label">3 · Login</div>
-      <div class="status-bar"><span>4:20 PM</span><span>📶 🔋</span></div>
+      <div class="status-bar"><span class="status-bar-time"></span><span>📶 🔋</span></div>
       <div class="topbar"><span class="topbar-title">VíaSegura</span></div>
       <div class="content" style="padding-top:32px;">
         <h2 class="greeting">Bienvenido de vuelta</h2>
@@ -108,7 +108,7 @@
     <!-- REGISTRO PASO 1 -->
     <div id="reg1" class="phone">
       <div class="phone-label">4 · Registro Paso 1 — Institución</div>
-      <div class="status-bar"><span>4:20 PM</span><span>📶 🔋</span></div>
+      <div class="status-bar"><span class="status-bar-time"></span><span>📶 🔋</span></div>
       <div class="topbar">
         <span style="font-size:22px; cursor:pointer;"></span>
         <span class="topbar-title">Registro</span>
@@ -139,7 +139,7 @@
     <!-- REGISTRO PASO 2 QR -->
     <div id="reg2" class="phone">
       <div class="phone-label">5 · Registro Paso 2 — Escanear QR</div>
-      <div class="status-bar"><span>4:20 PM</span><span>📶 🔋</span></div>
+      <div class="status-bar"><span class="status-bar-time"></span><span>📶 🔋</span></div>
       <div class="topbar">
         <span style="font-size:22px; cursor:pointer;"></span>
         <span class="topbar-title">Escanea tu institución</span>
@@ -176,7 +176,7 @@
     <!-- REGISTRO PASO 3 -->
     <div id="reg3" class="phone">
       <div class="phone-label">6 · Registro Paso 3 — Datos</div>
-      <div class="status-bar"><span>4:20 PM</span><span>📶 🔋</span></div>
+      <div class="status-bar"><span class="status-bar-time"></span><span>📶 🔋</span></div>
       <div class="topbar">
         <span style="font-size:22px; cursor:pointer;"></span>
         <span class="topbar-title">Tus datos</span>
@@ -235,7 +235,7 @@
     <!-- REGISTRO PASO 4 -->
     <div id="reg4" class="phone">
       <div class="phone-label">7 · Registro Paso 4 — Apoderado</div>
-      <div class="status-bar"><span>4:20 PM</span><span>📶 🔋</span></div>
+      <div class="status-bar"><span class="status-bar-time"></span><span>📶 🔋</span></div>
       <div class="topbar">
         <span style="font-size:22px; cursor:pointer;"></span>
         <span class="topbar-title">Apoderado</span>
@@ -274,7 +274,7 @@
     <!-- HOME ESTUDIANTE -->
     <div id="home" class="phone">
       <div class="phone-label">8 · Home Estudiante</div>
-      <div class="status-bar"><span>4:20 PM</span><span>📶 🔋</span></div>
+      <div class="status-bar"><span class="status-bar-time"></span><span>📶 🔋</span></div>
       <div class="topbar">
         <span class="topbar-title">🛡 VíaSegura</span>
         <span class="topbar-icon" style="background:var(--primary-light);">👤</span>
@@ -314,9 +314,27 @@
     <!-- RECORRIDO ACTIVO -->
     <div id="recorrido" class="phone">
       <div class="phone-label">9 · Recorrido Activo</div>
-      <div class="status-bar"><span>4:20 PM</span><span>📶 🔋</span></div>
-      <div style="background:var(--success); color:#fff; text-align:center; padding:12px; font-weight:700; font-size:14px; letter-spacing:1px;"> RECORRIDO ACTIVO</div>
+      <div class="status-bar"><span class="status-bar-time"></span><span>📶 🔋</span></div>
+      <!-- Header dinámico con color del semáforo -->
+      <div id="recorrido-header" style="background:var(--success); color:#fff; text-align:center; padding:12px; font-weight:700; font-size:14px; letter-spacing:1px; transition:background .5s;"> RECORRIDO ACTIVO</div>
       <div class="content">
+        <!-- 🚦 SEMÁFORO DE RUTA -->
+        <div data-semaforo style="margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:10px;background:#22c55e;color:#fff;border-radius:12px;padding:10px 14px;font-weight:700;font-size:13px;">
+            <span style="font-size:22px">🟢</span>
+            <div><div>SEGURO</div><div style="font-weight:400;font-size:11px;opacity:.85">Esperando GPS…</div></div>
+          </div>
+        </div>
+        <!-- Semáforo visual 3 luces -->
+        <div style="display:flex;justify-content:center;gap:0;margin-bottom:12px;">
+          <div style="background:#1a1a2e;border-radius:16px;padding:12px 20px;display:flex;flex-direction:column;align-items:center;gap:10px;box-shadow:0 4px 16px rgba(0,0,0,.2);">
+            <div style="font-size:10px;color:#9e9e9e;font-weight:700;letter-spacing:1px;">RUTA</div>
+            <div class="vs-semaforo-light rojo-light"    id="vs-sl-rojo"    style="width:34px;height:34px;border-radius:50%;background:#ef4444;opacity:.2;transition:opacity .4s,box-shadow .4s;"></div>
+            <div class="vs-semaforo-light amarillo-light" id="vs-sl-amarillo" style="width:34px;height:34px;border-radius:50%;background:#f59e0b;opacity:.2;transition:opacity .4s,box-shadow .4s;"></div>
+            <div class="vs-semaforo-light verde-light"   id="vs-sl-verde"   style="width:34px;height:34px;border-radius:50%;background:#22c55e;opacity:.8;box-shadow:0 0 12px 3px #22c55e88;transition:opacity .4s,box-shadow .4s;"></div>
+          </div>
+        </div>
+
         <div class="vs-map"></div>
         <div style="background:var(--surface); border-radius:12px; padding:16px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.05); border:1px solid var(--border); margin-top:-40px; position:relative; z-index:1000;">
           <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
@@ -354,7 +372,7 @@
     <!-- RECORRIDO INUSUAL -->
     <div id="anomalia" class="phone" style="position:relative;">
       <div class="phone-label">10 · Modal Recorrido Inusual</div>
-      <div class="status-bar"><span>4:35 PM</span><span>📶 🔋</span></div>
+      <div class="status-bar"><span class="status-bar-time"></span><span>📶 🔋</span></div>
       <div style="background:var(--warning); color:#fff; text-align:center; padding:12px; font-weight:700; font-size:14px; letter-spacing:1px;"> RECORRIDO ACTIVO</div>
       <div class="content" style="opacity:.4;">
         <div class="vs-map"></div>
@@ -377,7 +395,7 @@
     <!-- EMERGENCIA -->
     <div id="emergencia" class="phone" style="position:relative;">
       <div class="phone-label">11 · Emergencia — Confirmación</div>
-      <div class="status-bar"><span>4:35 PM</span><span>📶 🔋</span></div>
+      <div class="status-bar"><span class="status-bar-time"></span><span>📶 🔋</span></div>
       <div class="topbar">
         <span class="topbar-title">🛡 VíaSegura</span>
         <span class="topbar-icon" style="background:var(--primary-light);">👤</span>
@@ -403,7 +421,7 @@
     <!-- ALERTA ENVIADA -->
     <div id="enviada" class="phone">
       <div class="phone-label">12 · Alerta Enviada</div>
-      <div class="status-bar"><span>4:35 PM</span><span>📶 🔋</span></div>
+      <div class="status-bar"><span class="status-bar-time"></span><span>📶 🔋</span></div>
       <div class="alert-success">
         <div style="background:var(--primary); width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:30px; margin-bottom:16px;">🛡</div>
         <div class="check-circle">✓</div>
@@ -433,7 +451,7 @@
     <!-- PUNTOS SEGUROS -->
     <div id="puntos" class="phone">
       <div class="phone-label">13 · Puntos Seguros</div>
-      <div class="status-bar"><span>4:20 PM</span><span>📶 🔋</span></div>
+      <div class="status-bar"><span class="status-bar-time"></span><span>📶 🔋</span></div>
       <div class="topbar">
         <span style="font-size:22px; cursor:pointer;"></span>
         <span class="topbar-title">Puntos seguros</span>
@@ -468,7 +486,7 @@
     <!-- PERFIL -->
     <div id="perfil" class="phone">
       <div class="phone-label">14 · Perfil</div>
-      <div class="status-bar"><span>4:20 PM</span><span>📶 🔋</span></div>
+      <div class="status-bar"><span class="status-bar-time"></span><span>📶 🔋</span></div>
       <div class="topbar">
         <span class="topbar-title">Mi perfil</span>
         <span class="topbar-icon">👤</span>
@@ -519,7 +537,7 @@
     <!-- NOTIFICACIONES -->
     <div id="notificaciones" class="phone">
       <div class="phone-label">15 · Notificaciones</div>
-      <div class="status-bar"><span>4:20 PM</span><span>📶 🔋</span></div>
+      <div class="status-bar"><span class="status-bar-time"></span><span>📶 🔋</span></div>
       <div class="topbar">
         <span style="font-size:22px; cursor:pointer;" class="back-perfil">←</span>
         <span class="topbar-title">Notificaciones</span>
@@ -552,7 +570,7 @@
     <!-- SEGURIDAD -->
     <div id="seguridad" class="phone">
       <div class="phone-label">15 · Seguridad</div>
-      <div class="status-bar"><span>4:20 PM</span><span>📶 🔋</span></div>
+      <div class="status-bar"><span class="status-bar-time"></span><span>📶 🔋</span></div>
       <div class="topbar">
         <span style="font-size:22px; cursor:pointer;" class="back-perfil">←</span>
         <span class="topbar-title">Seguridad</span>
@@ -586,7 +604,7 @@
     <!-- CONTACTOS AUTORIZADOS -->
     <div id="contactos" class="phone">
       <div class="phone-label">15 · Contactos autorizados</div>
-      <div class="status-bar"><span>4:20 PM</span><span>📶 🔋</span></div>
+      <div class="status-bar"><span class="status-bar-time"></span><span>📶 🔋</span></div>
       <div class="topbar">
         <span style="font-size:22px; cursor:pointer;" class="back-perfil">←</span>
         <span class="topbar-title">Contactos autorizados</span>
@@ -612,7 +630,7 @@
     <!-- AYUDA -->
     <div id="ayuda" class="phone">
       <div class="phone-label">15 · Ayuda</div>
-      <div class="status-bar"><span>4:20 PM</span><span>📶 🔋</span></div>
+      <div class="status-bar"><span class="status-bar-time"></span><span>📶 🔋</span></div>
       <div class="topbar">
         <span style="font-size:22px; cursor:pointer;" class="back-perfil">←</span>
         <span class="topbar-title">Ayuda</span>
@@ -643,34 +661,67 @@
     <!-- DISPOSITIVO ESP32 -->
     <div id="esp32" class="phone">
       <div class="phone-label">16 · Dispositivo VíaSegura</div>
-      <div class="status-bar"><span>4:20 PM</span><span>📶 🔋</span></div>
+      <div class="status-bar"><span class="status-bar-time"></span><span>📶 🔋</span></div>
       <div class="topbar">
         <span style="font-size:22px; cursor:pointer;" class="back-perfil">←</span>
         <span class="topbar-title">Dispositivo ESP32</span>
         <span class="topbar-icon" style="opacity:0;">.</span>
       </div>
       <div class="content" style="padding-top:16px;">
-        <div class="card" id="esp32-status-card">
+        <!-- Tarjeta de Estado Real con VPS -->
+        <div class="card" id="esp32-status-card" style="margin-bottom:12px;">
           <div class="card-row" style="margin-bottom:10px;">
-            <div class="card-icon blue">📶</div>
+            <div class="card-icon blue">📡</div>
             <div style="flex:1;">
-              <div class="body" style="font-weight:600;" id="esp32-device-name">Sin dispositivo</div>
-              <div class="body-sm" id="esp32-device-detail">Vincula el módulo que lleva el estudiante</div>
+              <div class="body" style="font-weight:600;" id="esp32-device-name">ESP32 · VíaSegura Tecsup</div>
+              <div class="body-sm" id="esp32-device-detail">Cloud VPS (viasegura-mauricio.xyz)</div>
             </div>
             <span class="chip chip-neutral" id="esp32-status">Desconectado</span>
           </div>
-          <div class="body-sm">Señal: <b id="esp32-rssi">—</b> · Batería: <b id="esp32-battery">—</b></div>
+          <div class="body-sm" style="display:flex; justify-content:space-between; border-top:1px solid var(--border); padding-top:8px; margin-top:4px;">
+            <span>Sensor Distancia: <b id="esp32-live-dist" style="color:var(--primary);">— cm</b></span>
+            <span>LED Placa: <b id="esp32-live-led">—</b></span>
+          </div>
         </div>
 
-        <div class="section-title">Vía de conexión</div>
-        <div class="chip-row" data-list="esp32-methods">
-          <span class="chip chip-filter esp32-method" data-method="ble">Bluetooth</span>
-          <span class="chip chip-filter esp32-method" data-method="wifi">Wi-Fi</span>
-          <span class="chip chip-filter esp32-method" data-method="usb">USB</span>
+        <div class="card card-row" style="margin-bottom:14px; background:#f8fafc;">
+          <div style="flex:1;">
+            <div class="body" style="font-weight:600;">Conexión Cloud MQTT</div>
+            <div class="body-sm">Broker: 157.245.88.132:9001 (iotuser)</div>
+          </div>
+          <button class="btn btn-primary btn-sm" id="esp32-vps-toggle" style="width:auto; padding:6px 14px;">CONECTAR</button>
         </div>
 
-        <button class="btn btn-primary" id="esp32-scan">BUSCAR DISPOSITIVOS</button>
-        <div data-list="esp32-devices" style="margin-top:12px;"></div>
+        <div class="section-title">Vinculación con Estudiante</div>
+        <div class="card" style="margin-bottom:14px; border-left:4px solid var(--primary); background:#ffffff;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div>
+              <div class="body" style="font-weight:700;" id="esp32-student-name">Estudiante: Mauricio Gallegos</div>
+              <div class="body-sm" style="color:var(--text-muted);">Módulo de Cruce Escolar Activo</div>
+            </div>
+            <span class="chip chip-green" id="esp32-student-badge">🟢 En cruce</span>
+          </div>
+          <div style="background:#f1f5f9; border-radius:8px; padding:10px; margin-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+              <span>Distancia al cruce:</span>
+              <b id="esp32-student-dist" style="color:var(--primary); font-size:14px;">— cm</b>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:12px;">
+              <span>Estado del alumno:</span>
+              <b id="esp32-student-status" style="color:var(--success);">Esperando detección...</b>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-outline btn-sm" id="esp32-btn-vincular" style="flex:1;">🔗 Vincular Dispositivo</button>
+            <button class="btn btn-primary btn-sm" id="esp32-btn-simular" style="flex:1;">🚶 Probar Rastreo</button>
+          </div>
+        </div>
+
+        <div class="section-title">Acciones del Dispositivo</div>
+        <div style="display:flex; gap:10px; margin-bottom:16px;">
+          <button class="btn btn-outline btn-sm" id="esp32-cmd-buzzer" style="flex:1;">🔔 Probar Buzzer</button>
+          <button class="btn btn-outline btn-sm" id="esp32-cmd-reset" style="flex:1;">🔄 Reiniciar ESP32</button>
+        </div>
 
         <div class="section-title">Al conectar</div>
         <div class="card card-row" style="margin-bottom:10px;">
@@ -702,7 +753,7 @@
     <!-- REPORTAR INCIDENCIA -->
     <div id="incidencia" class="phone">
       <div class="phone-label">14 · Reportar Incidencia</div>
-      <div class="status-bar"><span>4:20 PM</span><span>📶 🔋</span></div>
+      <div class="status-bar"><span class="status-bar-time"></span><span>📶 🔋</span></div>
       <div class="topbar">
         <span style="font-size:22px; cursor:pointer;"></span>
         <span class="topbar-title">Reportar incidencia</span>
@@ -745,7 +796,7 @@
     <!-- HOME APODERADO -->
     <div id="padre" class="phone">
       <div class="phone-label">15 · Home Apoderado</div>
-      <div class="status-bar"><span>4:35 PM</span><span>📶 🔋</span></div>
+      <div class="status-bar"><span class="status-bar-time"></span><span>📶 🔋</span></div>
       <div class="topbar">
         <span class="topbar-title">🛡 VíaSegura</span>
         <span class="topbar-icon" style="background:var(--primary-light);">👩</span>
@@ -809,7 +860,7 @@
     <!-- ALERTA APODERADO -->
     <div id="padre-alerta" class="phone">
       <div class="phone-label">16 · Alerta de Emergencia (Apoderado)</div>
-      <div class="status-bar"><span>4:36 PM</span><span>📶 🔋</span></div>
+      <div class="status-bar"><span class="status-bar-time"></span><span>📶 🔋</span></div>
       <div style="background:var(--danger); color:#fff; padding:12px; font-size:13px; font-weight:700; text-align:center;">🚨 ALERTA DE SEGURIDAD</div>
       <div class="content" style="padding-top:16px;">
         <div class="card" style="border:2px solid var(--danger); margin-bottom:16px;">
@@ -840,7 +891,7 @@
     <!-- HISTORIAL APODERADO -->
     <div id="historial" class="phone">
       <div class="phone-label">17 · Historial (Apoderado)</div>
-      <div class="status-bar"><span>4:40 PM</span><span>📶 🔋</span></div>
+      <div class="status-bar"><span class="status-bar-time"></span><span>📶 🔋</span></div>
       <div class="topbar">
         <span class="topbar-back" id="historial-back" style="font-size:22px; cursor:pointer;">←</span>
         <span class="topbar-title">Historial</span>
@@ -867,7 +918,7 @@
     <!-- PANEL INSTITUCIONAL -->
     <div id="panel" class="phone">
       <div class="phone-label">16 · Panel Institucional</div>
-      <div class="status-bar"><span>4:35 PM</span><span>📶 🔋</span></div>
+      <div class="status-bar"><span class="status-bar-time"></span><span>📶 🔋</span></div>
       <div class="topbar">
         <span class="topbar-title">🛡 Panel</span>
         <span class="topbar-icon" style="background:var(--primary-light);">🏫</span>
@@ -1029,6 +1080,94 @@ document.addEventListener('DOMContentLoaded', function () {
     <script src="js/school-photo-map.js"></script>
 <script src="js/safe-points-data.js"></script>
 <script src="js/poi-photos-data.js"></script>
+<script src="js/mqtt.min.js"></script>
 <script src="js/app.js"></script>
+<script>function updateStatusBarTime(){var els=document.querySelectorAll(".status-bar-time");var now=new Date();var str=now.toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit",hour12:true});for(var i=0;i<els.length;i++){els[i].textContent=str;}}document.addEventListener("DOMContentLoaded",function(){updateStatusBarTime();setInterval(updateStatusBarTime,1000);});</script><script>
+/* ===== Envío de incidencias: celular → servidor → panel web ===== */
+(function(){
+  // Detecta la URL base del servidor (mismo host desde donde se cargó la página)
+  var API_BASE = location.origin;
+
+  function enviarAlServidor(data){
+    try {
+      fetch(API_BASE + '/api/incident', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(data)
+      }).then(function(r){ return r.json(); }).then(function(j){
+        console.log('[ViaSegura] Incidencia enviada al servidor:', j.id);
+      }).catch(function(e){
+        console.warn('[ViaSegura] Servidor no disponible, solo local:', e.message);
+      });
+    } catch(e){}
+  }
+
+  document.addEventListener("DOMContentLoaded",function(){
+    // Formulario del Panel Institucional (incident-form)
+    var form=document.getElementById("incident-form");
+    if(form){
+      form.addEventListener("submit",function(ev){
+        ev.preventDefault();
+        try{
+          var cat=document.getElementById("incident-category");
+          var desc=document.getElementById("incident-description");
+          var prio=document.getElementById("incident-priority");
+          var data={
+            type:"incidencia",
+            categoria:cat?cat.value:"Incidencia",
+            prioridad:prio?prio.value:"media",
+            mensaje:desc?desc.value:"",
+            hora:new Date().toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit",hour12:true}),
+            fecha:new Date().toLocaleDateString("es-PE"),
+            reportadoPor:"Alumno/Apoderado"
+          };
+          // Local (mismo navegador)
+          try{localStorage.setItem("vs_incident",JSON.stringify(data));}catch(e){}
+          try{if(window.BroadcastChannel){var bc=new BroadcastChannel("viasegura-realtime");bc.postMessage(data);bc.close();}}catch(e){}
+          // Servidor (celular → laptop)
+          enviarAlServidor(data);
+          // Feedback visual
+          var btn=form.querySelector('button[type="submit"]');
+          if(btn){var orig=btn.textContent;btn.textContent="✅ ENVIADO";btn.style.background="var(--success)";
+            setTimeout(function(){btn.textContent=orig;btn.style.background="";},2000);}
+          if(desc) desc.value="";
+        }catch(e){}
+      });
+    }
+
+    // Botón de Reportar Incidencia (pantalla 14: incidencia-enviar)
+    var btnIncidencia=document.getElementById("incidencia-enviar");
+    if(btnIncidencia){
+      btnIncidencia.addEventListener("click",function(ev){
+        ev.preventDefault();
+        try{
+          var tipo=document.getElementById("incidencia-tipo");
+          var desc=document.getElementById("incidencia-desc");
+          var school=document.getElementById("incidencia-school");
+          var data={
+            type:"incidencia",
+            categoria:tipo?tipo.value:"Incidencia",
+            colegio:school?school.value:"",
+            mensaje:desc?desc.value:"",
+            hora:new Date().toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit",hour12:true}),
+            fecha:new Date().toLocaleDateString("es-PE"),
+            reportadoPor:"Alumno/Apoderado"
+          };
+          try{localStorage.setItem("vs_incident",JSON.stringify(data));}catch(e){}
+          try{if(window.BroadcastChannel){var bc=new BroadcastChannel("viasegura-realtime");bc.postMessage(data);bc.close();}}catch(e){}
+          enviarAlServidor(data);
+          // Feedback
+          var orig=btnIncidencia.textContent;
+          btnIncidencia.textContent="✅ REPORTE ENVIADO";
+          btnIncidencia.style.background="var(--success)";
+          setTimeout(function(){btnIncidencia.textContent=orig;btnIncidencia.style.background="";},2500);
+          if(desc) desc.value="";
+        }catch(e){}
+      });
+    }
+  });
+})();
+</script>
+
 </body>
 </html>

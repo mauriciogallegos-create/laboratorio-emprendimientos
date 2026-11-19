@@ -1334,8 +1334,9 @@
 
       if (statusChip) { statusChip.className = 'chip chip-amber'; statusChip.textContent = 'Conectando…'; }
       btnToggle.textContent = 'CONECTANDO...';
+      toast('Conectando a broker MQTT (157.245.88.132:9001)...', 'info');
 
-      const brokerUrl = 'ws://viasegura-mauricio.xyz:9001/mqtt';
+      const brokerUrl = 'ws://157.245.88.132:9001';
       mqttClientInstance = mqtt.connect(brokerUrl, {
         clientId: 'ViaSeguraApp_' + Math.random().toString(16).substr(2, 6),
         username: 'iotuser',
@@ -1390,8 +1391,11 @@
       });
 
       mqttClientInstance.on('error', function (err) {
-        if (statusChip) { statusChip.className = 'chip chip-neutral'; statusChip.textContent = 'Error'; }
+        console.error('[MQTT Error]', err);
+        if (statusChip) { statusChip.className = 'chip chip-red'; statusChip.textContent = 'Error'; }
         btnToggle.textContent = 'REINTENTAR';
+        btnToggle.className = 'btn btn-primary btn-sm';
+        toast('Error MQTT: ' + (err && err.message ? err.message : 'No se pudo conectar'), 'error');
       });
 
       mqttClientInstance.on('close', function () {

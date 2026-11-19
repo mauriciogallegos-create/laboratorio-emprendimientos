@@ -23,7 +23,7 @@ const char* pass1     = "Mauricio10";
 const char* ssid2     = "Comunidad Innovadores";
 const char* pass2     = "INn0V4-2K23!*";
 
-const char* mqtt_server = "viasegura-mauricio.xyz"; // Tu dominio VPS
+const char* mqtt_server = "157.245.88.132";   // IP directa del VPS DigitalOcean (evita Error -2)
 const int   mqtt_port   = 1883;
 const char* mqtt_user   = "iotuser";          // Usuario Mosquitto (minúsculas)
 const char* mqtt_pass   = "LosSigmas1A";      // Contraseña Mosquitto
